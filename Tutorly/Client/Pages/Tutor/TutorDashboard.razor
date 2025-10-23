@@ -1,0 +1,570 @@
+﻿@page "/tutor/dashboard"
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using Tutorly.Shared
+
+<PageTitle>Tutor Dashboard</PageTitle>
+
+<div id="page-tutor">
+    <!-- ================== DASHBOARD NAVBAR (student-style) ================== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/tutor/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="mainNav">
+                <a class="db-nav__link db-nav__link--active" href="/tutor/dashboard" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+                    <span>Home</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/availability">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg>
+                    <span>Availability</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/queue">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/resources">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 4v16" /></svg>
+                    <span>Resources</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/analytics">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg>
+                    <span>Analytics</span>
+                </a>
+                <a class="db-nav__link" href="/tutorforum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- main bubble -->
+                        <path d="M21 12a4 4 0 0 1-4 4H9l-4 3V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4z" />
+                        <!-- secondary bubble -->
+                        <path d="M7 14H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2" />
+                    </svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/tutorsessiondetails">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span>
+                </a>
+            </nav>
+
+            <div class="db-actions" id="actionsBar">
+                <div class="search-wrap" id="searchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="searchInput" type="text" placeholder="Search…">
+                </div>
+
+                <div style="position:relative">
+                    <button class="db-iconbtn" aria-haspopup="true" aria-expanded="false" id="btnNotif">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                    </button>
+                    <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                        <div class="pop__head">Notifications</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">📅</div><div><div class="pop__title">Session starts soon</div><div class="pop__text">Algebra Basics at 5:00 PM.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">⭐</div><div><div class="pop__title">New rating</div><div class="pop__text">You received a 5★ from Alex.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=4" alt="Profile" />
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#modalPhoto">
+                                <div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalSettings">
+                                <div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalBadges">
+                                <div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-action="logout">
+                                <div class="pop__row"><div class="pop__icon">🚪</div><div><div class="pop__title">Logout</div><div class="pop__text">Sign out of your account.</div></div></div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================== PAGE BODY ================== -->
+    <div class="wrap">
+        <!-- Welcome / CTA -->
+        <section class="welcome">
+            <div>
+                <h1>Welcome back, Tutor!</h1>
+                <p class="muted">You have 3 upcoming sessions today</p>
+            </div>
+            <button class="btn btn--green" @onclick="@(() => Nav.NavigateTo("/tutor/tutorsessiondetails"))">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                New Session
+            </button>
+        </section>
+
+        <!-- Stats -->
+        <section class="stats">
+            <div class="stat stat--clickable" @onclick="NavigateToCalendar" style="cursor: pointer;">
+                <div class="s-row">
+                    <div><div class="label">Today's Sessions</div><div class="value">@todaysSessionsCount</div></div>
+                    <div class="badge" style="background:#EEF2FF;color:#4F46E5">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat stat--clickable" @onclick="NavigateToBookingRequests" style="cursor: pointer;">
+                <div class="s-row">
+                    <div><div class="label">Students Waiting</div><div class="value">@pendingRequestsCount</div></div>
+                    <div class="badge" style="background:#FEF9C3;color:#CA8A04">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="stat">
+                <div class="s-row">
+                    <div><div class="label">Average Rating</div><div class="value">@(totalRatings > 0 ? averageRating.ToString("F1") : "No ratings")</div></div>
+                    <div class="badge" style="background:#DCFCE7;color:#16A34A">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 17.27 6.18 3.73-1.64-7.03L21 9.24l-7.19-.61L12 2 10.19 8.63 3 9.24l4.46 4.73L5.82 21z" /></svg>
+                    </div>
+                </div>
+                @if (totalRatings > 0)
+                {
+                    <div class="stat-sub">@totalRatings @(totalRatings == 1 ? "rating" : "ratings")</div>
+                }
+            </div>
+            <div class="stat">
+                <div class="s-row">
+                    <div><div class="label">Hours This Week</div><div class="value">@hoursThisWeek.ToString("F1")</div></div>
+                    <div class="badge" style="background:#F5F3FF;color:#7C3AED">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20" /></svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main grid -->
+        <div class="grid">
+            <!-- Left: Upcoming Sessions -->
+            <section class="panel">
+                <div class="panel__head"><h3>Upcoming Sessions</h3><span></span></div>
+                <div class="list">
+                    @if (isLoadingSessions)
+                    {
+                        <div class="list__item">
+                            <div class="list__left">
+                                <div class="ico" style="background:#F3F4F6;color:#6B7280">⏳</div>
+                                <div><div class="ltitle">Loading sessions...</div></div>
+                            </div>
+                        </div>
+                    }
+                    else if (!upcomingSessions.Any())
+                    {
+                        <div class="list__item">
+                            <div class="list__left">
+                                <div class="ico" style="background:#F3F4F6;color:#6B7280">📅</div>
+                                <div><div class="ltitle">No upcoming sessions</div><div class="lsub">You don't have any sessions scheduled</div></div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var session in upcomingSessions)
+                        {
+                            <div class="list__item">
+                                <div class="list__left">
+                                    <div class="ico" style="background:#EEF2FF;color:#4F46E5">📚</div>
+                                    <div>
+                                        <div class="ltitle">@session.ModuleName</div>
+                                        <div class="lsub">@session.ParticipantName — @session.TimeDisplay</div>
+                                    </div>
+                                </div>
+                                <button class="icon-menu" title="More">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+                                </button>
+                            </div>
+                        }
+                    }
+                </div>
+            </section>
+
+            <!-- Right: Quick Actions -->
+            <section class="panel">
+                <div class="td-qa" role="list">
+                    <a class="td-qa__item" href="/tutor/availability" role="listitem">
+                        <span class="td-qa__ico td-qa__ico--indigo">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg>
+                        </span><span class="td-qa__label">Set Availability</span>
+                    </a>
+
+                    <a class="td-qa__item" href="/tutor/messages" role="listitem">
+                        <span class="td-qa__ico td-qa__ico--amber">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                        </span><span class="td-qa__label">View Messages</span>
+                    </a>
+
+                    <a class="td-qa__item" href="/tutor/resources" role="listitem">
+                        <span class="td-qa__ico td-qa__ico--green">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                        </span><span class="td-qa__label">Upload Resource</span>
+                    </a>
+
+                    <a class="td-qa__item" href="/forum" role="listitem">
+                        <span class="td-qa__ico td-qa__ico--violet">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                        </span><span class="td-qa__label">Forum</span>
+                    </a>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- ================== MODALS (EXACTLY LIKE STUDENT) ================== -->
+    <div class="modal" id="modalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+            <div class="modal__head">
+                <span id="modalPhotoTitle">Change Photo</span>
+                <button class="btn btn--ghost" data-close="modalPhoto">✕</button>
+            </div>
+            <div class="modal__body">
+                <div class="photo-row">
+                    <img id="photoPreview" src="https://i.pravatar.cc/80?img=4" alt="Preview">
+                    <div>
+                        <input type="file" id="photoInput" accept="image/*">
+                        <div class="muted" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="modalPhoto">Cancel</button>
+                <button class="btn btn--primary" id="savePhotoBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle">
+            <div class="modal__head">
+                <span id="modalSettingsTitle">Profile Settings</span>
+                <button class="btn btn--ghost" data-close="modalSettings">✕</button>
+            </div>
+            <div class="modal__body">
+                <div class="field"><label for="firstName">First name</label><input id="firstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label for="lastName">Last name</label><input id="lastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label for="degree">Degree</label>
+                    <select id="degree"><option value="">Select…</option><option>BComp</option><option>BIT</option><option>DIT</option><option>Other</option></select>
+                </div>
+                <div class="muted">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="modalSettings">Cancel</button>
+                <button class="btn btn--primary" id="saveSettingsBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalBadgesTitle">
+            <div class="modal__head">
+                <span id="modalBadgesTitle">Your Achievements</span>
+                <button class="btn btn--ghost" data-close="modalBadges">✕</button>
+            </div>
+            <div class="modal__body">
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>Active Learner</strong> — asked 10+ questions this week</li>
+                    <li><strong>Helper</strong> — answered 3 peer questions</li>
+                    <li><strong>On Track</strong> — met your weekly goal</li>
+                </ul>
+            </div>
+            <div class="modal__foot">
+                <button class="btn btn--primary" data-close="modalBadges">Nice!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stat--clickable {
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+        .stat--clickable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat--clickable:active {
+            transform: translateY(0);
+        }
+</style>
+
+<!-- Theme + navbar + actions + PROFILE MODALS wiring -->
+<script>
+    (function initTheme() { try { const saved = localStorage.getItem('theme'); if (saved === 'dark') { document.documentElement.classList.add('theme-dark'); } } catch (_) { } })();
+    function toggleTheme() { const el = document.documentElement; const isDark = el.classList.toggle('theme-dark'); try { localStorage.setItem('theme', isDark ? 'dark' : 'light') } catch (_) { } }
+
+    (function wireNav() {
+        const nav = document.getElementById('mainNav'); if (!nav) return;
+        const links = [...nav.querySelectorAll('a')];
+        const curr = links.find(a => a.getAttribute('href') === location.pathname);
+        if (curr) { links.forEach(x => { x.classList.remove('db-nav__link--active'); x.removeAttribute('aria-current'); }); curr.classList.add('db-nav__link--active'); curr.setAttribute('aria-current', 'page'); }
+        nav.addEventListener('click', (e) => { const a = e.target.closest('a'); if (!a) return; const href = (a.getAttribute('href') || '').trim(); links.forEach(x => x.classList.remove('db-nav__link--active')); a.classList.add('db-nav__link--active'); if (href === '' || href === '#') { e.preventDefault(); } }, { passive: false });
+    })();
+
+    (function wireActions() {
+        const sw = document.getElementById('searchWrap'), sb = document.getElementById('btnSearch'), si = document.getElementById('searchInput');
+        const bn = document.getElementById('btnNotif'), pn = document.getElementById('popNotif');
+        const bp = document.getElementById('btnProfile'), pp = document.getElementById('popProfile');
+        function closeAll() { sw?.classList.remove('open'); pn?.classList.remove('show'); bn?.setAttribute('aria-expanded', 'false'); pp?.classList.remove('show'); bp?.setAttribute('aria-expanded', 'false'); }
+        sb?.addEventListener('click', (e) => { e.preventDefault(); const o = sw.classList.toggle('open'); if (o) { si?.focus(); } pn?.classList.remove('show'); pp?.classList.remove('show'); });
+        bn?.addEventListener('click', (e) => { e.preventDefault(); const s = pn.classList.toggle('show'); bn.setAttribute('aria-expanded', s ? 'true' : 'false'); pp?.classList.remove('show'); sw?.classList.remove('open'); });
+        bp?.addEventListener('click', (e) => { e.preventDefault(); const s = pp.classList.toggle('show'); bp.setAttribute('aria-expanded', s ? 'true' : 'false'); pn?.classList.remove('show'); sw?.classList.remove('open'); });
+        document.addEventListener('click', (e) => { const within = e.target.closest('#actionsBar') || e.target.closest('.db-topbar__left'); if (!(within)) closeAll(); });
+    })();
+
+    // === EXACT student profile wiring (modals + photo + settings + logout)
+    (function profileUX() {
+        const avatarImg = document.getElementById('avatarImg');
+        const popProfile = document.getElementById('popProfile');
+
+        // open modals from menu
+        document.querySelectorAll('#page-tutor #popProfile .clickable[data-target]').forEach(li => {
+            li.addEventListener('click', () => { const target = li.getAttribute('data-target'); if (target) { document.querySelector(target)?.classList.add('show'); } });
+        });
+
+        // logout
+        const logoutItem = popProfile.querySelector('[data-action="logout"]');
+        if (logoutItem) {
+            logoutItem.addEventListener('click', () => {
+                try {
+                    localStorage.removeItem('profile.photo');
+                    localStorage.removeItem('profile.first');
+                    localStorage.removeItem('profile.last');
+                    localStorage.removeItem('profile.degree');
+                    localStorage.removeItem('messages.openChat');
+                    localStorage.removeItem('mymodules.selected');
+                } catch (_) { }
+                window.location.href = '/login';
+            });
+        }
+
+        // modal close
+        document.querySelectorAll('#page-tutor .modal').forEach(m => { m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('show'); }); });
+        document.querySelectorAll('#page-tutor [data-close]').forEach(btn => {
+            btn.addEventListener('click', () => { document.getElementById(btn.getAttribute('data-close'))?.classList.remove('show'); });
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('#page-tutor .modal.show').forEach(m => m.classList.remove('show')); } });
+
+        // photo preview + save
+        const photoInput = document.getElementById('photoInput'); const photoPreview = document.getElementById('photoPreview'); const savePhotoBtn = document.getElementById('savePhotoBtn');
+        if (photoInput) { photoInput.addEventListener('change', () => { const f = photoInput.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { photoPreview.src = r.result; }; r.readAsDataURL(f); }); }
+        if (savePhotoBtn) { savePhotoBtn.addEventListener('click', () => { try { localStorage.setItem('profile.photo', photoPreview.src); avatarImg.src = photoPreview.src; } catch (_) { } document.getElementById('modalPhoto').classList.remove('show'); }); }
+
+        // settings save/load
+        const firstName = document.getElementById('firstName'); const lastName = document.getElementById('lastName'); const degree = document.getElementById('degree');
+        document.getElementById('saveSettingsBtn')?.addEventListener('click', () => { try { localStorage.setItem('profile.first', firstName.value.trim()); localStorage.setItem('profile.last', lastName.value.trim()); localStorage.setItem('profile.degree', degree.value); } catch (_) { } document.getElementById('modalSettings').classList.remove('show'); });
+
+        // load persisted
+        (function load() { try { const p = localStorage.getItem('profile.photo'); if (p) { avatarImg.src = p; const prev = document.getElementById('photoPreview'); if (prev) prev.src = p; } if (firstName) firstName.value = localStorage.getItem('profile.first') || ''; if (lastName) lastName.value = localStorage.getItem('profile.last') || ''; if (degree) degree.value = localStorage.getItem('profile.degree') || ''; } catch (_) { } })();
+    })();
+</script>
+
+@code {
+    private int pendingRequestsCount = 0;
+    private int currentTutorId = 1; // Will be set from auth context
+    private int todaysSessionsCount = 0;
+    private double averageRating = 0.0;
+    private int totalRatings = 0;
+    private double hoursThisWeek = 0.0;
+    private List<UpcomingSessionDto> upcomingSessions = new();
+    private bool isLoadingSessions = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get user profile to extract tutor ID
+            var profile = await Http.GetFromJsonAsync<UnifiedSessionDto>("/api/profile/me");
+            if (profile?.Profile?.TutorId != null)
+            {
+                currentTutorId = profile.Profile.TutorId.Value;
+            }
+
+            await LoadDashboardData();
+            await LoadUpcomingSessions();
+            await LoadTutorRating();
+
+            // Listen for calendar refresh events
+            await JS.InvokeVoidAsync("addCalendarRefreshListener", DotNetObjectReference.Create(this));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tutor profile: {ex.Message}");
+        }
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            // Load pending requests count
+            var requestsResponse = await Http.GetFromJsonAsync<List<BookingRequestDto>>($"/api/booking/pending-requests/{currentTutorId}");
+            if (requestsResponse != null)
+            {
+                pendingRequestsCount = requestsResponse.Count;
+            }
+
+            // Load today's sessions
+            var today = DateTime.Today;
+            var tomorrow = today.AddDays(1);
+            var sessionsResponse = await Http.GetFromJsonAsync<List<SessionDto>>($"/api/booking/sessions/{currentTutorId}?startDate={today:yyyy-MM-dd}&endDate={tomorrow:yyyy-MM-dd}");
+            if (sessionsResponse != null)
+            {
+                todaysSessionsCount = sessionsResponse.Count(s => s.Status == "Confirmed" || s.Status == "InProgress");
+            }
+
+            // Load this week's sessions for hours calculation
+            var weekStart = today.AddDays(-(int)today.DayOfWeek);
+            var weekEnd = weekStart.AddDays(7);
+            var weekSessionsResponse = await Http.GetFromJsonAsync<List<SessionDto>>($"/api/booking/sessions/{currentTutorId}?startDate={weekStart:yyyy-MM-dd}&endDate={weekEnd:yyyy-MM-dd}");
+            if (weekSessionsResponse != null)
+            {
+                var confirmedSessions = weekSessionsResponse.Where(s => s.Status == "Confirmed" || s.Status == "Completed");
+                hoursThisWeek = confirmedSessions.Sum(s => (s.ScheduledEnd - s.ScheduledStart).TotalHours);
+            }
+
+            // Rating will be loaded by LoadTutorRating method
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+    }
+
+    private async Task LoadUpcomingSessions()
+    {
+        try
+        {
+            Console.WriteLine($"DEBUG: Tutor Dashboard - Loading upcoming sessions for tutor {currentTutorId}");
+            isLoadingSessions = true;
+
+            // Get upcoming sessions from the API
+            var response = await Http.GetFromJsonAsync<List<UpcomingSessionDto>>(
+                $"/api/booking/upcoming-sessions/{currentTutorId}?limit=3"
+            );
+
+            if (response != null)
+            {
+                upcomingSessions = response;
+                Console.WriteLine($"DEBUG: Tutor Dashboard - Loaded {upcomingSessions.Count} upcoming sessions");
+            }
+            else
+            {
+                upcomingSessions = new List<UpcomingSessionDto>();
+                Console.WriteLine("DEBUG: Tutor Dashboard - No upcoming sessions received");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading upcoming sessions: {ex.Message}");
+            upcomingSessions = new List<UpcomingSessionDto>();
+        }
+        finally
+        {
+            isLoadingSessions = false;
+        }
+    }
+
+    private async Task LoadTutorRating()
+    {
+        try
+        {
+            Console.WriteLine($"DEBUG: Loading rating for tutor ID: {currentTutorId}");
+            var response = await Http.GetFromJsonAsync<TutorRatingSummaryDto>($"/api/rating/tutor/{currentTutorId}/summary");
+
+            if (response != null)
+            {
+                averageRating = response.AverageRating;
+                totalRatings = response.TotalRatings;
+                Console.WriteLine($"DEBUG: Loaded tutor rating: {averageRating} from {totalRatings} ratings");
+
+                // Also try to get individual ratings for debugging
+                var individualRatings = await Http.GetFromJsonAsync<List<TutorRatingDto>>($"/api/rating/tutor/{currentTutorId}");
+                if (individualRatings != null)
+                {
+                    Console.WriteLine($"DEBUG: Found {individualRatings.Count} individual ratings");
+                    foreach (var rating in individualRatings)
+                    {
+                        Console.WriteLine($"DEBUG: Rating - Tutor: {rating.TutorId}, Student: {rating.StudentId}, Module: {rating.ModuleId}, Score: {rating.Rating}");
+                    }
+                }
+            }
+            else
+            {
+                averageRating = 0.0;
+                totalRatings = 0;
+                Console.WriteLine("DEBUG: No rating data found for tutor");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Error loading tutor rating: {ex.Message}");
+            averageRating = 0.0;
+            totalRatings = 0;
+        }
+    }
+
+    [JSInvokable]
+    public async Task RefreshCalendarData()
+    {
+        await LoadUpcomingSessions();
+        StateHasChanged();
+    }
+
+    private void NavigateToBookingRequests()
+    {
+        Nav.NavigateTo("/tutor/booking-requests");
+    }
+
+    private void NavigateToCalendar()
+    {
+        Nav.NavigateTo("/tutor/queue");
+    }
+}
+
+<script>
+    // Add calendar refresh listener
+    window.addCalendarRefreshListener = function (component) {
+        console.log("DEBUG: Tutor Dashboard - Adding calendar refresh listener");
+        window.addEventListener('calendarRefresh', function () {
+            console.log("DEBUG: Tutor Dashboard - calendarRefresh event received");
+            component.invokeMethodAsync('RefreshCalendarData');
+        });
+    };
+</script>

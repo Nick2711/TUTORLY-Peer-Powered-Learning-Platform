@@ -1,0 +1,16 @@
+﻿@using Microsoft.AspNetCore.Components.Routing
+
+<Router AppAssembly="@typeof(App).Assembly" PreferExactMatches="true">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <div class="p-6">
+                <h1 class="text-xl font-semibold">Page not found</h1>
+                <p class="text-sm text-gray-600 mt-2">The page you’re looking for doesn’t exist.</p>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

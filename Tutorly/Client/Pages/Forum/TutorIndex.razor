@@ -1,0 +1,1096 @@
+@page "/tutorforum"
+
+<PageTitle>Forum | Tutorly</PageTitle>
+
+<div id="page-forum" class="pg-forum">
+    <!-- ================== NAVBAR (Forum active) ================== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="mainNav">
+                <a class="db-nav__link" href="/tutor/dashboard" data-tab="home">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+                    <span>Home</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/availability" data-tab="availability">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" /></svg>
+                    <span>Availability</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/queue">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/resources">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 4v16" /></svg>
+                    <span>Resources</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/analytics">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg>
+                    <span>Analytics</span>
+                </a>
+                <!-- Tutor forum is active -->
+                <a class="db-nav__link db-nav__link--active" href="/tutorforum" data-tab="forum" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/tutorsessiondetails">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span>
+                </a>
+            </nav>
+
+            <div class="db-actions" id="actionsBar">
+                <div class="search-wrap" id="searchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="searchInput" type="text" placeholder="Search…">
+                </div>
+                <div style="position:relative">
+                    <button class="db-iconbtn" aria-haspopup="true" aria-expanded="false" id="btnNotif">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                    </button>
+                    <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                        <div class="pop__head">Notifications</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">🎓</div><div><div class="pop__title">New badge unlocked</div><div class="pop__text">You earned “Active Learner”.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">💬</div><div><div class="pop__title">Reply from Anouk</div><div class="pop__text">She commented on your thread.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">📅</div><div><div class="pop__title">Session reminder</div><div class="pop__text">Study group tomorrow 2:00 PM.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=3" alt="Profile" />
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#modalPhoto"><div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div></li>
+                            <li class="pop__item clickable" data-target="#modalSettings"><div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div></li>
+                            <li class="pop__item clickable" data-target="#modalBadges"><div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div></li>
+                            <!-- NEW: Logout -->
+                            <li class="pop__item clickable" id="logoutItem">
+                                <div class="pop__row">
+                                    <div class="pop__icon">🚪</div>
+                                    <div><div class="pop__title">Log out</div><div class="pop__text">Sign out of Tutorly.</div></div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================== PAGE ================== -->
+    <div class="forum-wrap">
+
+        <div class="forum-head">
+            <h2 class="forum-title">Forum</h2>
+            <div class="forum-actions">
+                <a class="btn-ghost" href="/tutorforum/thread">Browse Communities</a>
+                <button id="btnNewPost" type="button" class="btn-blue">+ New Post</button>
+            </div>
+        </div>
+
+        <!-- metrics -->
+        <div class="metrics">
+            @if (Metrics != null)
+            {
+                <div class="met"><div class="lab">Active Students</div><div class="num">@Metrics.ActiveStudents.ToString("N0")</div><div class="delta">Last 24h</div></div>
+                <div class="met"><div class="lab">Posts This Week</div><div class="num">@Metrics.PostsThisWeek.ToString("N0")</div><div class="delta">Last 7 days</div></div>
+                <div class="met"><div class="lab">Communities</div><div class="num">@Metrics.TotalCommunities.ToString("N0")</div><div class="delta">Active</div></div>
+                <div class="met"><div class="lab">Solved Questions</div><div class="num">@Metrics.SolvedQuestions.ToString("N0")</div><div class="delta">Verified</div></div>
+            }
+            else
+            {
+                <div class="met"><div class="lab">Active Students</div><div class="num">---</div><div class="delta">Loading...</div></div>
+                <div class="met"><div class="lab">Posts This Week</div><div class="num">---</div><div class="delta">Loading...</div></div>
+                <div class="met"><div class="lab">Communities</div><div class="num">---</div><div class="delta">Loading...</div></div>
+                <div class="met"><div class="lab">Solved Questions</div><div class="num">---</div><div class="delta">Loading...</div></div>
+            }
+        </div>
+
+        <div class="forum-grid">
+            <!-- left: posts -->
+            <section class="panel">
+                <div class="panel__head">
+                    <strong>Recent Posts</strong>
+                    <div class="tabs">
+                        <button class="tab is-on" data-tab="hot">Hot</button>
+                        <button class="tab" data-tab="new">New</button>
+                        <button class="tab" data-tab="top">Top</button>
+                    </div>
+                </div>
+                <ul class="posts" id="postList">
+                    @foreach (var p in Posts)
+                    {
+                        <li class="post" data-type="@p.Type">
+                            <div class="vote">
+                                <button class="up" title="Upvote" @onclick="() => VoteOnPost(p.PostId, 1)">▲</button>
+                                <div class="count">@p.Votes</div>
+                                <button class="down" title="Downvote" @onclick="() => VoteOnPost(p.PostId, -1)">▼</button>
+                            </div>
+                            <div>
+                                <div class="tag @p.Type">@p.Type</div>
+                                <h3 class="post-title">@p.Title</h3>
+                                <p class="post-sum">@p.Summary</p>
+                                <div class="post-meta">
+                                    <span>👤 @p.Author</span>
+                                    <span>• @p.Time</span>
+                                    <span>• <strong>@p.Community</strong></span>
+                                </div>
+                            </div>
+                            <div class="post-actions">
+                                <span>💬 @p.Comments</span>
+                                <span>🔖 @p.Saves</span>
+                                <!-- NEW: Report button -->
+                                <button type="button" class="btn-report" data-post-id="@p.PostId">🚩 Report</button>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </section>
+
+            <!-- right: sidebar -->
+            <aside>
+                <section class="panel side">
+                    <div class="side-head">Trending This Week</div>
+                    @if (TrendingPosts.Any())
+                    {
+                        <ul class="trend">
+                            @for (int i = 0; i < TrendingPosts.Count; i++)
+                            {
+                                var post = TrendingPosts[i];
+                                var rank = i + 1;
+                                <li>
+                                    <div class="trow">
+                                        <span class="rank">#@rank</span>
+                                        <div>
+                                            <div class="tbadge">@post.Type • @post.Community</div>
+                                            <div style="font-weight:800">@(post.Title.Length > 40 ? post.Title.Substring(0, 40) + "..." : post.Title)</div>
+                                        </div>
+                                        <div class="muted">
+                                            <button class="tr-up" type="button" aria-pressed="false" title="Upvote" @onclick="() => VoteOnPost(post.PostId, 1)">
+                                                <span class="tr-count">@post.Votes</span> <span class="caret">▲</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else if (isLoading)
+                    {
+                        <div style="padding: 1rem; text-align: center; color: var(--muted);">
+                            Loading trending posts...
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="padding: 1rem; text-align: center; color: var(--muted);">
+                            No trending posts this week
+                        </div>
+                    }
+                </section>
+
+                <section class="panel side" style="margin-top:16px">
+                    <div class="side-head">Quick Actions</div>
+                    <div class="side-actions qa-block">
+                        <!-- page-unique class: qa-forum -->
+                        <a class="qa-forum" href="#" data-type="question" id="qaQuestion">Ask a Question</a>
+                        <a class="qa-forum" href="#" id="qaCreateCommunity">Create Community</a>
+                        <a class="qa-forum" href="#" data-type="resource" id="qaResource">Share Resource</a>
+                    </div>
+                </section>
+
+                <section class="panel side" style="margin-top:16px">
+                    <div class="side-head">Community Guidelines</div>
+                    <div class="guides">
+                        <ul>
+                            <li>Be respectful and constructive</li>
+                            <li>Search before posting duplicates</li>
+                            <li>Use descriptive titles</li>
+                            <li>Anonymous posting is encouraged</li>
+                            <li>Help others learn and grow</li>
+                        </ul>
+                    </div>
+                </section>
+            </aside>
+        </div>
+
+        <!-- Popular communities -->
+        <h3 class="section-h">Popular Communities</h3>
+        <div class="comms">
+            @foreach (var c in Communities)
+            {
+                <article class="comm">
+                    <div class="comm-h">
+                        <div style="font-weight:900">@c.Name</div>
+                        <span class="pill">@c.Type</span>
+                    </div>
+                    <div class="comm-b">@c.Description</div>
+                    <div class="comm-f">
+                        <div class="muted">👥 @c.Members • 💬 @c.Posts</div>
+                        <button class="join @(c.Joined ? "" : "ghost")"
+                                data-community="@c.Name"
+                                data-joined="@c.Joined.ToString().ToLower()"
+                                aria-pressed="@c.Joined.ToString().ToLower()"
+                                @onclick="() => c.Joined ? LeaveCommunity(c.CommunityId) : JoinCommunity(c.CommunityId)">
+                            @((c.Joined) ? "Joined" : "Join")
+                        </button>
+                    </div>
+                </article>
+            }
+        </div>
+    </div>
+
+    <!-- ===== New Post Modal ===== -->
+    <div class="modal" id="modalNewPost" aria-hidden="true">
+        <div class="modal__card np-card" role="dialog" aria-modal="true" aria-labelledby="npTitle">
+            <div class="modal__head">
+                <span id="npTitle">Create a new post</span>
+                <button class="btn btn--ghost" data-close="modalNewPost">✕</button>
+            </div>
+            <div class="modal__body">
+                <div class="field">
+                    <label>Community</label>
+                    <select id="npCommunity">
+                        <option value="">Choose a community</option>
+                        @foreach (var c in Communities)
+                        {
+                            <option>@c.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="field" style="margin-bottom:6px">
+                    <label>Post Type</label>
+                    <div class="seg" id="npTypeSeg">
+                        <button type="button" class="chip question on" data-type="question">Question</button>
+                        <button type="button" class="chip discussion" data-type="discussion">Discussion</button>
+                        <button type="button" class="chip resource" data-type="resource">Resource</button>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Title</label>
+                    <input id="npTitleInput" placeholder="What's your question or topic?" />
+                </div>
+
+                <div class="field">
+                    <label>Content</label>
+                    <textarea id="npContentInput" placeholder="Provide details, context, or additional information..."></textarea>
+                </div>
+
+                <!-- NEW: Attachments -->
+                <div class="field">
+                    <label>Attachments (optional)</label>
+                    <InputFile id="npFiles" OnChange="OnNewPostFilesSelected" multiple
+                               accept=".pdf,image/*,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip" />
+                    <div class="muted" style="font-size:.9rem">You can add screenshots, PDFs, or documents. Up to ~25MB per file.</div>
+                </div>
+
+                <div class="np-identity" id="npIdentity">
+                    <div class="np-id-left">
+                        <div class="np-id-icon">👤</div>
+                        <div>
+                            <div class="np-id-heading" id="npIdHeading">Posting with your profile</div>
+                            <div class="muted" id="npIdSub">Your name will be visible to other students</div>
+                        </div>
+                    </div>
+                    <button id="npToggleIdBtn" type="button" class="btn">Hide Identity</button>
+                </div>
+            </div>
+            <div class="modal__foot np-foot">
+                <div><span id="npTypePill" class="tag question">question</span></div>
+                <div>
+                    <button class="btn btn--ghost" data-close="modalNewPost">Cancel</button>
+                    <button id="npPostBtn" class="btn btn-post" disabled>Post</button>
+                    <!-- Hidden inputs for passing data to C# -->
+                    <input type="hidden" id="npCommunityValue" />
+                    <input type="hidden" id="npTitleValue" />
+                    <input type="hidden" id="npContentValue" />
+                    <input type="hidden" id="npTypeValue" />
+                    <input type="hidden" id="npAnonymousValue" />
+                    <!-- Hidden submit button for C# -->
+                    <button type="button" id="npSubmitBtn" style="display:none" @onclick="HandleNewPostSubmit"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Report Post Modal ===== -->
+    <div class="modal" id="modalReport" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="rpTitle">
+            <div class="modal__head">
+                <span id="rpTitle">Report Post</span>
+                <button class="btn btn--ghost" data-close="modalReport">✕</button>
+            </div>
+            <div class="modal__body">
+                <div class="field">
+                    <label for="rpReason">Reason</label>
+                    <select id="rpReason">
+                        <option value="Spam">Spam</option>
+                        <option value="Harassment">Harassment</option>
+                        <option value="Inappropriate">Inappropriate Content</option>
+                        <option value="Off-topic">Off-topic</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="field">
+                    <label for="rpDetails">Details (optional)</label>
+                    <textarea id="rpDetails" maxlength="500" placeholder="Add any context that helps our moderators…"></textarea>
+                    <div class="muted" id="rpCount">0/500</div>
+                </div>
+
+                <input type="hidden" id="rpPostId" />
+            </div>
+
+            <div class="modal__foot">
+                <button class="btn btn--ghost" data-close="modalReport">Cancel</button>
+                <button id="rpSendBtn" class="btn btn--primary">Send Report</button>
+                <!-- Hidden submit for Blazor -->
+                <button type="button" id="rpSubmitBtn" style="display:none" @onclick="HandleReportSubmit"></button>
+                <input type="hidden" id="rpReasonValue" />
+                <input type="hidden" id="rpDetailsValue" />
+                <input type="hidden" id="rpPostIdValue" />
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Create Community Modal ===== -->
+    <div class="modal" id="modalCreateCommunity" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="ccTitle">
+            <div class="modal__head">
+                <span id="ccTitle">Create a New Community</span>
+                <button class="btn btn--ghost" data-close="modalCreateCommunity">✕</button>
+            </div>
+            <div class="modal__body">
+                <div class="field">
+                    <label for="ccName">Community Name <span style="color:red">*</span></label>
+                    <input type="text" id="ccName" placeholder="e.g., Database Systems 101" maxlength="100" />
+                </div>
+                <div class="field">
+                    <label for="ccDescription">Description</label>
+                    <textarea id="ccDescription" placeholder="What is this community about?" rows="3" maxlength="500"></textarea>
+                </div>
+                <div class="field">
+                    <label for="ccType">Community Type <span style="color:red">*</span></label>
+                    <select id="ccType">
+                        <option value="course">Course</option>
+                        <option value="study_group">Study Group</option>
+                        <option value="general">General Discussion</option>
+                    </select>
+                </div>
+                <div class="muted" style="margin-top:8px; font-size:0.9rem">
+                    * Required fields
+                </div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn btn--ghost" data-close="modalCreateCommunity">Cancel</button>
+                <button id="ccCreateBtn" class="btn btn--primary" disabled>Create Community</button>
+                <!-- Hidden inputs for passing data to C# -->
+                <input type="hidden" id="ccNameValue" />
+                <input type="hidden" id="ccDescriptionValue" />
+                <input type="hidden" id="ccTypeValue" />
+                <!-- Hidden submit button for C# -->
+                <button type="button" id="ccSubmitBtn" style="display:none" @onclick="HandleCreateCommunity"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden button for sort changes -->
+    <button type="button" id="sortChangeBtn" data-sort="hot" style="display:none" @onclick="HandleSortChange"></button>
+
+    <!-- ===== Simple profile modals (navbar reuse) ===== -->
+    <div class="modal" id="modalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+            <div class="modal__head"><span id="modalPhotoTitle">Change Photo</span><button class="btn btn--ghost" data-close="modalPhoto">✕</button></div>
+            <div class="modal__body">
+                <div class="photo-row"><img id="photoPreview" src="https://i.pravatar.cc/80?img=3" alt="Preview"><div><input type="file" id="photoInput" accept="image/*"><div class="muted" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div></div></div>
+            </div>
+            <div class="modal__foot"><button class="btn" data-close="modalPhoto">Cancel</button><button class="btn btn--primary" id="savePhotoBtn">Save</button></div>
+        </div>
+    </div>
+    <div class="modal" id="modalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle">
+            <div class="modal__head"><span id="modalSettingsTitle">Profile Settings</span><button class="btn btn--ghost" data-close="modalSettings">✕</button></div>
+            <div class="modal__body">
+                <div class="field"><label>First name</label><input id="firstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label>Last name</label><input id="lastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label>Degree</label>
+                    <select id="degree"><option value="">Select…</option><option>BComp</option><option>BIT</option><option>DIT</option><option>Other</option></select>
+                </div>
+                <div class="muted">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot"><button class="btn" data-close="modalSettings">Cancel</button><button class="btn btn--primary" id="saveSettingsBtn">Save</button></div>
+        </div>
+    </div>
+    <div class="modal" id="modalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalBadgesTitle">
+            <div class="modal__head"><span id="modalBadgesTitle">Your Achievements</span><button class="btn btn--ghost" data-close="modalBadges">✕</button></div>
+            <div class="modal__body"><ul style="margin:0;padding-left:18px"><li><strong>Active Learner</strong> — asked 10+ questions this week</li><li><strong>Helper</strong> — answered 3 peer questions</li><li><strong>On Track</strong> — met your weekly goal</li></ul></div>
+            <div class="modal__foot"><button class="btn btn--primary" data-close="modalBadges">Nice!</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* Theme persistence */
+    (function initTheme(){try{const s=localStorage.getItem('theme');if(s==='dark'){document.documentElement.classList.add('theme-dark');}}catch(_){}})();
+    function toggleTheme(){const el=document.documentElement;const d=el.classList.toggle('theme-dark');try{localStorage.setItem('theme', d?'dark':'light');}catch(_){}}
+
+    /* Navbar interactions */
+    (function wireNav(){
+        const nav=document.getElementById('mainNav'); if(!nav) return;
+        nav.addEventListener('click',(e)=>{
+            const a=e.target.closest('a'); if(!a) return;
+            const href=(a.getAttribute('href')||'').trim();
+            [...nav.querySelectorAll('a')].forEach(x=>x.classList.remove('db-nav__link--active'));
+            a.classList.add('db-nav__link--active');
+            if(href===''||href==='#'){ e.preventDefault(); }
+        },{passive:false});
+    })();
+
+    /* Search + Notifs + Profile popovers */
+    (function wireActions(){
+        const sw=document.getElementById('searchWrap'), sb=document.getElementById('btnSearch'), si=document.getElementById('searchInput');
+        const bn=document.getElementById('btnNotif'), pn=document.getElementById('popNotif');
+        const bp=document.getElementById('btnProfile'), pp=document.getElementById('popProfile');
+        function closeAll(){ sw?.classList.remove('open'); pn?.classList.remove('show'); bn?.setAttribute('aria-expanded','false'); pp?.classList.remove('show'); bp?.setAttribute('aria-expanded','false'); }
+        sb?.addEventListener('click',(e)=>{ e.preventDefault(); const o=sw.classList.toggle('open'); if(o){ si?.focus(); } pn?.classList.remove('show'); pp?.classList.remove('show'); });
+        bn?.addEventListener('click',(e)=>{ e.preventDefault(); const s=pn.classList.toggle('show'); bn.setAttribute('aria-expanded', s?'true':'false'); pp?.classList.remove('show'); sw?.classList.remove('open'); });
+        bp?.addEventListener('click',(e)=>{ e.preventDefault(); const s=pp.classList.toggle('show'); bp.setAttribute('aria-expanded', s?'true':'false'); pn?.classList.remove('show'); sw?.classList.remove('open'); });
+        document.addEventListener('click',(e)=>{ const within=e.target.closest('#actionsBar')||e.target.closest('.db-topbar__left'); if(!(within)) closeAll(); });
+
+        // NEW: logout action
+        document.getElementById('logoutItem')?.addEventListener('click',()=>{
+            try{
+                localStorage.removeItem('profile.photo');
+                localStorage.removeItem('profile.first');
+                localStorage.removeItem('profile.last');
+                localStorage.removeItem('profile.degree');
+                localStorage.removeItem('messages.openChat');
+                localStorage.removeItem('mymodules.selected');
+            }catch(_){}
+            window.location.href='/login';
+        });
+    })();
+
+    /* Simple vote toggle demo */
+    (function forumUX(){
+        document.querySelectorAll('#page-forum .post').forEach(p=>{
+            const up=p.querySelector('.up'), down=p.querySelector('.down'), count=p.querySelector('.count');
+            let n=parseInt(count.textContent,10)||0;
+            up?.addEventListener('click',()=>{ if(up.classList.contains('on')){ up.classList.remove('on'); n--; } else { up.classList.add('on'); down.classList.remove('on'); n++; } count.textContent=n; });
+            down?.addEventListener('click',()=>{ if(down.classList.contains('on')){ down.classList.remove('on'); n++; } else { down.classList.add('on'); up.classList.remove('on'); n=Math.max(0,n-1); } count.textContent=n; });
+        });
+    })();
+
+        /* NEW: Report button wiring (delegated; safe across Blazor re-renders) */
+    (function reportWiring(){
+      const modal = document.getElementById('modalReport');
+      const reasonEl = document.getElementById('rpReason');
+      const detailsEl = document.getElementById('rpDetails');
+      const postIdEl = document.getElementById('rpPostId');
+      const countEl = document.getElementById('rpCount');
+      const sendBtn = document.getElementById('rpSendBtn');
+
+      function openModal(postId){
+        if(!modal) return;
+        postIdEl.value = String(postId || '');
+        reasonEl.value = 'Spam';
+        detailsEl.value = '';
+        if (countEl) countEl.textContent = '0/500';
+        modal.classList.add('show');
+        // focus first control
+        setTimeout(()=> reasonEl.focus(), 0);
+        // aria
+        modal.setAttribute('aria-hidden','false');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeModal(){
+        if(!modal) return;
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden','true');
+        document.body.style.overflow = '';
+      }
+
+      // 1) Delegate clicks for any .btn-report (even when list re-renders)
+      document.getElementById('page-forum')?.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.btn-report');
+        if (!btn) return;
+        e.preventDefault();
+        const id = btn.getAttribute('data-post-id') || '';
+        openModal(id);
+      });
+
+      // 2) Submit
+      sendBtn?.addEventListener('click', ()=>{
+        const r = reasonEl.value || 'Spam';
+        const d = detailsEl.value || '';
+        const id = postIdEl.value || '';
+        // move values into the hidden inputs Blazor reads
+        document.getElementById('rpReasonValue').value = r;
+        document.getElementById('rpDetailsValue').value = d;
+        document.getElementById('rpPostIdValue').value = id;
+        document.getElementById('rpSubmitBtn').click();
+      });
+
+      // 3) Char counter
+      detailsEl?.addEventListener('input', ()=>{
+        if (!countEl) return;
+        const n = detailsEl.value.length;
+        countEl.textContent = `${n}/500`;
+      });
+
+      // 4) Close on overlay click or [x] (data-close already on the button)
+      modal?.addEventListener('click', (e)=>{
+        if (e.target === modal) closeModal();
+      });
+      document.querySelectorAll('#modalReport [data-close="modalReport"]').forEach(b=>{
+        b.addEventListener('click', closeModal);
+      });
+
+      // 5) ESC to close
+      document.addEventListener('keydown', (e)=>{
+        if (e.key === 'Escape' && modal?.classList.contains('show')) closeModal();
+      });
+    })();
+
+    /* Trending arrows: clickable */
+    (function trendingVotes(){
+        document.querySelectorAll('#page-forum .tr-up').forEach(btn=>{
+            btn.addEventListener('click',(e)=>{
+                e.preventDefault();
+                const span=btn.querySelector('.tr-count');
+                let n=parseInt(span.textContent,10)||0;
+                const on=btn.classList.toggle('on');
+                btn.setAttribute('aria-pressed', on?'true':'false');
+                span.textContent=on? n+1 : Math.max(0,n-1);
+            });
+        });
+    })();
+
+    /* Profile modals + photo/save (ignore items without data-target) */
+    (function profileModals(){
+        const open=(sel)=>{ if(!sel) return; document.querySelector(sel)?.classList.add('show'); };
+        const close=(id)=>document.getElementById(id)?.classList.remove('show');
+
+        document.querySelectorAll('#page-forum #popProfile .clickable').forEach(li=>{
+            li.addEventListener('click',()=>{
+                const t=li.getAttribute('data-target'); if(t) open(t);
+            });
+        });
+
+        document.querySelectorAll('#page-forum .modal').forEach(m=>m.addEventListener('click',(e)=>{ if(e.target===m) m.classList.remove('show'); }));
+        document.querySelectorAll('#page-forum [data-close]').forEach(btn=>btn.addEventListener('click',()=>close(btn.getAttribute('data-close'))));
+
+        const photoInput=document.getElementById('photoInput'), photoPreview=document.getElementById('photoPreview'), save=document.getElementById('savePhotoBtn'), avatar=document.getElementById('avatarImg');
+        photoInput?.addEventListener('change',()=>{ const f=photoInput.files?.[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ photoPreview.src=r.result; }; r.readAsDataURL(f); });
+        save?.addEventListener('click',()=>{ try{ localStorage.setItem('profile.photo', photoPreview.src); avatar.src=photoPreview.src; }catch(_){ } close('modalPhoto'); });
+        (function load(){ try{ const p=localStorage.getItem('profile.photo'); if(p){ avatar.src=p; photoPreview.src=p; } }catch(_){ }})();
+    })();
+
+    /* ===== New Post modal wiring (includes Quick Actions integration) ===== */
+    (function newPost(){
+        const openBtn=document.getElementById('btnNewPost');
+        const modal=document.getElementById('modalNewPost');
+        const comm=document.getElementById('npCommunity');
+        const title=document.getElementById('npTitleInput');
+        const content=document.getElementById('npContentInput');
+        const postBtn=document.getElementById('npPostBtn');
+        const typeSeg=document.getElementById('npTypeSeg');
+        const typePill=document.getElementById('npTypePill');
+        const idHeading=document.getElementById('npIdHeading');
+        const idSub=document.getElementById('npIdSub');
+        const idBtn=document.getElementById('npToggleIdBtn');
+
+        let postType='question';
+        let anonymous=false;
+
+        function setType(t){
+            postType=(t==='discussion'||t==='resource')?t:'question';
+            typeSeg.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+            const btn=typeSeg.querySelector(`[data-type="${postType}"]`);
+            btn?.classList.add('on');
+            typePill.textContent=postType;
+            typePill.className='tag '+postType;
+        }
+
+        function reset(){
+            comm.value=''; title.value=''; content.value='';
+            anonymous=false;
+            idHeading.textContent='Posting with your profile';
+            idSub.textContent='Your name will be visible to other students';
+            idBtn.textContent='Hide Identity';
+            setType('question'); validate();
+        }
+
+        function validate(){ const ok=(comm.value.trim()!=='' && title.value.trim()!=='' && content.value.trim()!==''); postBtn.disabled=!ok; }
+        function openWithType(t){ reset(); setType(t); modal.classList.add('show'); }
+
+        openBtn?.addEventListener('click',()=>openWithType('question'));
+        document.querySelectorAll('#page-forum .side-actions .qa-forum').forEach(a=>{
+            a.addEventListener('click',(e)=>{ e.preventDefault(); const t=a.getAttribute('data-type')||'question'; openWithType(t); });
+        });
+
+        typeSeg?.addEventListener('click',(e)=>{ const b=e.target.closest('.chip'); if(!b) return; setType(b.getAttribute('data-type')); });
+
+        idBtn?.addEventListener('click',()=>{ anonymous=!anonymous;
+            if(anonymous){ idHeading.textContent='Posting anonymously'; idSub.textContent='Your identity will be hidden from other students'; idBtn.textContent='Show Identity'; }
+            else { idHeading.textContent='Posting with your profile'; idSub.textContent='Your name will be visible to other students'; idBtn.textContent='Hide Identity'; }
+        });
+
+        ['input','change'].forEach(ev=>{ comm?.addEventListener(ev,validate); title?.addEventListener(ev,validate); content?.addEventListener(ev,validate); });
+
+        postBtn?.addEventListener('click',()=>{
+            if(postBtn.disabled) return;
+            document.getElementById('npCommunityValue').value=comm.value.trim();
+            document.getElementById('npTitleValue').value=title.value.trim();
+            document.getElementById('npContentValue').value=content.value.trim();
+            document.getElementById('npTypeValue').value=postType;
+            document.getElementById('npAnonymousValue').value=anonymous?'true':'false';
+            document.getElementById('npSubmitBtn').click();
+        });
+    })();
+
+    /* ===== Create Community modal wiring ===== */
+    (function createCommunity(){
+        const openBtn=document.getElementById('qaCreateCommunity');
+        const modal=document.getElementById('modalCreateCommunity');
+        const nameInput=document.getElementById('ccName');
+        const descInput=document.getElementById('ccDescription');
+        const typeSelect=document.getElementById('ccType');
+        const createBtn=document.getElementById('ccCreateBtn');
+
+        function validate(){ const ok=nameInput?.value.trim()!==''; if(createBtn) createBtn.disabled=!ok; }
+        function reset(){ if(nameInput) nameInput.value=''; if(descInput) descInput.value=''; if(typeSelect) typeSelect.value='course'; validate(); }
+
+        openBtn?.addEventListener('click',(e)=>{ e.preventDefault(); reset(); modal?.classList.add('show'); });
+        ['input','change'].forEach(ev=>{ nameInput?.addEventListener(ev,validate); });
+
+        createBtn?.addEventListener('click',()=>{
+            if(createBtn.disabled) return;
+            document.getElementById('ccNameValue').value=nameInput.value.trim();
+            document.getElementById('ccDescriptionValue').value=descInput.value.trim();
+            document.getElementById('ccTypeValue').value=typeSelect.value;
+            document.getElementById('ccSubmitBtn').click();
+        });
+
+        modal?.addEventListener('click',(e)=>{ if(e.target===modal || e.target.closest('[data-close]')) modal.classList.remove('show'); });
+    })();
+
+    /* ===== Join ↔ Joined toggles (localStorage persistence) ===== */
+    (function joinToggles(){
+        const keyPrefix='forum.join.';
+        const apply=(btn,joined)=>{ btn.setAttribute('data-joined', joined?'true':'false'); btn.setAttribute('aria-pressed', joined?'true':'false'); if(joined){ btn.classList.remove('ghost'); btn.textContent='Joined'; } else { btn.classList.add('ghost'); btn.textContent='Join'; } };
+        document.querySelectorAll('#page-forum .comm .join').forEach(btn=>{
+            const name=btn.getAttribute('data-community')||'';
+            try{ const saved=localStorage.getItem(keyPrefix+name); if(saved!==null) apply(btn, saved==='true'); else apply(btn, btn.getAttribute('data-joined')==='true'); }catch(_){}
+            btn.addEventListener('click',()=>{ const joined=!(btn.getAttribute('data-joined')==='true'); apply(btn,joined); try{ localStorage.setItem(keyPrefix+name, String(joined)); }catch(_){ } });
+        });
+    })();
+
+    /* ===== Hot/Top/New filter tabs ===== */
+    (function filterTabs(){
+        const tabs=document.querySelectorAll('.panel__head .tabs .tab');
+        tabs.forEach(tab=>{
+            tab.addEventListener('click',()=>{
+                tabs.forEach(t=>t.classList.remove('is-on'));
+                tab.classList.add('is-on');
+                const sortBy=tab.getAttribute('data-tab');
+                document.getElementById('sortChangeBtn').setAttribute('data-sort', sortBy);
+                document.getElementById('sortChangeBtn').click();
+            });
+        });
+    })();
+
+    window.setBlazorIndexVoteHandler = (ref) => { window.blazorIndexVoteHandler = ref; };
+</script>
+
+@using Tutorly.Shared
+@using Tutorly.Client.Services
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Net.Http.Headers
+@inject JwtHttpClient Http
+@inject IJSRuntime JSRuntime
+
+@code {
+    record Post(int PostId, string Type, string Title, string Summary, string Author, string Time, string Community, int Votes, int Comments, int Saves);
+    record Community(int CommunityId, string Name, string Type, string Description, int Members, int Posts, bool Joined);
+
+    List<Post> Posts = new();
+    List<Community> Communities = new();
+    List<Post> TrendingPosts = new();
+    ForumMetricsDto? Metrics = null;
+
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string currentSort = "hot";
+
+    // NEW: hold attachments chosen in New Post
+    private List<IBrowserFile> _newPostFiles = new();
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private DotNetObjectReference<object>? _dotNetRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create((object)this);
+
+            await JSRuntime.InvokeVoidAsync("eval", "window.blazorIndexVoteHandler = null;");
+            await JSRuntime.InvokeVoidAsync("setBlazorIndexVoteHandler", _dotNetRef);
+
+            await JSRuntime.InvokeVoidAsync("eval", @"
+                if (!window.indexVoteListenerSetup) {
+                    window.indexVoteListenerSetup = true;
+                    window.addEventListener('postVoteUpdate', async (event) => {
+                        if (window.blazorIndexVoteHandler) {
+                            try {
+                                await window.blazorIndexVoteHandler.invokeMethodAsync('UpdatePostVote', event.detail.postId, event.detail.voteCount);
+                            } catch (err) {
+                                console.error('Error calling UpdatePostVote:', err);
+                            }
+                        }
+                    });
+                }
+            ");
+        }
+    }
+
+    public void Dispose() => _dotNetRef?.Dispose();
+
+
+    [JSInvokable]
+    public void UpdatePostVote(int postId, int voteCount)
+    {
+        var postIndex = Posts.FindIndex(p => p.PostId == postId);
+        if (postIndex >= 0) { var post = Posts[postIndex]; Posts[postIndex] = post with { Votes = voteCount }; }
+
+        var trendingIndex = TrendingPosts.FindIndex(p => p.PostId == postId);
+        if (trendingIndex >= 0) { var tpost = TrendingPosts[trendingIndex]; TrendingPosts[trendingIndex] = tpost with { Votes = voteCount }; }
+
+        StateHasChanged();
+    }
+
+    private async Task LoadData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            var postsResponse = await Http.GetFromJsonAsync<ApiResponse<List<PostDto>>>($"api/forum/posts/recent?PageSize=6&SortBy={currentSort}");
+            if (postsResponse?.Success == true && postsResponse.Data != null)
+                Posts = postsResponse.Data.Select(p => new Post(p.ForumPostsId, p.PostType, p.Title, p.Summary, p.AuthorName, p.TimeAgo, "Community", p.Votes, p.Comments, p.Saves)).ToList();
+
+            var communitiesResponse = await Http.GetFromJsonAsync<ApiResponse<List<CommunityDto>>>("api/forum/communities?PageSize=10");
+            if (communitiesResponse?.Success == true && communitiesResponse.Data != null)
+                Communities = communitiesResponse.Data.Select(c => new Community(c.CommunityId, c.CommunityName, c.CommunityType ?? "Course", c.CommunityDescription ?? "", c.Members, c.Posts, c.Joined)).ToList();
+
+            var trendingResponse = await Http.GetFromJsonAsync<ApiResponse<List<PostDto>>>("api/forum/posts/trending");
+            if (trendingResponse?.Success == true && trendingResponse.Data != null)
+                TrendingPosts = trendingResponse.Data.Select(p => new Post(p.ForumPostsId, p.PostType, p.Title, p.Summary, p.AuthorName, p.TimeAgo, "Community", p.Votes, p.Comments, p.Saves)).ToList();
+
+            var metricsResponse = await Http.GetFromJsonAsync<ApiResponse<ForumMetricsDto>>("api/forum/metrics");
+            if (metricsResponse?.Success == true && metricsResponse.Data != null)
+                Metrics = metricsResponse.Data;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load data. Please try again.";
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+        finally { isLoading = false; }
+    }
+
+    private async Task HandleSortChange()
+    {
+        try
+        {
+            var sortBy = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('sortChangeBtn').getAttribute('data-sort')");
+            currentSort = sortBy;
+            await LoadData();
+        }
+        catch (Exception ex) { Console.WriteLine($"Error in HandleSortChange: {ex.Message}"); }
+    }
+
+    private async Task JoinCommunity(int communityId)
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"api/forum/communities/{communityId}/join", new { });
+            if (response.IsSuccessStatusCode) { await JSRuntime.InvokeVoidAsync("alert", "Successfully joined community!"); await LoadData(); }
+            else { await JSRuntime.InvokeVoidAsync("alert", "Failed to join community"); }
+        }
+        catch (Exception ex) { await JSRuntime.InvokeVoidAsync("alert", $"Error joining community: {ex.Message}"); }
+    }
+
+    private async Task LeaveCommunity(int communityId)
+    {
+        try
+        {
+            var response = await Http.PostAsJsonAsync($"api/forum/communities/{communityId}/leave", new { });
+            if (response.IsSuccessStatusCode) { await JSRuntime.InvokeVoidAsync("alert", "Successfully left community!"); await LoadData(); }
+            else { await JSRuntime.InvokeVoidAsync("alert", "Failed to leave community"); }
+        }
+        catch (Exception ex) { await JSRuntime.InvokeVoidAsync("alert", $"Error leaving community: {ex.Message}"); }
+    }
+
+    private async Task HandleCreateCommunity()
+    {
+        try
+        {
+            var name = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('ccNameValue').value");
+            var description = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('ccDescriptionValue').value");
+            var type = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('ccTypeValue').value");
+
+            var createCommunityDto = new CreateCommunityDto { CommunityName = name, CommunityDescription = description, CommunityType = type };
+            var response = await Http.PostAsJsonAsync("api/forum/communities", createCommunityDto);
+            if (response.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Community created successfully!");
+                await LoadData();
+                await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('modalCreateCommunity').classList.remove('show')");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Failed to create community: {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error creating community: {ex.Message}");
+            Console.WriteLine($"Error in HandleCreateCommunity: {ex}");
+        }
+    }
+
+    // NEW: capture file selection
+    private void OnNewPostFilesSelected(InputFileChangeEventArgs e)
+    {
+        // Up to 20 files; browser limit ~25MB each (also enforced on upload)
+        _newPostFiles = e.GetMultipleFiles(20).ToList();
+        StateHasChanged();
+    }
+
+    private async Task HandleNewPostSubmit()
+    {
+        try
+        {
+            var communityName = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('npCommunityValue').value");
+            var title = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('npTitleValue').value");
+            var content = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('npContentValue').value");
+            var postType = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('npTypeValue').value");
+            var anonymousStr = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('npAnonymousValue').value");
+            var anonymous = anonymousStr == "true";
+
+            await CreatePostInternal(communityName, title, content, postType, anonymous);
+            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('modalNewPost').classList.remove('show')");
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error handling post submit: {ex.Message}");
+            Console.WriteLine($"Error in HandleNewPostSubmit: {ex}");
+        }
+    }
+
+    private async Task CreatePostInternal(string communityName, string title, string content, string postType, bool anonymous)
+    {
+        try
+        {
+            var community = Communities.FirstOrDefault(c => c.Name == communityName);
+            if (community == null) { await JSRuntime.InvokeVoidAsync("alert", $"Community '{communityName}' not found"); return; }
+
+            var threadsResponse = await Http.GetFromJsonAsync<ApiResponse<List<ThreadDto>>>($"api/forum/communities/{community.CommunityId}/threads");
+            int threadId;
+            if (threadsResponse?.Success == true && threadsResponse.Data != null && threadsResponse.Data.Any())
+            {
+                threadId = threadsResponse.Data.First().ThreadId;
+            }
+            else
+            {
+                var createThreadDto = new CreateThreadDto { ThreadName = $"{communityName} - General Discussion", ThreadDescription = "General discussion thread for this community" };
+                var threadResponse = await Http.PostAsJsonAsync($"api/forum/communities/{community.CommunityId}/threads", createThreadDto);
+                if (!threadResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await threadResponse.Content.ReadAsStringAsync();
+                    await JSRuntime.InvokeVoidAsync("alert", $"Failed to create thread: {errorContent}");
+                    return;
+                }
+                var threadResult = await threadResponse.Content.ReadFromJsonAsync<ApiResponse<ThreadDto>>();
+                if (threadResult?.Success != true || threadResult.Data == null) { await JSRuntime.InvokeVoidAsync("alert", "Failed to create thread"); return; }
+                threadId = threadResult.Data.ThreadId;
+            }
+
+            var createPostDto = new CreatePostDto { Title = title, Content = content, PostType = postType, Tag = postType };
+            
+            // Add retry logic for network errors
+            HttpResponseMessage? response = null;
+            int maxRetries = 3;
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
+            {
+                try
+                {
+                    response = await Http.PostAsJsonAsync($"api/forum/threads/{threadId}/posts", createPostDto);
+                    if (response.IsSuccessStatusCode || attempt == maxRetries)
+                        break;
+                    
+                    Console.WriteLine($"Post creation attempt {attempt} failed, retrying...");
+                    await Task.Delay(1000 * attempt); // Exponential backoff
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Post creation attempt {attempt} failed with exception: {ex.Message}");
+                    if (attempt == maxRetries)
+                        throw;
+                    await Task.Delay(1000 * attempt);
+                }
+            }
+
+            if (response != null && response.IsSuccessStatusCode)
+            {
+                // Try to read created post to get its ID for attachments
+                var created = await response.Content.ReadFromJsonAsync<ApiResponse<PostDto>>();
+                var newPostId = created?.Data?.ForumPostsId ?? 0;
+
+                // Upload attachments if there are any and we have a post id
+                if (newPostId > 0 && _newPostFiles.Any())
+                {
+                    using var mp = new MultipartFormDataContent();
+                    foreach (var f in _newPostFiles)
+                    {
+                        // enforce 25 MB per file
+                        var stream = f.OpenReadStream(25 * 1024 * 1024);
+                        var sc = new StreamContent(stream);
+                        sc.Headers.ContentType = new MediaTypeHeaderValue(f.ContentType ?? "application/octet-stream");
+                        mp.Add(sc, "files", f.Name);
+                    }
+
+                    var uploadResp = await Http.PostAsync($"api/forum/posts/{newPostId}/attachments", mp);
+                    if (!uploadResp.IsSuccessStatusCode)
+                    {
+                        var err = await uploadResp.Content.ReadAsStringAsync();
+                        Console.WriteLine($"Attachment upload failed: {err}");
+                    }
+                }
+
+                _newPostFiles.Clear();
+                await JSRuntime.InvokeVoidAsync("alert", "Post created successfully!");
+                await LoadData();
+            }
+            else
+            {
+                string errorMessage = "Failed to create post";
+                try
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(errorContent))
+                    {
+                        errorMessage = errorContent;
+                    }
+                }
+                catch
+                {
+                    errorMessage = $"Network error occurred. Status: {response.StatusCode}";
+                }
+                await JSRuntime.InvokeVoidAsync("alert", errorMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error creating post: {ex.Message}");
+            Console.WriteLine($"Error in CreatePostInternal: {ex}");
+        }
+    }
+
+    private async Task VoteOnPost(int postId, int voteType)
+    {
+        try
+        {
+            var createVoteDto = new CreateVoteDto { VoteType = voteType };
+            var response = await Http.PostAsJsonAsync($"api/forum/posts/{postId}/vote", createVoteDto);
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Failed to vote: {errorContent}");
+            }
+        }
+        catch (Exception ex) { Console.WriteLine($"Error voting on post: {ex.Message}"); }
+    }
+
+    // NEW: Send report to API
+    private async Task HandleReportSubmit()
+    {
+        try
+        {
+            var postIdStr = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('rpPostIdValue').value");
+            var reason = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('rpReasonValue').value");
+            var details = await JSRuntime.InvokeAsync<string>("eval", "document.getElementById('rpDetailsValue').value");
+
+            if (!int.TryParse(postIdStr, out var postId) || postId <= 0)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Something went wrong: invalid post id.");
+                return;
+            }
+
+            var dto = new CreateReportDto 
+            { 
+                ReportType = "post",
+                ReportedItemId = postId,
+                Reason = reason, 
+                Details = details,
+                Severity = "mild" // Default severity, could be made configurable
+            };
+            var resp = await Http.PostAsJsonAsync($"api/forum/posts/{postId}/report", dto);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                await JSRuntime.InvokeVoidAsync("alert", "Thanks! Your report was sent to moderators.");
+                await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('modalReport').classList.remove('show')");
+            }
+            else
+            {
+                var err = await resp.Content.ReadAsStringAsync();
+                await JSRuntime.InvokeVoidAsync("alert", $"Failed to send report: {err}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error sending report: {ex.Message}");
+            Console.WriteLine($"Report error: {ex}");
+        }
+    }
+
+    // NEW: small DTO for reporting
+    public class ReportPostDto
+    {
+        public string Reason { get; set; } = "";
+        public string? Details { get; set; }
+    }
+}

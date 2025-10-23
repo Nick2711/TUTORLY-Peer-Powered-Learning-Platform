@@ -1,0 +1,769 @@
+﻿@page "/admin/dashboard"
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@using System.Text.Json
+@using Tutorly.Shared
+
+<PageTitle>Admin • Dashboard</PageTitle>
+
+<!-- Link your CSS file in _Host or here with HeadContent -->
+<HeadContent>
+    <link rel="stylesheet" href="css/AdminDashboard.css" />
+</HeadContent>
+
+<div id="admin-dashboard" class="dash-v3">
+    <!-- Top bar (matches your other admin pages) -->
+    <header class="ad-topbar">
+        <div class="brand">Tutorly<span>Admin</span></div>
+
+        <button class="nav-toggle" id="dashboardNavToggle" aria-controls="dashboard-topnav" aria-expanded="false" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav id="dashboard-topnav" class="ad-topnav" aria-label="Primary">
+            <NavLink class="nav-item" href="/admin/dashboard" Match="NavLinkMatch.All">Dashboard</NavLink>
+            <NavLink class="nav-item" href="/admin/user-management">User Management</NavLink>
+            <NavLink class="nav-item" href="/admin/forum-moderation">Forum Moderation</NavLink>
+            <NavLink class="nav-item" href="/admin/module-management">Module Management</NavLink>
+            <NavLink class="nav-item" href="/admin/tutors">Tutors</NavLink>
+            <NavLink class="nav-item" href="/admin/analytics">Analytics</NavLink>
+            <NavLink class="nav-item" href="/admin/database">Database</NavLink>
+            <NavLink class="nav-item" href="/admin/faqs">FAQs</NavLink>
+        </nav>
+
+        <div class="top-actions">
+            <button id="dbNotifyBtn" class="icon-btn" title="Notifications" aria-haspopup="menu" aria-controls="dbNotifyMenu" aria-expanded="false">
+                <!-- modern bell icon -->
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2ZM6 17v-5a6 6 0 1 1 12 0v5l2 2v1H4v-1l2-2Z" fill="currentColor" /></svg>
+            </button>
+
+            <button id="dbProfileBtn" class="user-mini" aria-haspopup="menu" aria-controls="dbProfileMenu" aria-expanded="false">
+                <img id="dbAvatar" src="https://i.pravatar.cc/40?img=8" alt="Admin avatar" />
+                <div>
+                    <div class="name">Admin User</div>
+                    <div class="muted">Super Admin</div>
+                </div>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" fill="currentColor" /></svg>
+            </button>
+        </div>
+
+        <!-- Popovers (hidden by default; positioned by JS) -->
+        <div id="dbNotifyMenu" class="aa-pop aa-notify" role="menu" tabindex="-1" hidden>
+            <div class="aa-pop-title">Notifications</div>
+            <ul>
+                <li class="note"><span class="ico">🎓</span><div><div class="t">New badge unlocked</div><div class="s">You earned "Active Learner".</div></div></li>
+                <li class="note"><span class="ico">💬</span><div><div class="t">Reply from Anouk</div><div class="s">She commented on your code review.</div></div></li>
+                <li class="note"><span class="ico">📅</span><div><div class="t">Session reminder</div><div class="s">Query Review tomorrow at 1:00 PM.</div></div></li>
+            </ul>
+        </div>
+
+        <div id="dbProfileMenu" class="aa-pop aa-profile" role="menu" tabindex="-1" hidden>
+            <div class="aa-pop-title">My Profile</div>
+            <button id="dbChangePhotoOpen" class="row">
+                <span class="ico">🖼️</span><div><div class="t">Change Photo</div><div class="s">Upload a new profile picture.</div></div>
+            </button>
+            <a class="row" href="/settings"><span class="ico">⚙️</span><div><div class="t">Settings</div><div class="s">Manage account and preferences.</div></div></a>
+            <button id="dbLogoutBtn" class="row danger"><span class="ico">🚪</span><div><div class="t">Logout</div><div class="s">Sign out of your account.</div></div></button>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="ad-main">
+        <div class="page-header">
+            <h1 class="page-title">Welcome back, Admin!</h1>
+            <button class="btn primary" @onclick="RefreshDashboard" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span>Loading...</span>
+                }
+                else
+                {
+                    <span>Refresh Data</span>
+                }
+            </button>
+        </div>
+
+        <!-- KPI cards -->
+        <section class="stats">
+            @if (isLoading)
+            {
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading dashboard data...</p>
+                </div>
+            }
+            else
+            {
+                <article class="stat-card clickable" @onclick="NavigateToUserManagement">
+                    <div class="stat-head">Total Users</div>
+                    <div class="stat-row">
+                        <div class="kpi">@totalUsers</div>
+                        <div class="chip chip-blue" title="Users">
+                            <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3ZM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm0 2c-2.7 0-7 1.4-7 3.5V19h14v-2.5C15 14.4 10.7 13 8 13Zm8 0c-.3 0-.7 0-1 .1C16.7 13.7 18 14.8 18 16.5V19h6v-2.5C24 14.4 19.7 13 16 13Z" fill="currentColor" /></svg>
+                        </div>
+                    </div>
+                </article>
+
+                <NavLink href="/admin/forum-moderation" class="stat-card-link">
+                    <article class="stat-card">
+                        <div class="stat-head">Flagged Content</div>
+                        <div class="stat-row">
+                            <div>
+                                <div class="kpi">@totalReports</div>
+                                <div class="muted tiny"><span class="mini-dot"></span>@urgentReports urgent cases</div>
+                            </div>
+                            <div class="chip chip-red" title="Reports">
+                                <svg viewBox="0 0 24 24"><path d="M12 2 2 20h20L12 2Zm0 5.5 5 9H7l5-9Zm-1 9.5h2v2h-2v-2Z" fill="currentColor" /></svg>
+                            </div>
+                        </div>
+                    </article>
+                </NavLink>
+
+                <NavLink href="/admin/forum-moderation" class="stat-card-link">
+                    <article class="stat-card">
+                        <div class="stat-head">Active Warnings</div>
+                        <div class="stat-row">
+                            <div>
+                                <div class="kpi">@totalWarnings</div>
+                                <div class="muted tiny"><span class="mini-clock"></span>@recentWarnings recent</div>
+                            </div>
+                            <div class="chip chip-yellow" title="Warnings">
+                                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none" /><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" /></svg>
+                            </div>
+                        </div>
+                    </article>
+                </NavLink>
+
+                <NavLink href="/admin/forum-moderation" class="stat-card-link">
+                    <article class="stat-card">
+                        <div class="stat-head">Active Bans</div>
+                        <div class="stat-row">
+                            <div>
+                                <div class="kpi">@activeBans</div>
+                                <div class="muted tiny">@autoBans auto-bans</div>
+                            </div>
+                            <div class="chip chip-red" title="Bans">
+                                <svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2" ry="2" stroke="currentColor" stroke-width="2" fill="none" /><path d="M8 10h8M8 14h8" stroke="currentColor" stroke-width="2" /></svg>
+                            </div>
+                        </div>
+                    </article>
+                </NavLink>
+            }
+        </section>
+
+        <!-- Content grid -->
+        <section class="content-grid">
+            <!-- Recent Activities -->
+            <article class="card activity-card">
+                <h3>Recent Activities</h3>
+                @if (isLoading)
+                {
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading activities...</p>
+                    </div>
+                }
+                else if (!recentActivities.Any())
+                {
+                    <div class="empty-state">
+                        <p>No recent activities found.</p>
+                    </div>
+                }
+                else
+                {
+                    <ul class="activity-list">
+                        @foreach (var activity in recentActivities)
+                        {
+                            <li>
+                                <div class="left">
+                                    <span class="dot @GetActivityDotClass(activity.Type)"></span>
+                                    <div class="info">
+                                        <div class="info-title">@activity.Title</div>
+                                        <div class="muted">@activity.Description</div>
+                                    </div>
+                                </div>
+                                <div class="time">@GetTimeAgo(activity.Timestamp)</div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </article>
+
+            <!-- Right column -->
+            <div class="right-col">
+                <article class="card qa-card">
+                    <h3>Quick Actions</h3>
+                    <div class="qa-grid">
+                        <NavLink href="/admin/forum-moderation" class="qa-link">
+                            <div class="qa-tile">
+                                <div class="qa-icon qa-icon-warn">
+                                    <svg viewBox="0 0 24 24"><path d="M12 2 2 20h20L12 2Zm0 12.5h2v2h-2v-2Zm0-7.5h2v6h-2V7Z" fill="currentColor" /></svg>
+                                </div>
+                                <span class="qa-label">Moderate</span>
+                            </div>
+                        </NavLink>
+
+                        <NavLink href="/admin/module-management" class="qa-link">
+                            <div class="qa-tile">
+                                <div class="qa-icon qa-icon-create">
+                                    <svg viewBox="0 0 24 24"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" fill="currentColor" /></svg>
+                                </div>
+                                <span class="qa-label">New Module</span>
+                            </div>
+                        </NavLink>
+
+                        <NavLink href="/admin/user-management" class="qa-link">
+                            <div class="qa-tile">
+                                <div class="qa-icon qa-icon-users">
+                                    <svg viewBox="0 0 24 24"><path d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3ZM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm0 2c-2.7 0-7 1.4-7 3.5V19h14v-2.5C15 14.4 10.7 13 8 13Z" fill="currentColor" /></svg>
+                                </div>
+                                <span class="qa-label">Users</span>
+                            </div>
+                        </NavLink>
+
+                        <button class="qa-link" onclick="refreshChatbotCache()" style="border: none; background: none; padding: 0; cursor: pointer;">
+                            <div class="qa-tile">
+                                <div class="qa-icon qa-icon-refresh">
+                                    <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 8-8V2.5L16 6l-4 3.5V8a6 6 0 1 0 6 6h2a8 8 0 0 1-8 8v-2.5L8 18l4-3.5V16a6 6 0 1 0-6-6H4z" fill="currentColor" /></svg>
+                                </div>
+                                <span class="qa-label">Refresh AI</span>
+                            </div>
+                        </button>
+                    </div>
+                </article>
+
+                <article class="card tutors-card">
+                    <h3>Recent Tutors</h3>
+                    <ul class="tutors-list">
+                        <li>
+                            <img src="https://i.pravatar.cc/40?img=12" alt="">
+                            <div class="tutor-meta">
+                                <div class="tutor-name">Marcus M.</div>
+                                <div class="muted tiny">Math</div>
+                            </div>
+                            <span class="pill pill-ok">Active</span>
+                        </li>
+                        <li>
+                            <img src="https://i.pravatar.cc/40?img=20" alt="">
+                            <div class="tutor-meta">
+                                <div class="tutor-name">Viljoen S.</div>
+                                <div class="muted tiny">Biology</div>
+                            </div>
+                            <span class="pill pill-warn">Pending</span>
+                        </li>
+                    </ul>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <!-- Change Photo modal (same look as other pages) -->
+    <div id="dbPhotoModal" class="aa-modal" aria-hidden="true" aria-labelledby="dbPhotoTitle" role="dialog">
+        <div class="scrim" data-close></div>
+        <div class="dialog" role="document">
+            <header class="m-head">
+                <h3 id="dbPhotoTitle">Change Photo</h3>
+                <button class="x" data-close aria-label="Close">✕</button>
+            </header>
+            <div class="m-body">
+                <div class="preview-wrap"><img id="dbPreview" src="https://i.pravatar.cc/96?img=8" alt="Preview"></div>
+                <div class="file-wrap">
+                    <input id="dbFile" type="file" accept="image/png,image/jpeg,image/webp" />
+                    <div class="help">PNG/JPG up to ~2MB works best.</div>
+                    <div id="dbFileError" class="err" hidden></div>
+                </div>
+            </div>
+            <footer class="m-foot">
+                <button class="btn ghost" data-close>Cancel</button>
+                <button id="dbSavePhoto" class="btn primary">Save</button>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<!-- Razor-safe JS (no raw '') -->
+<script>
+    (() => {
+        const $ = (s, sc = document) => sc.querySelector(s);
+        const $$ = (s, sc = document) => Array.from(sc.querySelectorAll(s));
+        const outside = (el, e) => el && !el.contains(e.target);
+
+        function bindNav() {
+            const btn = $('#dashboardNavToggle');
+            const nav = $('#dashboard-topnav');
+            if (!btn || !nav || btn.__bound) return;
+            btn.__bound = true;
+            btn.addEventListener('click', () => {
+                const open = nav.classList.toggle('is-open');
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }, { passive: true });
+        }
+
+        const nBtn = $('#dbNotifyBtn');
+        const pBtn = $('#dbProfileBtn');
+        const nMenu = $('#dbNotifyMenu');
+        const pMenu = $('#dbProfileMenu');
+
+        function position(menu, btn) {
+            if (!menu || !btn) return;
+            const wasHidden = menu.hasAttribute('hidden');
+            if (wasHidden) { menu.style.visibility = 'hidden'; menu.removeAttribute('hidden'); }
+            const mw = Math.max(280, Math.min(menu.offsetWidth || 300, 320)); /* clamp width for consistency */
+            const r = btn.getBoundingClientRect();
+            const top = Math.round(r.bottom + 8 + window.scrollY);
+            let left = Math.round(r.right - mw + window.scrollX);
+            left = Math.max(8, Math.min(left, window.innerWidth + window.scrollX - mw - 8));
+            menu.style.position = 'absolute';
+            menu.style.width = mw + 'px';
+            menu.style.top = top + 'px';
+            menu.style.left = left + 'px';
+            if (wasHidden) { menu.setAttribute('hidden', ''); menu.style.visibility = ''; }
+        }
+
+        function closeAll(except) {
+            [nMenu, pMenu].forEach(m => {
+                if (!m) return;
+                if (except && m === except) return;
+                m.setAttribute('hidden', '');
+            });
+            nBtn?.setAttribute('aria-expanded', 'false');
+            pBtn?.setAttribute('aria-expanded', 'false');
+        }
+
+        function toggle(menu, btn) {
+            if (!menu || !btn) return;
+            const opening = menu.hasAttribute('hidden');
+            if (opening) {
+                closeAll(menu);
+                position(menu, btn);
+                menu.removeAttribute('hidden');
+                btn.setAttribute('aria-expanded', 'true');
+                setTimeout(() => position(menu, btn), 0);
+            } else {
+                menu.setAttribute('hidden', '');
+                btn.setAttribute('aria-expanded', 'false');
+            }
+        }
+
+        function bindPopovers() {
+            if (nBtn && !nBtn.__bound) {
+                nBtn.__bound = true;
+                nBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(nMenu, nBtn); });
+            }
+            if (pBtn && !pBtn.__bound) {
+                pBtn.__bound = true;
+                pBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(pMenu, pBtn); });
+            }
+            if (!window.__dash_pop_listeners) {
+                window.__dash_pop_listeners = true;
+                document.addEventListener('click', (e) => {
+                    if (nMenu && outside(nMenu, e) && outside(nBtn, e)) nMenu.setAttribute('hidden', '');
+                    if (pMenu && outside(pMenu, e) && outside(pBtn, e)) pMenu.setAttribute('hidden', '');
+                });
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+                window.addEventListener('scroll', () => closeAll(), { passive: true });
+                window.addEventListener('resize', () => closeAll(), { passive: true });
+            }
+            $('#dbLogoutBtn')?.addEventListener('click', () => {
+                try { localStorage.clear(); sessionStorage.clear(); } catch { }
+                window.location.href = '/';
+            });
+        }
+
+        // Global function for cache refresh
+        window.refreshChatbotCache = async function () {
+            try {
+                const response = await fetch('/api/chatbot/refresh-cache', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('AI knowledge base refresh initiated! The system will process all documents including new ones.');
+                } else {
+                    alert('Failed to refresh AI knowledge base. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error refreshing cache:', error);
+                alert('Error refreshing AI knowledge base. Please check console for details.');
+            }
+        };
+
+        /* Change Photo modal */
+        const modal = $('#dbPhotoModal');
+        const openBtn = $('#dbChangePhotoOpen');
+        const file = $('#dbFile');
+        const err = $('#dbFileError');
+        const preview = $('#dbPreview');
+        const avatar = $('#dbAvatar');
+        const save = $('#dbSavePhoto');
+
+        function openModal() { modal?.classList.add('open'); modal?.setAttribute('aria-hidden', 'false'); }
+        function closeModal() { modal?.classList.remove('open'); modal?.setAttribute('aria-hidden', 'true'); if (err) { err.hidden = true; err.textContent = ''; } if (file) file.value = ''; }
+
+        function bindModal() {
+            openBtn?.addEventListener('click', openModal);
+            $$('[data-close]', modal).forEach(b => b.addEventListener('click', closeModal));
+            file?.addEventListener('change', () => {
+                if (!file.files || !file.files[0]) return;
+                const f = file.files[0];
+                const okType = ['image/png', 'image/jpeg', 'image/webp'].includes(f.type);
+                const okSize = f.size <= 2 * 1024 * 1024;
+                if (!okType || !okSize) {
+                    err.hidden = false;
+                    err.textContent = !okType ? 'Please select a PNG, JPG, or WEBP image.' : 'Image must be 2MB or smaller.';
+                    file.value = '';
+                    return;
+                }
+                const r = new FileReader();
+                r.onload = e => { preview.src = e.target.result; };
+                r.readAsDataURL(f);
+            });
+            save?.addEventListener('click', () => {
+                if (preview && avatar) {
+                    avatar.src = preview.src;
+                    try { localStorage.setItem('dash-avatar', preview.src); } catch { }
+                }
+                closeModal();
+            });
+            try { const saved = localStorage.getItem('dash-avatar'); if (saved) { avatar.src = saved; preview.src = saved; } } catch { }
+        }
+
+        function revealActivities() {
+            const list = document.querySelector('.activity-list');
+            if (!list || list.__revealed) return;
+            list.__revealed = true;
+            list.classList.add('reveal');
+            const items = Array.from(list.querySelectorAll('li'));
+            let i = 0;
+            const step = () => { if (i >= items.length) return; items[i++].classList.add('show'); setTimeout(step, 160); };
+            step();
+        }
+
+        function init() { bindNav(); bindPopovers(); bindModal(); revealActivities(); }
+
+        if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init, { once: true }); } else { init(); }
+        new MutationObserver(() => init()).observe(document.body, { childList: true, subtree: true });
+    })();
+
+    (function () {
+        const KEEP_SCOPE = 'dashboard';
+        const BASE_SCOPE = 'base';
+        const SENTINEL_SEL = '#admin-app.dash-v3';
+        const SENTINEL_PROP = '--dash-v3-loaded';
+        const MAX_RETRY = 2;
+
+        function pruneOtherPageStyles() {
+            // Disable any page-specific sheets that aren't "dashboard" or "base"
+            document.querySelectorAll('link[rel="stylesheet"][data-scope]').forEach(l => {
+                const scope = l.getAttribute('data-scope') || '';
+                const keep = (scope === KEEP_SCOPE || scope === BASE_SCOPE);
+                l.disabled = !keep;
+                // Also move our dashboard css to the end so it wins specificity by order
+                if (scope === KEEP_SCOPE) document.head.appendChild(l);
+            });
+        }
+
+        function hasSentinel() {
+            const el = document.querySelector(SENTINEL_SEL);
+            if (!el) return false;
+            const v = getComputedStyle(el).getPropertyValue(SENTINEL_PROP);
+            return v && v.trim() === '1';
+        }
+
+        function retryLoadIfNeeded(retry = 0) {
+            if (hasSentinel()) return;
+            const link = document.getElementById('dash-css');
+            if (!link) return;
+
+            if (retry > MAX_RETRY) return;
+
+            // cache-bust and try again
+            const clean = link.href.split('?')[0];
+            link.href = clean + '?v=' + Date.now();
+
+            // verify shortly after
+            setTimeout(() => {
+                if (!hasSentinel()) retryLoadIfNeeded(retry + 1);
+            }, 80);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            pruneOtherPageStyles();
+            // give the browser a tick to compute styles
+            setTimeout(retryLoadIfNeeded, 50);
+        });
+    })();
+
+</script>
+
+@code {
+    // Dashboard data
+    private bool isLoading = true;
+    private int totalUsers = 0;
+    private int totalReports = 0;
+    private int urgentReports = 0;
+    private int totalWarnings = 0;
+    private int recentWarnings = 0;
+    private int activeBans = 0;
+    private int autoBans = 0;
+    private List<ActivityItem> recentActivities = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task RefreshDashboard()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+
+            // Load data in parallel
+            var tasks = new[]
+            {
+                LoadUserStats(),
+                LoadReportsData(),
+                LoadWarningsData(),
+                LoadBansData(),
+                LoadRecentActivities()
+            };
+
+            await Task.WhenAll(tasks);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadUserStats()
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                return;
+            }
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.GetAsync("/api/admin/total-users");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var result = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(content);
+
+                if (result.TryGetProperty("totalUsers", out var totalUsersElement))
+                {
+                    totalUsers = totalUsersElement.GetInt32();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user stats: {ex.Message}");
+            totalUsers = 0;
+        }
+    }
+
+    private async Task LoadReportsData()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/forum/reports");
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<ForumReportDto>>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    totalReports = result.Data.Count;
+                    urgentReports = result.Data.Count(r => r.Severity == "severe");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading reports data: {ex.Message}");
+        }
+    }
+
+    private async Task LoadWarningsData()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/forum/warnings");
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<WarningDto>>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    totalWarnings = result.Data.Count;
+                    recentWarnings = result.Data.Count(w => w.CreatedAt > DateTime.UtcNow.AddDays(-7));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading warnings data: {ex.Message}");
+        }
+    }
+
+    private async Task LoadBansData()
+    {
+        try
+        {
+            var response = await Http.GetAsync("api/forum/bans");
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<BanDto>>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    activeBans = result.Data.Count(b => b.IsActive && !b.IsExpired);
+                    autoBans = result.Data.Count(b => b.BanType == "auto");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading bans data: {ex.Message}");
+        }
+    }
+
+    private async Task LoadRecentActivities()
+    {
+        try
+        {
+            // Load recent reports as activities
+            var reportsResponse = await Http.GetAsync("api/forum/reports");
+            if (reportsResponse.IsSuccessStatusCode)
+            {
+                var reportsResult = await reportsResponse.Content.ReadFromJsonAsync<ApiResponse<List<ForumReportDto>>>();
+                if (reportsResult?.Success == true && reportsResult.Data != null)
+                {
+                    var reportActivities = reportsResult.Data
+                        .OrderByDescending(r => r.CreatedAt)
+                        .Take(5)
+                        .Select(r => new ActivityItem
+                        {
+                            Type = "report",
+                            Title = "Content flagged",
+                            Description = $"Post reported: {r.Reason}",
+                            Timestamp = r.CreatedAt
+                        })
+                        .ToList();
+
+                    recentActivities.AddRange(reportActivities);
+                }
+            }
+
+            // Load recent warnings as activities
+            var warningsResponse = await Http.GetAsync("api/forum/warnings");
+            if (warningsResponse.IsSuccessStatusCode)
+            {
+                var warningsResult = await warningsResponse.Content.ReadFromJsonAsync<ApiResponse<List<WarningDto>>>();
+                if (warningsResult?.Success == true && warningsResult.Data != null)
+                {
+                    var warningActivities = warningsResult.Data
+                        .OrderByDescending(w => w.CreatedAt)
+                        .Take(3)
+                        .Select(w => new ActivityItem
+                        {
+                            Type = "warning",
+                            Title = "User warned",
+                            Description = $"Warning issued: {w.WarningMessage.Substring(0, Math.Min(50, w.WarningMessage.Length))}...",
+                            Timestamp = w.CreatedAt
+                        })
+                        .ToList();
+
+                    recentActivities.AddRange(warningActivities);
+                }
+            }
+
+            // Load recent bans as activities
+            var bansResponse = await Http.GetAsync("api/forum/bans");
+            if (bansResponse.IsSuccessStatusCode)
+            {
+                var bansResult = await bansResponse.Content.ReadFromJsonAsync<ApiResponse<List<BanDto>>>();
+                if (bansResult?.Success == true && bansResult.Data != null)
+                {
+                    var banActivities = bansResult.Data
+                        .OrderByDescending(b => b.BannedAt)
+                        .Take(3)
+                        .Select(b => new ActivityItem
+                        {
+                            Type = "ban",
+                            Title = b.BanType == "auto" ? "User auto-banned" : "User banned",
+                            Description = $"Ban reason: {b.BanReason.Substring(0, Math.Min(50, b.BanReason.Length))}...",
+                            Timestamp = b.BannedAt
+                        })
+                        .ToList();
+
+                    recentActivities.AddRange(banActivities);
+                }
+            }
+
+            // Sort all activities by timestamp and take the most recent 10
+            recentActivities = recentActivities
+                .OrderByDescending(a => a.Timestamp)
+                .Take(10)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading recent activities: {ex.Message}");
+        }
+    }
+
+    private string GetActivityDotClass(string type)
+    {
+        return type switch
+        {
+            "report" => "dot-red",
+            "warning" => "dot-yellow",
+            "ban" => "dot-red",
+            _ => "dot-blue"
+        };
+    }
+
+    private string GetTimeAgo(DateTime timestamp)
+    {
+        var timeSpan = DateTime.UtcNow - timestamp;
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} min ago";
+        else if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} hours ago";
+        else
+            return $"{(int)timeSpan.TotalDays} days ago";
+    }
+
+    private void NavigateToUserManagement()
+    {
+        Navigation.NavigateTo("/admin/user-management");
+    }
+
+    public class ActivityItem
+    {
+        public string Type { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime Timestamp { get; set; }
+    }
+}

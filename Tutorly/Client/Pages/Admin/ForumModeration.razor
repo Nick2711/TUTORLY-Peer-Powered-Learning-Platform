@@ -1,0 +1,1048 @@
+﻿@page "/admin/forum-moderation"
+@inject IJSRuntime JS
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Forum Moderation • Admin</PageTitle>
+
+<HeadContent>
+    <link rel="stylesheet" href="css/ForumModeration.css" />
+</HeadContent>
+
+<div id="forum-mod-app" class="fm-v1">
+    <!-- Top bar -->
+    <header class="ad-topbar">
+        <div class="brand">Tutorly<span>Admin</span></div>
+
+        <button class="nav-toggle" id="fmNavToggle" aria-controls="fmTopnav" aria-expanded="false" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav id="fmTopnav" class="ad-topnav" aria-label="Primary">
+            <NavLink class="nav-item" href="/admin/dashboard">Dashboard</NavLink>
+            <NavLink class="nav-item" href="/admin/user-management">User Management</NavLink>
+            <NavLink class="nav-item active" href="/admin/forum-moderation" Match="NavLinkMatch.All">Forum Moderation</NavLink>
+            <NavLink class="nav-item" href="/admin/module-management">Module Management</NavLink>
+            <NavLink class="nav-item" href="/admin/tutors">Tutors</NavLink>
+            <NavLink class="nav-item" href="/admin/analytics">Analytics</NavLink>
+            <NavLink class="nav-item" href="/admin/database">Database</NavLink>
+            <NavLink class="nav-item" href="/admin/faqs">FAQs</NavLink>
+        </nav>
+
+        <div class="top-actions">
+            <!-- Notifications -->
+            <button id="fmNotifyBtn" class="icon-btn" title="Notifications" aria-haspopup="menu" aria-controls="fmNotifyMenu" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" fill="currentColor" /></svg>
+            </button>
+
+            <!-- Profile -->
+            <button id="fmProfileBtn" class="user-mini" aria-haspopup="menu" aria-controls="fmProfileMenu" aria-expanded="false">
+                <img id="fmAvatar" src="https://i.pravatar.cc/40?img=8" alt="Admin avatar" />
+                <div>
+                    <div class="name">Admin User</div>
+                    <div class="muted small">Super Admin</div>
+                </div>
+                <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" fill="currentColor" /></svg>
+            </button>
+        </div>
+
+        <!-- Notifications dropdown -->
+        <div id="fmNotifyMenu" class="aa-pop aa-notify" role="menu" tabindex="-1" hidden>
+            <div class="aa-pop-title">Notifications</div>
+            <ul>
+                <li class="note">
+                    <span class="ico">🎓</span>
+                    <div><div class="t">New badge unlocked</div><div class="s">You earned “Active Learner”.</div></div>
+                </li>
+                <li class="note">
+                    <span class="ico">💬</span>
+                    <div><div class="t">Reply from Anouk</div><div class="s">She commented on your code review thread.</div></div>
+                </li>
+                <li class="note">
+                    <span class="ico">📅</span>
+                    <div><div class="t">Session reminder</div><div class="s">Query Review starts tomorrow at 1:00 PM.</div></div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Profile dropdown -->
+        <div id="fmProfileMenu" class="aa-pop aa-profile" role="menu" tabindex="-1" hidden>
+            <div class="aa-pop-title">My Profile</div>
+            <button id="fmChangePhotoOpen" class="row">
+                <span class="ico">🖼️</span>
+                <div><div class="t">Change Photo</div><div class="s">Upload a new profile picture.</div></div>
+            </button>
+            <a class="row" href="/settings">
+                <span class="ico">⚙️</span>
+                <div><div class="t">Settings</div><div class="s">Manage account and preferences.</div></div>
+            </a>
+            <button id="fmLogoutBtn" class="row danger">
+                <span class="ico">🚪</span>
+                <div><div class="t">Logout</div><div class="s">Sign out of your account.</div></div>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="ad-main">
+        <h1 class="page-h1">Forum Moderation</h1>
+
+        <!-- Toolbar -->
+        <div class="fm-toolbar">
+            <div class="dropdown" id="dd-reports">
+                <button class="dd-btn" type="button" aria-haspopup="true" aria-expanded="false">
+                    <span class="label">All Reports</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" fill="currentColor" /></svg>
+                </button>
+                <ul class="dd-menu" role="menu">
+                    <li role="menuitem" data-state="all" class="active">All Reports</li>
+                    <li role="menuitem" data-state="open">Open</li>
+                    <li role="menuitem" data-state="resolved">Resolved</li>
+                </ul>
+            </div>
+
+            <div class="dropdown" id="dd-sev">
+                <button class="dd-btn" type="button" aria-haspopup="true" aria-expanded="false">
+                    <span class="label">All Severity</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5" fill="currentColor" /></svg>
+                </button>
+                <ul class="dd-menu" role="menu">
+                    <li role="menuitem" data-sev="all" class="active">All Severity</li>
+                    <li role="menuitem" data-sev="severe">Severe</li>
+                    <li role="menuitem" data-sev="moderate">Moderate</li>
+                    <li role="menuitem" data-sev="mild">Mild</li>
+                </ul>
+            </div>
+
+            <div class="search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 015.94 12.18l3.69 3.69-1.41 1.41-3.69-3.69A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" fill="currentColor" /></svg>
+                <input id="fmSearch" type="search" placeholder="Search reports..." />
+            </div>
+        </div>
+
+        <!-- Loading state -->
+        @if (isLoading)
+        {
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading reports...</p>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="error-state">
+                <p>@errorMessage</p>
+                <button class="btn primary" @onclick="LoadReports">Retry</button>
+            </div>
+        }
+        else if (!reports.Any())
+        {
+            <div class="empty-state">
+                <p>No reports found.</p>
+            </div>
+        }
+        else
+        {
+            <!-- Dynamic Report cards -->
+            @foreach (var report in reports)
+            {
+                <article class="report-card @(report.Status == "resolved" ? "is-resolved" : "")" 
+                         data-id="@report.ReportId" 
+                         data-sev="@report.Severity.ToLower()" 
+                         data-type="@report.ReportType" 
+                         data-state="@report.Status"
+                         data-reporter="@report.ReporterName" 
+                         data-reason="@report.Reason"
+                         data-kind="@(report.ReportType == "post" ? "Forum Post" : report.ReportType == "response" ? "Forum Response" : "Resource")" 
+                         data-view="/forum/@report.ReportedItemId">
+                    <div class="rc-head">
+                        <span class="sev @GetSeverityClass(report.Severity)">@report.Severity</span>
+                        <span class="muted">Reported @GetTimeAgo(report.CreatedAt)</span>
+                    </div>
+                    <div class="rc-grid">
+                        <section>
+                            <h4 class="section-title">REPORTED CONTENT</h4>
+                            <div class="panel">
+                                <div class="userline">
+                                    <img src="https://i.pravatar.cc/50?img=@(report.ReportedItemId % 50)" alt="">
+                                    <div>
+                                        <div class="uname">@(report.ReportedBy ?? "Unknown")</div>
+                                        <div class="muted small">@report.ReportType</div>
+                                    </div>
+                                </div>
+                                <div class="bubble">
+                                    @if (!string.IsNullOrEmpty(report.ItemTitle))
+                                    {
+                                        <strong>@report.ItemTitle</strong><br/>
+                                    }
+                                    @(report.ReportedContent ?? "Content not available")
+                                </div>
+                            </div>
+                        </section>
+                        <aside>
+                            <h4 class="section-title">REPORTED BY</h4>
+                            <div class="panel">
+                                <div class="userline">
+                                    <img src="https://i.pravatar.cc/50?img=@(report.ReportId % 50)" alt="">
+                                    <div>
+                                        <div class="uname">@report.ReporterName</div>
+                                        <div class="muted small">Reporter</div>
+                                    </div>
+                                </div>
+                                <div class="kv"><div class="k">Reason:</div><div class="v">@report.Reason</div></div>
+                                @if (!string.IsNullOrEmpty(report.Details))
+                                {
+                                    <div class="kv"><div class="k">Details:</div><div class="v">@report.Details</div></div>
+                                }
+                                @if (!string.IsNullOrEmpty(report.ResolutionNotes))
+                                {
+                                    <div class="kv"><div class="k">Resolution:</div><div class="v">@report.ResolutionNotes</div></div>
+                                }
+                            </div>
+                        </aside>
+                    </div>
+                    <div class="rc-actions">
+                        <button class="btn ctx">Context</button>
+                        @if (report.Status != "resolved")
+                        {
+                            <button class="btn danger" @onclick="@(() => OpenBanModal(report.ReportedBy))">Ban User</button>
+                            <button class="btn info" @onclick="@(() => OpenWarningModal(report.ReportedBy))">Warn User</button>
+                            <button class="btn gray" @onclick="@(() => UpdateReportStatus(report.ReportId, "dismissed", "Report dismissed"))">Dismiss</button>
+                        }
+                        else
+                        {
+                            <span class="resolved-badge">Resolved</span>
+                        }
+                    </div>
+                </article>
+            }
+        }
+    </main>
+
+    <!-- Warnings Section -->
+    <main class="fm-main">
+        <div class="fm-header">
+            <h2>User Warnings</h2>
+            <p>Manage user warnings and disciplinary actions</p>
+        </div>
+
+        <!-- Warnings Loading state -->
+        @if (isLoadingWarnings)
+        {
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading warnings...</p>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(warningErrorMessage))
+        {
+            <div class="error-state">
+                <p>@warningErrorMessage</p>
+                <button class="btn primary" @onclick="LoadWarnings">Retry</button>
+            </div>
+        }
+        else if (!warnings.Any())
+        {
+            <div class="empty-state">
+                <p>No warnings found.</p>
+            </div>
+        }
+        else
+        {
+            <!-- Warnings List -->
+            <div class="warnings-list">
+                @foreach (var warning in warnings)
+                {
+                    <div class="warning-card">
+                        <div class="warning-header">
+                            <div class="warning-user">
+                                <img src="https://i.pravatar.cc/40?img=@(warning.WarningId % 50)" alt="User avatar" />
+                                <div>
+                                    <div class="user-name">@(warning.UserName ?? "Unknown User")</div>
+                                    <div class="user-id">@warning.UserId</div>
+                                </div>
+                            </div>
+                            <div class="warning-meta">
+                                <span class="warning-date">@GetTimeAgo(warning.CreatedAt)</span>
+                                <span class="admin-name">by @(warning.AdminName ?? "Unknown Admin")</span>
+                            </div>
+                        </div>
+                        <div class="warning-message">
+                            @warning.WarningMessage
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </main>
+
+    <!-- Bans Section -->
+    <main class="fm-main">
+        <div class="fm-header">
+            <h2>User Bans</h2>
+            <p>Manage user bans and disciplinary actions</p>
+        </div>
+
+        <!-- Bans Loading state -->
+        @if (isLoadingBans)
+        {
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading bans...</p>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(banErrorMessage))
+        {
+            <div class="error-state">
+                <p>@banErrorMessage</p>
+                <button class="btn primary" @onclick="LoadBans">Retry</button>
+            </div>
+        }
+        else if (!bans.Any())
+        {
+            <div class="empty-state">
+                <p>No bans found.</p>
+            </div>
+        }
+        else
+        {
+            <!-- Bans List -->
+            <div class="bans-list">
+                @foreach (var ban in bans)
+                {
+                    <div class="ban-card @(ban.IsActive ? "active" : "inactive")">
+                        <div class="ban-header">
+                            <div class="ban-user">
+                                <img src="https://i.pravatar.cc/40?img=@(ban.BanId % 50)" alt="User avatar" />
+                                <div>
+                                    <div class="user-name">@(ban.UserName ?? "Unknown User")</div>
+                                    <div class="user-id">@ban.UserId</div>
+                                </div>
+                            </div>
+                            <div class="ban-meta">
+                                <span class="ban-type @ban.BanType.ToLower()">@ban.BanType.ToUpper()</span>
+                                <span class="ban-date">@GetTimeAgo(ban.BannedAt)</span>
+                                <span class="admin-name">by @(ban.AdminName ?? "Unknown Admin")</span>
+                            </div>
+                        </div>
+                        <div class="ban-details">
+                            <div class="ban-reason">
+                                <strong>Reason:</strong> @ban.BanReason
+                            </div>
+                            @if (ban.ExpiresAt.HasValue)
+                            {
+                                <div class="ban-expiry">
+                                    <strong>Expires:</strong> @ban.ExpiresAt.Value.ToString("yyyy-MM-dd HH:mm")
+                                </div>
+                            }
+                            @if (ban.IsActive && !ban.IsExpired)
+                            {
+                                <div class="ban-status active">ACTIVE</div>
+                            }
+                            else if (ban.IsExpired)
+                            {
+                                <div class="ban-status expired">EXPIRED</div>
+                            }
+                            else
+                            {
+                                <div class="ban-status inactive">INACTIVE</div>
+                            }
+                        </div>
+                        <div class="ban-actions">
+                            @if (ban.IsActive && !ban.IsExpired)
+                            {
+                                <button class="btn success" @onclick="@(() => UnbanUser(ban.BanId))">Unban User</button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </main>
+
+        <!-- Warning Creation Modal -->
+        @if (showWarningModal)
+        {
+            <div class="fm-modal open" @onclick="CloseWarningModal">
+                <div class="scrim"></div>
+                <div class="dialog small" @onclick:stopPropagation="true">
+                    <div class="m-head">
+                        <h3>Create Warning</h3>
+                        <button class="x" @onclick="CloseWarningModal">&times;</button>
+                    </div>
+                    <div class="m-body">
+                        <div class="form-group">
+                            <label>User ID:</label>
+                            <input type="text" @bind="warningUserId" readonly class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label>Warning Message:</label>
+                            <textarea @bind="warningMessage" class="form-control" rows="4" placeholder="Enter warning message..."></textarea>
+                        </div>
+                    </div>
+                    <div class="m-foot">
+                        <button class="btn ghost" @onclick="CloseWarningModal">Cancel</button>
+                        <button class="btn primary" @onclick="CreateWarning">Create Warning</button>
+                    </div>
+                </div>
+            </div>
+        }
+
+    <!-- Ban Creation Modal -->
+    @if (showBanModal)
+    {
+        <div class="fm-modal open" @onclick="CloseBanModal">
+            <div class="scrim"></div>
+            <div class="dialog small" @onclick:stopPropagation="true">
+                <div class="m-head">
+                    <h3>Ban User</h3>
+                    <button class="x" @onclick="CloseBanModal">&times;</button>
+                </div>
+                <div class="m-body">
+                    <div class="form-group">
+                        <label>User ID:</label>
+                        <input type="text" @bind="banUserId" readonly class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Ban Type:</label>
+                        <select @bind="banType" class="form-control">
+                            <option value="temporary">Temporary</option>
+                            <option value="permanent">Permanent</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ban Reason:</label>
+                        <textarea @bind="banReason" class="form-control" rows="4" placeholder="Enter ban reason..."></textarea>
+                    </div>
+                    @if (banType == "temporary")
+                    {
+                        <div class="form-group">
+                            <label>Expires At:</label>
+                            <input type="datetime-local" @bind="banExpiresAt" class="form-control" />
+                        </div>
+                    }
+                </div>
+                <div class="m-foot">
+                    <button class="btn ghost" @onclick="CloseBanModal">Cancel</button>
+                    <button class="btn primary" @onclick="CreateBan">Ban User</button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Change Photo modal -->
+    <div id="fmPhotoModal" class="fm-modal" aria-hidden="true" role="dialog" aria-labelledby="fmPhotoTitle">
+        <div class="scrim" data-fm-close></div>
+        <div class="dialog small" role="document">
+            <header class="m-head">
+                <h3 id="fmPhotoTitle">Change Photo</h3>
+                <button class="x" data-fm-close aria-label="Close">✕</button>
+            </header>
+            <div class="m-body photo-body">
+                <div class="preview-wrap">
+                    <img id="fmPreview" src="https://i.pravatar.cc/120?img=8" alt="Preview" />
+                </div>
+                <div class="file-wrap">
+                    <input id="fmFile" type="file" accept="image/png,image/jpeg" />
+                    <div class="help">PNG/JPG up to ~2MB works best.</div>
+                    <div id="fmFileError" class="err" hidden></div>
+                </div>
+            </div>
+            <footer class="m-foot">
+                <button class="btn ghost" data-fm-close>Cancel</button>
+                <button id="fmSavePhoto" class="btn primary">Save</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Context modal -->
+    <div id="fmContextModal" class="fm-modal" aria-hidden="true" role="dialog" aria-labelledby="fmContextTitle">
+        <div class="scrim" data-fm-close></div>
+        <div class="dialog" role="document">
+            <header class="m-head">
+                <h3 id="fmContextTitle">Report Context</h3>
+                <button class="x" data-fm-close aria-label="Close">✕</button>
+            </header>
+            <div class="m-body ctx-body">
+                <div class="ctx-grid">
+                    <div class="ctx-block">
+                        <div class="k">Reported By</div>
+                        <div id="ctxReporter" class="v"></div>
+                    </div>
+                    <div class="ctx-block">
+                        <div class="k">Reason</div>
+                        <div id="ctxReason" class="v"></div>
+                    </div>
+                    <div class="ctx-block">
+                        <div class="k">Item Type</div>
+                        <div id="ctxKind" class="v"></div>
+                    </div>
+                </div>
+                <div class="ctx-content">
+                    <div class="k">Excerpt</div>
+                    <div id="ctxExcerpt" class="excerpt"></div>
+                </div>
+            </div>
+            <footer class="m-foot">
+                <button class="btn ghost" data-fm-close>Close</button>
+                <button id="ctxViewBtn" class="btn primary" type="button">View Item</button>
+            </footer>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<ForumReportDto> reports = new();
+    private List<WarningDto> warnings = new();
+    private List<BanDto> bans = new();
+    private bool isLoading = true;
+    private bool isLoadingWarnings = true;
+    private bool isLoadingBans = true;
+    private string errorMessage = string.Empty;
+    private string warningErrorMessage = string.Empty;
+    private string banErrorMessage = string.Empty;
+    
+    // Warning creation state
+    private bool showWarningModal = false;
+    private string warningUserId = string.Empty;
+    private string warningMessage = string.Empty;
+    
+    // Ban creation state
+    private bool showBanModal = false;
+    private string banUserId = string.Empty;
+    private string banReason = string.Empty;
+    private string banType = "temporary";
+    private DateTime? banExpiresAt = DateTime.UtcNow.AddDays(7);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReports();
+        await LoadWarnings();
+        await LoadBans();
+    }
+
+    private async Task LoadReports()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = string.Empty;
+
+            var response = await Http.GetAsync("api/forum/reports");
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<ForumReportDto>>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    reports = result.Data;
+                }
+                else
+                {
+                    errorMessage = result?.Message ?? "Failed to load reports";
+                }
+            }
+            else
+            {
+                errorMessage = "Failed to load reports. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading reports: {ex.Message}";
+            Console.WriteLine($"Error loading reports: {ex}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateReportStatus(int reportId, string status, string? notes = null)
+    {
+        try
+        {
+            var updateDto = new UpdateReportStatusDto
+            {
+                Status = status,
+                ResolutionNotes = notes
+            };
+
+            var response = await Http.PutAsJsonAsync($"api/forum/reports/{reportId}/status", updateDto);
+            if (response.IsSuccessStatusCode)
+            {
+                // Refresh reports after update
+                await LoadReports();
+            }
+            else
+            {
+                await JS.InvokeAsync<object>("alert", new object[] { "Failed to update report status" });
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeAsync<object>("alert", new object[] { $"Error updating report: {ex.Message}" });
+        }
+    }
+
+    private string GetSeverityClass(string severity)
+    {
+        return severity.ToLower() switch
+        {
+            "severe" => "severe",
+            "moderate" => "moderate",
+            "mild" => "mild",
+            _ => "mild"
+        };
+    }
+
+    private string GetTimeAgo(DateTime createdAt)
+    {
+        var timeSpan = DateTime.UtcNow - createdAt;
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} minutes ago";
+        else if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} hours ago";
+        else
+            return $"{(int)timeSpan.TotalDays} days ago";
+    }
+
+    private async Task LoadWarnings()
+    {
+        try
+        {
+            isLoadingWarnings = true;
+            warningErrorMessage = string.Empty;
+
+            var response = await Http.GetAsync("api/forum/warnings");
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<WarningDto>>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    warnings = result.Data;
+                }
+                else
+                {
+                    warningErrorMessage = result?.Message ?? "Failed to load warnings";
+                }
+            }
+            else
+            {
+                warningErrorMessage = "Failed to load warnings. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            warningErrorMessage = $"Error loading warnings: {ex.Message}";
+            Console.WriteLine($"Error loading warnings: {ex}");
+        }
+        finally
+        {
+            isLoadingWarnings = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OpenWarningModal(string? userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            JS.InvokeAsync<object>("alert", new object[] { "Cannot warn user: User ID is missing or invalid" });
+            return;
+        }
+        
+        warningUserId = userId;
+        warningMessage = string.Empty;
+        showWarningModal = true;
+    }
+
+    private void CloseWarningModal()
+    {
+        showWarningModal = false;
+        warningUserId = string.Empty;
+        warningMessage = string.Empty;
+    }
+
+    private async Task CreateWarning()
+    {
+        if (string.IsNullOrWhiteSpace(warningMessage))
+        {
+            await JS.InvokeAsync<object>("alert", new object[] { "Please enter a warning message" });
+            return;
+        }
+
+        try
+        {
+            var dto = new CreateWarningDto
+            {
+                UserId = warningUserId,
+                WarningMessage = warningMessage.Trim()
+            };
+
+            var response = await Http.PostAsJsonAsync("api/forum/warnings", dto);
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeAsync<object>("alert", new object[] { "Warning created successfully" });
+                CloseWarningModal();
+                await LoadWarnings(); // Refresh warnings list
+                await LoadBans(); // Refresh bans list in case of auto-ban
+            }
+            else
+            {
+                await JS.InvokeAsync<object>("alert", new object[] { "Failed to create warning" });
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeAsync<object>("alert", new object[] { $"Error creating warning: {ex.Message}" });
+        }
+    }
+
+    private async Task LoadBans()
+    {
+        try
+        {
+            isLoadingBans = true;
+            banErrorMessage = string.Empty;
+
+            var response = await Http.GetAsync("api/forum/bans");
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<List<BanDto>>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    bans = result.Data;
+                }
+                else
+                {
+                    banErrorMessage = result?.Message ?? "Failed to load bans";
+                }
+            }
+            else
+            {
+                banErrorMessage = "Failed to load bans. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            banErrorMessage = $"Error loading bans: {ex.Message}";
+            Console.WriteLine($"Error loading bans: {ex}");
+        }
+        finally
+        {
+            isLoadingBans = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OpenBanModal(string? userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            JS.InvokeAsync<object>("alert", new object[] { "Cannot ban user: User ID is missing or invalid" });
+            return;
+        }
+        
+        banUserId = userId;
+        banReason = string.Empty;
+        banType = "temporary";
+        banExpiresAt = DateTime.UtcNow.AddDays(7);
+        showBanModal = true;
+    }
+
+    private void CloseBanModal()
+    {
+        showBanModal = false;
+        banUserId = string.Empty;
+        banReason = string.Empty;
+        banType = "temporary";
+        banExpiresAt = DateTime.UtcNow.AddDays(7);
+    }
+
+    private async Task CreateBan()
+    {
+        if (string.IsNullOrWhiteSpace(banReason))
+        {
+            await JS.InvokeAsync<object>("alert", new object[] { "Please enter a ban reason" });
+            return;
+        }
+
+        try
+        {
+            var dto = new CreateBanDto
+            {
+                UserId = banUserId,
+                BanReason = banReason.Trim(),
+                BanType = banType,
+                ExpiresAt = banType == "permanent" ? null : banExpiresAt
+            };
+
+            var response = await Http.PostAsJsonAsync("api/forum/bans", dto);
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeAsync<object>("alert", new object[] { "User banned successfully" });
+                CloseBanModal();
+                await LoadBans(); // Refresh bans list
+            }
+            else
+            {
+                await JS.InvokeAsync<object>("alert", new object[] { "Failed to ban user" });
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeAsync<object>("alert", new object[] { $"Error creating ban: {ex.Message}" });
+        }
+    }
+
+    private async Task UnbanUser(int banId)
+    {
+        try
+        {
+            var dto = new UnbanUserDto
+            {
+                UnbanReason = "Unbanned by admin"
+            };
+
+            var response = await Http.PutAsJsonAsync($"api/forum/bans/{banId}/unban", dto);
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeAsync<object>("alert", new object[] { "User unbanned successfully" });
+                await LoadBans(); // Refresh bans list
+            }
+            else
+            {
+                await JS.InvokeAsync<object>("alert", new object[] { "Failed to unban user" });
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeAsync<object>("alert", new object[] { $"Error unbanning user: {ex.Message}" });
+        }
+    }
+}
+
+<script>
+    /* ===================== Forum Moderation – FULL JS ===================== */
+    (() => {
+      const root = document.getElementById('forum-mod-app') || document;
+
+      const $  = (sel, sc = root) => sc.querySelector(sel);
+      const $$ = (sel, sc = root) => Array.from(sc.querySelectorAll(sel));
+      const outside = (el, e) => el && !el.contains(e.target);
+
+      /* ---------- NAV (mobile) ---------- */
+      const navBtn = $('#fmNavToggle');
+      const nav    = $('#fmTopnav');
+      navBtn?.addEventListener('click', () => {
+        const open = nav.classList.toggle('is-open');
+        navBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+
+      /* ---------- POPOVERS (profile / notifications) ---------- */
+      const pBtn  = $('#fmProfileBtn');
+      const pMenu = $('#fmProfileMenu');
+      const nBtn  = $('#fmNotifyBtn');
+      const nMenu = $('#fmNotifyMenu');
+
+      function openMenu(menu, btn) {
+        if (!menu || !btn) return;
+        menu.classList.add('open');
+        menu.removeAttribute('hidden');
+        btn.setAttribute('aria-expanded', 'true');
+        if (menu.focus) menu.focus();
+      }
+      function closeMenu(menu, btn) {
+        if (!menu || !btn) return;
+        menu.classList.remove('open');
+        menu.setAttribute('hidden', '');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+      function toggleMenu(menu, btn) {
+        if (!menu || !btn) return;
+        const willOpen = !menu.classList.contains('open');
+        if (willOpen) {
+          // close the other one
+          if (menu === pMenu) closeMenu(nMenu, nBtn);
+          if (menu === nMenu) closeMenu(pMenu, pBtn);
+          openMenu(menu, btn);
+        } else {
+          closeMenu(menu, btn);
+        }
+      }
+
+      pBtn?.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(pMenu, pBtn); });
+      nBtn?.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(nMenu, nBtn); });
+
+      document.addEventListener('click', (e) => {
+        if (pMenu && outside(pMenu, e) && outside(pBtn, e)) closeMenu(pMenu, pBtn);
+        if (nMenu && outside(nMenu, e) && outside(nBtn, e)) closeMenu(nMenu, nBtn);
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeMenu(pMenu, pBtn);
+          closeMenu(nMenu, nBtn);
+          closePhoto();
+          closeContext();
+        }
+      });
+      window.addEventListener('scroll', () => { closeMenu(pMenu, pBtn); closeMenu(nMenu, nBtn); }, { passive: true });
+      window.addEventListener('resize', () => { closeMenu(pMenu, pBtn); closeMenu(nMenu, nBtn); }, { passive: true });
+
+      /* ---------- CHANGE PHOTO MODAL ---------- */
+      const openPhotoBtn = $('#fmChangePhotoOpen');
+      const photoModal   = $('#fmPhotoModal');
+      const fileInp      = $('#fmFile');
+      const previewImg   = $('#fmPreview');
+      const avatarImg    = $('#fmAvatar');
+      const savePhotoBtn = $('#fmSavePhoto');
+      const fileErr      = $('#fmFileError');
+      const LS_KEY       = 'fm-avatar';
+
+      function openPhoto(){ photoModal?.classList.add('open'); photoModal?.setAttribute('aria-hidden','false'); }
+      function closePhoto(){ if (!photoModal) return; photoModal.classList.remove('open'); photoModal.setAttribute('aria-hidden','true'); if (fileErr){ fileErr.hidden = true; fileErr.textContent = ''; } if (fileInp){ fileInp.value = ''; } }
+      function onFileChange(){
+        const f = fileInp?.files?.[0]; if (!f) return;
+        const okType = ['image/png','image/jpeg'].includes(f.type);
+        const okSize = f.size <= 2*1024*1024;
+        if (!okType || !okSize){
+          if (fileErr){ fileErr.hidden = false; fileErr.textContent = !okType ? 'Please select a PNG or JPG image.' : 'Image must be 2MB or smaller.'; }
+          if (fileInp) fileInp.value = '';
+          return;
+        }
+        const r = new FileReader();
+        r.onload = e => { if (previewImg) previewImg.src = e.target.result; };
+        r.readAsDataURL(f);
+      }
+      function savePhoto(){
+        if (!previewImg || !avatarImg) return;
+        avatarImg.src = previewImg.src;
+        try { localStorage.setItem(LS_KEY, previewImg.src); } catch {}
+        closePhoto();
+      }
+      function loadSavedAvatar(){
+        try {
+          const saved = localStorage.getItem(LS_KEY);
+          if (saved){ if (avatarImg) avatarImg.src = saved; if (previewImg) previewImg.src = saved; }
+        } catch {}
+      }
+
+      openPhotoBtn?.addEventListener('click', () => { closeMenu(pMenu, pBtn); openPhoto(); });
+      fileInp?.addEventListener('change', onFileChange);
+      savePhotoBtn?.addEventListener('click', savePhoto);
+      $$('.scrim[data-fm-close], .m-head .x[data-fm-close], .m-foot .btn.ghost[data-fm-close]', photoModal).forEach(el => el.addEventListener('click', closePhoto));
+      loadSavedAvatar();
+
+      /* ---------- LOGOUT ---------- */
+      $('#fmLogoutBtn')?.addEventListener('click', () => {
+        try { localStorage.clear(); sessionStorage.clear(); } catch {}
+        window.location.href = '/';
+      });
+
+      /* ---------- DROPDOWNS + FILTERS ---------- */
+      const ddReports = $('#dd-reports');
+      const ddSev     = $('#dd-sev');
+      const search    = $('#fmSearch');
+
+      function toggleDrop(dd, force){
+        const willOpen = (typeof force === 'boolean') ? force : !dd.classList.contains('open');
+        dd.classList.toggle('open', willOpen);
+        $('.dd-btn', dd)?.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      }
+      function selectDropItem(dd, li){
+        $('.dd-menu .active', dd)?.classList.remove('active');
+        li.classList.add('active');
+        $('.label', dd).textContent = li.textContent.trim();
+        toggleDrop(dd, false);
+        applyFilter();
+      }
+
+      ddReports?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.dd-btn'); if (btn) { toggleDrop(ddReports); return; }
+        const li  = e.target.closest('.dd-menu li[role="menuitem"]'); if (li) { selectDropItem(ddReports, li); }
+      });
+      ddSev?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.dd-btn'); if (btn) { toggleDrop(ddSev); return; }
+        const li  = e.target.closest('.dd-menu li[role="menuitem"]'); if (li) { selectDropItem(ddSev, li); }
+      });
+      document.addEventListener('click', (e) => {
+        if (ddReports && outside(ddReports, e)) ddReports.classList.remove('open');
+        if (ddSev && outside(ddSev, e)) ddSev.classList.remove('open');
+      });
+
+      const cards = () => $$('.report-card');
+      const stateSel = () => $('.dd-menu .active', ddReports)?.dataset.state || 'all';
+      const sevSel   = () => $('.dd-menu .active', ddSev)?.dataset.sev || 'all';
+
+      function applyFilter(){
+        const q = (search?.value || '').toLowerCase();
+        const s = stateSel();
+        const v = sevSel();
+        cards().forEach(c => {
+          const okState = s === 'all' || (c.dataset.state || 'open') === s;
+          const okSev   = v === 'all' || (c.dataset.sev || '').toLowerCase() === v;
+          const okText  = !q || c.textContent.toLowerCase().includes(q);
+          c.style.display = (okState && okSev && okText) ? '' : 'none';
+        });
+      }
+      search?.addEventListener('input', applyFilter);
+
+      /* ---------- CONTEXT MODAL ---------- */
+      const ctxModal   = $('#fmContextModal');
+      const ctxReporter= $('#ctxReporter');
+      const ctxReason  = $('#ctxReason');
+      const ctxKind    = $('#ctxKind');
+      const ctxExcerpt = $('#ctxExcerpt');
+      const ctxViewBtn = $('#ctxViewBtn');
+
+      function openContext(){ ctxModal?.classList.add('open'); ctxModal?.setAttribute('aria-hidden','false'); }
+      function closeContext(){ if (!ctxModal) return; ctxModal.classList.remove('open'); ctxModal.setAttribute('aria-hidden','true'); }
+
+      function fillContext(card){
+        const reporter = $('.rc-grid aside .userline .uname', card)?.textContent?.trim() || '—';
+        const reasonKV = Array.from($$('.rc-grid aside .kv', card)).find(kv => ($('.k', kv)?.textContent || '').toLowerCase().includes('reason'));
+        const reason   = reasonKV ? $('.v', reasonKV)?.textContent?.trim() : '—';
+        const kind     = card.dataset.kind || (card.dataset.type || 'Item');
+        const bubble   = $('.rc-grid section .bubble', card);
+        const excerpt  = bubble ? bubble.innerHTML : '—';
+        const viewHref = card.dataset.view || '#';
+
+        if (ctxReporter) ctxReporter.textContent = reporter;
+        if (ctxReason)   ctxReason.textContent   = reason;
+        if (ctxKind)     ctxKind.textContent     = kind;
+        if (ctxExcerpt)  ctxExcerpt.innerHTML    = excerpt;
+
+        if (ctxViewBtn){
+          ctxViewBtn.onclick = () => {
+            if (viewHref && viewHref !== '#') window.open(viewHref, '_blank', 'noopener');
+            closeContext();
+          };
+        }
+      }
+
+      root.addEventListener('click', (e) => {
+        const ctxBtn = e.target.closest('.report-card .rc-actions .btn.ctx');
+        if (ctxBtn){
+          const card = e.target.closest('.report-card');
+          fillContext(card);
+          openContext();
+          return;
+        }
+
+        const actBtn = e.target.closest('.report-card .rc-actions .btn');
+        if (actBtn && !actBtn.classList.contains('ctx')){
+          const card = e.target.closest('.report-card');
+          card.dataset.state = 'resolved';
+          card.classList.add('is-resolved');
+          applyFilter();
+          return;
+        }
+
+        if (e.target.matches('[data-fm-close]')) { closeContext(); closePhoto(); }
+      });
+
+      // initial filter render
+      applyFilter();
+    })();
+</script>

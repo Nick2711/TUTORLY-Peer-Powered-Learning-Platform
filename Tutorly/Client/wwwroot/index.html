@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title>Tutorly</title>
+
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+    <script>window.tailwind = { config: { corePlugins: { preflight: false } } };</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.metered.ca/sdk/video/1.4.6/sdk.min.js"></script>
+
+    <!-- Page CSS (list all page styles so any route can use them) -->
+    <link rel="stylesheet" href="/css/Login.css" />
+    <link rel="stylesheet" href="/css/Register.css" />
+    <link rel="stylesheet" href="/css/forgot.css" />
+    <link rel="stylesheet" href="/css/reset.css" />
+    <link rel="stylesheet" href="/css/status.css" />
+    <link rel="stylesheet" href="/css/verify.css" />
+    <link rel="stylesheet" href="/css/Dashboard.css" />
+    <link rel="stylesheet" href="/css/help.css" />
+    <link rel="stylesheet" href="/css/home.css" />
+    <link rel="stylesheet" href="/css/Modules.css" />
+    <link rel="stylesheet" href="/css/ModuleDetail.css" />
+    <link rel="stylesheet" href="/css/Messages.css" />
+    <link rel="stylesheet" href="/css/resources.css" />
+    <link rel="stylesheet" href="/css/topics-detail.css" />
+    <link rel="stylesheet" href="/css/Index.css" />
+    <link rel="stylesheet" href="/css/Thread.css" />
+    <link rel="stylesheet" href="/css/Overview.css" />
+    <link rel="stylesheet" href="/css/SessionDetail.css" />
+     <link rel="stylesheet" href="/css/Gamification.css" />
+
+    <!--Admin-->
+    <link rel="stylesheet" href="css/AdminDashboard.css" />
+    <link rel="stylesheet" href="css/AdminTutors.css" />
+    <link rel="stylesheet" href="css/FAQs.css" />
+    <link rel="stylesheet" href="css/ForumModeration.css" />
+    <link rel="stylesheet" href="css/ModuleManagement.css" />
+    <link rel="stylesheet" href="css/UserManagement.css" />
+    <link rel="stylesheet" href="css/AdminAnalytics.css" />
+
+    <!--Tutor-->
+    <link rel="stylesheet" href="css/TutorDashboard.css" />
+    <link rel="stylesheet" href="css/TutorMessages.css" />
+    <link rel="stylesheet" href="css/Availability.css?v=3">
+    <link rel="stylesheet" href="css/TutorResources.css" />
+    <link rel="stylesheet" href="css/TutorMessages.css" />
+    <link rel="stylesheet" href="css/Queue.css" />
+    <link rel="stylesheet" href="css/TutorSessionDetails.css" />
+    <link rel="stylesheet" href="css/TutorActiveSession.css" />
+    <link rel="stylesheet" href="css/Analytics.css" />
+
+
+
+
+    <!-- IMPORTANT: cache-bust and give the link an id -->
+    <link id="css-session" rel="stylesheet" href="/css/BookTutor.css?v=3" />
+    <link rel="stylesheet" href="/css/Session.css?v=1" />
+
+    <link rel="stylesheet" href="/css/MyModules.css" />
+
+    <!-- Feather icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <!-- AOS -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Anime.js -->
+    <script src="https://cdn.jsdelivr.net/npm/animejs/lib/anime.iife.min.js"></script>
+    <!-- Shared helpers -->
+    <script src="js/Script.js"></script>
+
+    <!-- SignalR -->
+    <script src="https://unpkg.com/@microsoft/signalr@latest/dist/browser/signalr.js"></script>
+    <script src="js/forum-signalr.js"></script>
+    <script src="js/messaging-backend-bridge.js"></script>
+
+    <!-- WebRTC Handler for Study Rooms -->
+    <script src="js/webrtc-handler.js"></script>
+
+    <!-- Call Handler for Floating Windows -->
+    <script src="js/call-handler.js"></script>
+
+    <!-- Guard: if BookTutor.css loads empty, automatically re-request it once -->
+    <script>
+        (function ensureSessionCss() {
+            const id = 'css-session';
+            const link = document.getElementById(id);
+            if (!link) return;
+
+            function sheetLooksValid() {
+                // Find the stylesheet by href and check it actually has rules.
+                try {
+                    for (const s of document.styleSheets) {
+                        if (s.href && s.href.indexOf('BookTutor.css') !== -1) {
+                            // If cssRules is accessible and has rules, we're good.
+                            if (s.cssRules && s.cssRules.length > 0) return true;
+                            // If access is blocked (rare), assume valid to avoid loops.
+                            try { void s.cssRules; } catch { return true; }
+                        }
+                    }
+                } catch { }
+                return false;
+            }
+
+            function reloadOnceIfEmpty() {
+                if (sheetLooksValid()) return;
+                const base = link.getAttribute('href').split('?')[0];
+                const fresh = base + '?v=3&t=' + Date.now(); // one-time cache bust
+                const clone = link.cloneNode();
+                clone.id = id;
+                clone.href = fresh;
+                clone.addEventListener('load', () => {
+                    // After load, check again (in case of odd caches)
+                    setTimeout(sheetLooksValid, 0);
+                });
+                link.replaceWith(clone);
+            }
+
+            // Run after window load so all stylesheets are registered.
+            window.addEventListener('load', reloadOnceIfEmpty);
+        })();
+    </script>
+
+    <!-- Blazor Interop Helpers for Forum Voting -->
+    <script>
+        window.setBlazorIndexVoteHandler = function (dotNetRef) {
+            window.blazorIndexVoteHandler = dotNetRef;
+            console.log('Blazor Index vote handler set:', !!dotNetRef);
+        };
+
+        window.setBlazorThreadVoteHandler = function (dotNetRef) {
+            window.blazorThreadVoteHandler = dotNetRef;
+            console.log('Blazor Thread vote handler set:', !!dotNetRef);
+        };
+    </script>
+</head>
+<body>
+    <div id="app">Loading...</div>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+﻿@page "/500"
+@page "/errors/error"
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<PageTitle>Something went wrong</PageTitle>
+
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div class="max-w-2xl w-full text-center" data-aos="zoom-in">
+        <div class="mx-auto h-16 w-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shadow">
+            <i data-feather="zap" class="h-8 w-8"></i>
+        </div>
+        <h1 class="mt-6 text-3xl font-bold text-gray-900">Something went wrong</h1>
+        <p class="mt-2 text-gray-600">
+            An unexpected error occurred. Try again, or head back to safety while we look into it.
+        </p>
+
+        <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <button class="btn primary" @onclick="Reload"><i data-feather="refresh-cw" class="h-4 w-4"></i> Try Again</button>
+            <button class="btn ghost" @onclick="GoHome"><i data-feather="home" class="h-4 w-4"></i> Go Home</button>
+        </div>
+
+        <details class="mt-6 text-left max-w-xl mx-auto bg-white rounded-lg border p-4">
+            <summary class="cursor-pointer font-medium text-gray-800">Technical details</summary>
+            <pre class="mt-3 text-xs text-gray-600 whitespace-pre-wrap">If you’re in dev, check the browser console for stack traces.</pre>
+        </details>
+    </div>
+</div>
+
+@code {
+    private async Task Reload() => await JS.InvokeVoidAsync("location.reload");
+    private void GoHome() => Nav.NavigateTo("/");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JS.InvokeVoidAsync("ui.initFeather");
+        await JS.InvokeVoidAsync("ui.initAOS");
+        await JS.InvokeVoidAsync("ui.loadScript", "/js/status-pages.js");
+        await JS.InvokeVoidAsync("statusPages.initError");
+    }
+}

@@ -1,0 +1,141 @@
+﻿@page "/auth/verify"
+@attribute [Authorize]
+@inject IJSRuntime JS
+@inject HttpClient Http
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+
+<PageTitle>Two-Factor Auth | Belgium Campus Learning Portal</PageTitle>
+
+<div class="fixed top-4 right-4 z-50">
+  <label class="theme-switch" title="Toggle theme">
+    <input id="theme-toggle" type="checkbox" class="theme-switch__checkbox">
+    <div class="theme-switch__container">
+      <div class="theme-switch__clouds"></div>
+      <div class="theme-switch__stars-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none"><path fill="currentColor" d="M135.831 3.00688..."></path></svg>
+      </div>
+      <div class="theme-switch__circle-container">
+        <div class="theme-switch__sun-moon-container"><div class="theme-switch__moon"><div class="theme-switch__spot"></div><div class="theme-switch__spot"></div><div class="theme-switch__spot"></div></div></div>
+      </div>
+    </div>
+  </label>
+</div>
+
+<div class="min-h-screen flex items-center justify-center p-4" style="font-family:'Inter',sans-serif; background-color: var(--page-bg);">
+  <div class="max-w-md w-full space-y-8">
+    <div class="text-center">
+      <div class="flex justify-center">
+        <div class="gradient-bg p-3 rounded-lg shadow-lg inline-flex">
+          <i data-feather="shield" class="text-white w-8 h-8"></i>
+        </div>
+      </div>
+      <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Set up Two-Factor Authentication</h2>
+      <p class="mt-2 text-sm text-gray-600">Scan the QR code with Google Authenticator / Authy, then enter the 6-digit code.</p>
+    </div>
+
+    <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+      @if (enrolling)
+      {
+        <p>Preparing your MFA secret…</p>
+      }
+      else if (qrUri is null)
+      {
+        <p class="text-sm text-red-700">Could not start MFA enrollment.</p>
+      }
+      else
+      {
+        <div class="flex flex-col items-center gap-4">
+          <!-- If server returns an SVG (qrSvg), you can render it via MarkupString. Using URI is safest. -->
+          <img src="@qrUri" alt="Authenticator QR" class="rounded border" style="max-width: 220px;" />
+          <code class="text-xs break-all">@manualKey</code>
+        </div>
+
+        <EditForm class="mt-6 space-y-6" Model="@model" OnValidSubmit="VerifyAsync">
+          <DataAnnotationsValidator />
+          <ValidationSummary />
+          <div class="neo-field">
+            <InputText id="code" class="neo-input" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                       @bind-Value="model.Code" placeholder="123456" />
+            <label for="code" class="neo-label">6-digit code</label>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-3d btn-3d--tiny btn-3d--fixed" disabled="@busy">@(busy ? "Verifying…" : "Verify & Enable")</button>
+          </div>
+
+          @if (!string.IsNullOrWhiteSpace(error))
+          {
+            <div class="mt-4 bg-red-50 border-l-4 border-red-400 p-3 rounded"><p class="text-sm text-red-700">@error</p></div>
+          }
+          @if (!string.IsNullOrWhiteSpace(success))
+          {
+            <div class="mt-4 bg-green-50 border-l-4 border-green-400 p-3 rounded"><p class="text-sm text-green-700">@success</p></div>
+          }
+        </EditForm>
+      }
+    </div>
+  </div>
+</div>
+
+@code {
+  private bool enrolling = true;
+  private bool busy;
+  private string? error;
+  private string? success;
+
+  private string? factorId;
+  private string? qrUri;
+  private string? manualKey;
+
+  private Model model = new();
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      await JS.InvokeVoidAsync("ui.initFeather");
+      await JS.InvokeVoidAsync("ui.wireThemeToggle", "#theme-toggle");
+      await EnrollAsync();
+    }
+  }
+
+  private async Task EnrollAsync()
+  {
+    try
+    {
+      var req = new HttpRequestMessage(HttpMethod.Post, "api/mfa/totp/enroll");
+      req.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+      var resp = await Http.SendAsync(req);
+      if (!resp.IsSuccessStatusCode) { enrolling = false; return; }
+
+      var dto = await resp.Content.ReadFromJsonAsync<EnrollDto>();
+      factorId = dto?.factor_id;
+      qrUri   = dto?.otpauth_uri;
+      manualKey = dto?.secret;
+    }
+    finally { enrolling = false; StateHasChanged(); }
+  }
+
+  private async Task VerifyAsync()
+  {
+    error = success = null;
+    busy = true;
+    try
+    {
+      var req = new HttpRequestMessage(HttpMethod.Post, "api/mfa/totp/verify")
+      { Content = JsonContent.Create(new { FactorId = factorId, Code = model.Code }) };
+      req.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+      var resp = await Http.SendAsync(req);
+      if (resp.IsSuccessStatusCode) success = "Two-Factor Authentication successfully enabled.";
+      else error = await resp.Content.ReadAsStringAsync();
+    }
+    finally { busy = false; StateHasChanged(); }
+  }
+
+  private class Model { [Required, StringLength(6, MinimumLength = 6)] public string Code { get; set; } = ""; }
+  private class EnrollDto { public string? factor_id { get; set; } public string? otpauth_uri { get; set; } public string? secret { get; set; } }
+}

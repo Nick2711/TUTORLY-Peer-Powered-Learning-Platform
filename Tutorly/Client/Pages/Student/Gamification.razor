@@ -1,0 +1,1127 @@
+﻿@page "/gamification"
+@using System.Text.Json
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@implements IAsyncDisposable
+
+<PageTitle>Gamification | Tutorly</PageTitle>
+
+@* Provide absolute URLs for assets to CSS via variables *@
+<style id="flame-src">
+    :root {
+        --flame-url: url('@FlameGifUrl');
+        /* NEW: used only for the little shop tile preview square */
+        --clown-url: url('@ClownUrl');
+        --balatro-thumb: url('@BalatroThumbUrl'); /* NEW – small square for Balatro */
+        --stars-url: url('@StarsUrl'); /* NEW – small square for Night Sky */
+    }
+</style>
+
+<div id="gamification-page" style="@PageBackgroundStyle">
+    <!-- HEADER / PROFILE + LEVEL -->
+    <header class="g-head">
+        <div class="g-profile">
+            <div class="g-avatar @SelectedFrameCss" style="background:@SelectedBackgroundCss">
+                <img src="@AvatarUrl" alt="Profile avatar" />
+                <span class="g-level-badge" title="Level">@($"Lv {Level}")</span>
+            </div>
+            <div class="g-pmeta">
+                <div class="g-name">
+                    <span>@DisplayName</span>
+                    <span class="g-name-badge">@CurrentTitle</span>
+                </div>
+                <div class="g-xprow">
+                    <div class="g-progress" role="progressbar" aria-valuenow="@LevelProgressPct" aria-valuemin="0" aria-valuemax="100">
+                        <div class="g-progress__bar" style="width:@($"{LevelProgressPct}%")"></div>
+                    </div>
+                    <div class="g-xpmeta">Level @Level – <strong>@CurrentTitle</strong> • @XP/@NextLevelXP XP</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="g-wallet">
+            <button class="g-btn" aria-label="Home" @onclick="@(() => Nav.NavigateTo("/dashboard"))">🏠 Home</button>
+            <button class="g-btn" @onclick="TogglePlantView">🌱 Your Plant</button>
+            <div class="g-coin">🪙 TutorCoins: <strong>@Coins</strong></div>
+            <button class="g-btn" @onclick="ToggleAchievements">🏆 View Trophies & Achievements</button>
+        </div>
+    </header>
+
+    @if (!ShowPlantView)
+    {
+        <!-- QUICK ACTIONS -->
+        <section class="g-card">
+            <div class="g-card__head">
+                <h3>Earn XP</h3>
+                <div class="g-hint">Booking (+50 XP), Attending (+100 XP), Feedback (+30 XP)</div>
+            </div>
+            <div class="g-actions">
+                <button class="g-btn g-btn--primary" @onclick="@(() => AddXP(50, 10, "Booked a session"))">📅 Book Session (+50 XP)</button>
+                <button class="g-btn g-btn--primary" @onclick="@(() => AddXP(100, 15, "Attended a session"))">✅ Attended Session (+100 XP)</button>
+                <button class="g-btn g-btn--primary" @onclick="@(() => AddXP(30, 5, "Submitted feedback"))">📝 Submit Feedback (+30 XP)</button>
+            </div>
+        </section>
+
+        <!-- POINTS / CURRENCY + SHOP -->
+        <section class="g-grid">
+            <div class="g-card">
+                <div class="g-card__head"><h3>🪙 TutorCoins</h3></div>
+                <ul class="g-list">
+                    <li>Earned from: completing lessons, helping others, logging in daily.</li>
+                    <li>Redeem for: profile customization, exclusive study materials, tutoring discounts.</li>
+                </ul>
+
+                <div class="g-shop">
+                    <h4>Redeem & Customize</h4>
+                    <div class="g-shop-grid">
+                        @foreach (var item in AllShopItems)
+                        {
+                            var unlocked = Level >= item.RequiredLevel || Coins >= item.Cost || item.Id == SecretFrameId;
+                            var owned = OwnedCosmetics.Contains(item.Id);
+
+                            // Show "Remove" when the item is the currently-applied one (frame or bg)
+                            var applied = (item.Kind == "frame" && SelectedFrameCss == item.Id)
+                            || (item.Kind == "bg" && SelectedBackgroundId == item.Id)
+                            || (item.Kind == "icon" && item.Id == "icon-animated" && AvatarUrl == AnimatedGifUrl);
+
+                            <div class="g-shop-item @(owned ? "is-owned" : null)">
+                                <div class="g-shop-art @($"c-{item.Id}")"></div>
+                                <div class="g-shop-meta">
+                                    <div class="g-shop-title">
+                                        @item.Name
+                                        @if (item.Id == SecretFrameId)
+                                        {
+                                            <span title="Secret" style="font-size:12px;margin-left:6px">🔒✨</span>
+                                        }
+                                    </div>
+                                    <div class="g-shop-req">Req: Lv @item.RequiredLevel or @item.Cost 🪙</div>
+                                </div>
+
+                                @if (!owned)
+                                {
+                                    <button class="g-btn g-btn--small" disabled="@(!unlocked)" title="Unlock"
+                                            @onclick="@(() => UnlockItem(item))">
+                                        @(unlocked ? "Unlock" : "Locked")
+                                    </button>
+                                }
+                                else
+                                {
+                                    @if (applied)
+                                    {
+                                        <button class="g-btn g-btn--small" title="Remove" @onclick="@(() => RemoveItem(item))">Remove</button>
+                                    }
+                                    else
+                                    {
+                                        <button class="g-btn g-btn--small" title="Apply" @onclick="@(() => ApplyItem(item))">Apply</button>
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUESTS -->
+            <div class="g-card">
+                <div class="g-card__head"><h3>🧭 Quests</h3></div>
+                <div class="g-quests">
+                    @foreach (var q in Quests)
+                    {
+                        var pct = (int)Math.Clamp((q.Progress * 100.0 / q.Target), 0, 100);
+                        <div class="g-quest">
+                            <div class="g-quest-head">
+                                <div class="g-quest-title">@q.Title</div>
+                                <div class="g-quest-rew">+@q.RewardXP XP • +@q.RewardCoins 🪙</div>
+                            </div>
+                            <div class="g-progress">
+                                <div class="g-progress__bar" style="@($"width:{pct}%")"></div>
+                            </div>
+                            <div class="g-quest-meta">@q.Progress/@q.Target</div>
+                            <button class="g-btn g-btn--small"
+                                    disabled="@(pct < 100 || q.Claimed)"
+                                    @onclick="@(() => ClaimQuest(q.Id))">
+                                @(q.Claimed ? "Claimed" : "Claim Reward")
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <!-- STREAKS -->
+        <section class="g-card">
+            <div class="g-card__head"><h3>🔔 Streaks</h3></div>
+            <div class="g-streaks">
+                <div class="g-streak-box">
+                    <div class="g-streak-count">🔥 @StreakDays day@(StreakDays == 1 ? "" : "s")</div>
+                    <div class="g-streak-best">Best: @BestStreak days</div>
+                </div>
+                <button class="g-btn g-btn--primary" @onclick="MarkStudiedToday">Mark “Studied Today”</button>
+                <div class="g-hint">Hit milestones (5, 10, 20…) to earn badges and bonus XP.</div>
+            </div>
+        </section>
+
+        <!-- LEADERBOARDS -->
+        <section class="g-card">
+            <div class="g-card__head"><h3>🥇 Leaderboards</h3></div>
+
+            <div class="g-lb-privacy">
+                <label class="g-switch">
+                    <input type="checkbox" checked="@HideMeOnLeaderboards" @onchange="OnHideMeChanged" />
+                    <span></span> Hide me from public leaderboards
+                </label>
+            </div>
+
+            <div class="g-lb-grid">
+                <div class="g-lb">
+                    <div class="g-lb-title">Top Tutors (5⭐)</div>
+                    <ol>
+                        @foreach (var r in TopTutors)
+                        {
+                            <li>@r.Name <span>@r.Value</span></li>
+                        }
+                    </ol>
+                </div>
+                <div class="g-lb">
+                    <div class="g-lb-title">Top Students (Sessions)</div>
+                    <ol>
+                        @foreach (var r in TopStudents)
+                        {
+                            <li>@r.Name <span>@r.Value</span></li>
+                        }
+                        @if (!HideMeOnLeaderboards)
+                        {
+                            <li class="me">You <span>@SessionsAttended</span></li>
+                        }
+                    </ol>
+                </div>
+                <div class="g-lb">
+                    <div class="g-lb-title">Most XP This Month</div>
+                    <ol>
+                        @foreach (var r in TopXP)
+                        {
+                            <li>@r.Name <span>@r.Value</span></li>
+                        }
+                        @if (!HideMeOnLeaderboards)
+                        {
+                            <li class="me">You <span>@XP</span></li>
+                        }
+                    </ol>
+                </div>
+            </div>
+        </section>
+    }
+
+    @* =========================
+       PLANT / STREAK VIEW
+       ========================= *@
+    @if (ShowPlantView)
+    {
+        <section class="g-card plant-card">
+            <div class="g-card__head">
+                <h3>🌱 Your Study Plant</h3>
+                <div class="g-plant-actions">
+                    <button class="g-btn" @onclick="BackToGamification">← Back to Gamification</button>
+                </div>
+            </div>
+
+            <div class="plant-wrap">
+                <div class="plant-ring" role="img" aria-label="Plant growth progress" style="@RingStyle">
+                    <div class="plant-stage">
+                        @((MarkupString)GetStageSvg(Active.Stage))
+                    </div>
+                    <div class="plant-pot" aria-hidden="true"></div>
+                </div>
+
+                <div class="plant-meta">
+                    <div class="plant-title">
+                        @StageNames[Math.Min(Active.Stage, StageNames.Length - 1)]
+                    </div>
+                    <div class="plant-desc">
+                        Progress: <strong>@Active.Progress</strong> / @Active.Required day(s)
+                        @if (IsFinalStage(Active))
+                        {
+                            <span class="plant-badge">🌳 Mature tree!</span>
+                        }
+                    </div>
+
+                    <div class="plant-actions-row">
+                        <button class="g-btn g-btn--primary"
+                                disabled="@HasGrownToday"
+                                @onclick="WaterToday">
+                            @((HasGrownToday ? "✅ Logged today" : "💧 Log today & water plant"))
+                        </button>
+
+                        <button class="g-btn"
+                                title="Demo: advance the plant by one day"
+                                @onclick="DemoGrowOnce">
+                            🌞 Demo: +1 day
+                        </button>
+                        <div class="g-hint">
+                            Logging also counts toward your study streak.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @* ===== Forest Board (auto-populates with fully grown trees) ===== *@
+            <div class="plant-forest">
+                <div class="forest-bar">
+                    <div class="forest-meta g-hint">
+                        Trees: <strong>@MaturedCount</strong> • Grid @($"{ForestPage + 1}/{TotalBoards}")
+                    </div>
+                    <div class="forest-pager">
+                        <button class="g-btn g-btn--ghost" aria-label="Previous board"
+                                disabled="@(ForestPage == 0)" @onclick="PrevBoard">
+                            ‹
+                        </button>
+
+                        <div class="pager-dots" role="tablist" aria-label="Forest boards">
+                            @for (int p = 0; p < TotalBoards; p++)
+                            {
+                                <button class="dot @(p == ForestPage ? "is-active" : null)"
+                                        role="tab" aria-selected="@(p == ForestPage)"
+                                        title="@($"Board {p + 1}")"
+                                        @onclick="(() => GoBoard(p))"></button>
+                            }
+                        </div>
+
+                        <button class="g-btn g-btn--ghost" aria-label="Next board"
+                                disabled="@(ForestPage >= TotalBoards - 1)" @onclick="NextBoard">
+                            ›
+                        </button>
+                    </div>
+                </div>
+
+                <div class="farm-wrap">
+                    <div class="farm-iso" style="--rows:@Rows; --cols:@Cols;">
+                        @for (int r = 0; r < Rows; r++)
+                        {
+                            for (int c = 0; c < Cols; c++)
+                            {
+                                var idxOnPage = r * Cols + c;
+                                var globalIdx = PageOffset + idxOnPage;     // <-- key
+                                var hasTree = globalIdx < MaturedCount;   // <-- key
+
+                                <div class="farm-tile" style="--r:@r; --c:@c">
+                                    @if (hasTree)
+                                    {
+                                        <div class="tree tree--mature" title="Mature Tree"></div>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    }
+
+    <!-- ACHIEVEMENTS MODAL -->
+    <div class="g-modal @(ShowAchievements ? "show" : "")" @onclick="CloseAchievements">
+        <div class="g-modal__card" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="achTitle">
+            <div class="g-modal__head">
+                <h3 id="achTitle">Trophies & Achievements</h3>
+                <button class="g-btn g-btn--ghost" @onclick="CloseAchievements">✕</button>
+            </div>
+
+            <div class="g-modal__body">
+                <div class="g-platinum">
+                    <div class="trophy trophy--platinum" title="Platinum">
+                        @TrophySvg("platinum")
+                    </div>
+                    <div class="g-plat-meta">
+                        <div class="g-platinum-title">Platinum Trophy</div>
+                        <div class="g-hint">Unlock all achievements for 100% completion.</div>
+                        <div class="g-progress"><div class="g-progress__bar" style="width:@PlatinumPct%"></div></div>
+                        <div class="g-quest-meta">@CompletedAchievements/@AllAchievements.Count completed</div>
+                    </div>
+                </div>
+
+                <div class="g-ach-grid">
+                    @foreach (var a in AllAchievements)
+                    {
+                        var prog = GetProgress(a);
+                        var pct = (int)Math.Min(100, Math.Round(prog * 100.0 / a.Target));
+
+                        <div class="@GetAchClass(a, prog)">
+                            <div class="@GetTrophyClass(a)" title="@a.Tier">
+                                @TrophySvg(a.Tier.ToLower())
+                            </div>
+
+                            <div class="g-ach-meta">
+                                <div class="g-ach-title">@a.Title</div>
+                                <div class="g-ach-desc">@a.Description</div>
+                                <div class="g-progress">
+                                    <div class="g-progress__bar" style="@($"width:{pct}%")"></div>
+                                </div>
+                                <div class="g-quest-meta">@prog/@a.Target</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="g-modal__foot">
+                <button class="g-btn" @onclick="CloseAchievements">Close</button>
+                <button class="g-btn g-btn--primary"
+                        disabled="@(!AllAchievementsComplete)"
+                        title="@(AllAchievementsComplete
+                                                                  ? "You’ve unlocked the Mystery Reward!"
+                                                                  : "Complete all trophies & achievements to unlock")"
+                        @onclick="OpenMysteryReward">
+                    🎁 Open Mystery Reward
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECRET POPUP (Konami) -->
+    <div class="egg-modal @(ShowCheatModal ? "show" : "")" @onclick="CloseCheatModal">
+        <div class="egg-card" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-labelledby="eggTitle">
+            <div class="egg-head">
+                <h3 id="eggTitle">🔥 Secret Unlocked!</h3>
+                <button class="g-btn g-btn--ghost" @onclick="CloseCheatModal">✕</button>
+            </div>
+            <div class="egg-body">
+                <p>Konami Code detected. You’ve unlocked a <strong>Flaming Profile Frame</strong> and the hidden achievement <em>“Legacy Codebreaker”</em>!</p>
+                <div class="egg-preview">
+                    <div class="g-avatar frame-flames">
+                        <img src="@AvatarUrl" alt="Preview avatar" />
+                        <span class="g-level-badge" title="Level">@($"Lv {Level}")</span>
+                    </div>
+                </div>
+            </div>
+            <div class="egg-foot">
+                <button class="g-btn" @onclick="CloseCheatModal">Close</button>
+                <button class="g-btn g-btn--primary" @onclick="EquipFlameFrame">🔥 Equip Flaming Frame</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // --------- Basic profile demo data ----------
+    string DisplayName = "Alex Student";
+    string AvatarUrl = "https://i.pravatar.cc/80?img=68";
+    string FlameGifUrl = string.Empty;
+
+    bool AllAchievementsComplete => AllAchievements.Count > 0
+                                && CompletedAchievements >= AllAchievements.Count;
+    // NEW: absolute URLs used elsewhere
+    string BalatroUrl = string.Empty;   // page wallpaper (unchanged)
+    string ClownUrl = string.Empty;     // shop preview square ONLY
+
+    // saved state
+    int XP = 0, Coins = 0, SessionsBooked = 0, SessionsAttended = 0, FeedbackGiven = 0;
+    int StreakDays = 0, BestStreak = 0;
+    DateTime? LastStudyDate = null;
+    bool HideMeOnLeaderboards = false;
+
+    // cosmetics
+    HashSet<string> OwnedCosmetics = new();
+    string SelectedFrameCss = "";
+    string SelectedBackgroundCss = ""; // avatar preview
+    string SelectedBackgroundId = "";  // which bg is applied
+    string PageBackgroundStyle = "";   // page wallpaper
+
+    // Secret frame id
+    const string SecretFrameId = "frame-flames";
+
+    string GetAchClass(Ach a, int prog) =>
+        $"g-ach is-{a.Tier.ToLower()}{(prog >= a.Target ? " is-done" : "")}";
+
+    string GetTrophyClass(Ach a) =>
+        $"trophy trophy--{a.Tier.ToLower()}";
+
+    // --------- Leveling ----------
+    const int BaseLevelXP = 250;
+    string[] LevelTitles = new[] {
+        "Newcomer", "Learner", "Apprentice", "Knowledge Explorer",
+        "Problem Solver", "Contributor", "Mentor in Training", "Tutor Ally",
+        "Subject Specialist", "Master Scholar"
+    };
+    int Level => Math.Max(1, (XP / BaseLevelXP) + 1);
+    int NextLevelXP => Level * BaseLevelXP;
+    int LevelProgress => XP - ((Level - 1) * BaseLevelXP);
+    int LevelProgressPct => Math.Clamp((int)Math.Round(LevelProgress * 100.0 / BaseLevelXP), 0, 100);
+    string CurrentTitle => LevelTitles[Math.Min(LevelTitles.Length - 1, Math.Max(0, Level - 1))];
+
+    // --------- Quests ----------
+    record Quest(string Id, string Title, int Target, int RewardXP, int RewardCoins, int Progress = 0, bool Claimed = false);
+    List<Quest> Quests = new()
+    {
+        new Quest("q1","Book 3 tutoring sessions this week",3, 150, 20),
+        new Quest("q2","Complete 2 different subjects in one week",2, 180, 25),
+        new Quest("q3","Leave feedback for 3 tutors",3, 120, 15),
+    };
+
+    // --------- Achievements ----------
+    record Ach(string Id, string Title, string Description, string Tier, int Target, Func<int> Get);
+    List<Ach> AllAchievements = new();
+    int GetProgress(Ach a) => Math.Min(a.Target, Math.Max(0, a.Get()));
+    int CompletedAchievements => AllAchievements.Count(a => GetProgress(a) >= a.Target);
+    int PlatinumPct => (int)Math.Round(CompletedAchievements * 100.0 / Math.Max(1, AllAchievements.Count));
+
+    // --------- Leaderboards (demo) ----------
+    record Row(string Name, string Value);
+    List<Row> TopTutors = new() {
+        new Row("Anouk", "4.98 ★"), new Row("Zinhle", "4.95 ★"), new Row("Marco", "4.93 ★"),
+        new Row("Vuyo",  "4.89 ★"), new Row("Priya", "4.88 ★"),
+    };
+    List<Row> TopStudents = new() {
+        new Row("Jamie", "42"), new Row("Sam", "39"), new Row("Lebo", "36"),
+        new Row("Kait", "30"), new Row("Maya", "29")
+    };
+    List<Row> TopXP = new() {
+        new Row("Jordan", "3850"), new Row("Chen", "3600"), new Row("Rai", "3440"),
+        new Row("Noah", "3290"), new Row("Aisha","3100")
+    };
+
+    // --------- Shop / cosmetics ----------
+    record ShopItem(string Id, string Name, int RequiredLevel, int Cost, string Kind);
+    List<ShopItem> ShopItems = new() {
+        new ShopItem("frame-bronze","Bronze Frame", 2, 50, "frame"),
+        new ShopItem("frame-gold","Gold Frame", 10, 200, "frame"),
+        new ShopItem("bg-grid","Balatro Background", 3, 60, "bg"),
+        new ShopItem("bg-stars","Night Sky Background", 6, 120, "bg"),
+        new ShopItem("icon-animated","Animated Avatar (Platinum)", 0, 0, "icon"),
+        // secret frame is not listed; it unlocks via Konami
+    };
+
+    // Append secret item to the shop once owned
+    ShopItem SecretShopItem => new(SecretFrameId, "Flame Ring (Secret)", 0, 0, "frame");
+    IEnumerable<ShopItem> AllShopItems => OwnedCosmetics.Contains(SecretFrameId)
+        ? ShopItems.Concat(new[] { SecretShopItem })
+        : ShopItems;
+
+    // --------- Modals ----------
+    bool ShowAchievements = false;
+    bool ShowCheatModal = false;
+
+    // ---------- Lifecycle ----------
+    DotNetObjectReference<Gamification>? _dotnetRef;
+
+    string BalatroThumbUrl = string.Empty; // small shop tile
+
+    string StarsUrl = string.Empty;
+
+    string AnimatedGifUrl = string.Empty;
+
+    string MinecraftUrl = string.Empty;
+
+    const string DefaultAvatar = "https://i.pravatar.cc/80?img=68";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // build absolute URLs so they work under any base path
+        FlameGifUrl = new Uri(new Uri(Nav.BaseUri), "images/IMG_0090.gif").ToString();
+        BalatroUrl = new Uri(new Uri(Nav.BaseUri), "images/balatro-key-art-5k-3840x2160-21621.jpg").ToString();
+        // NEW: clown preview image (only used in the small shop square)
+        ClownUrl = new Uri(new Uri(Nav.BaseUri), "images/what-do-you-guys-think-about-john-balatro-ceo-of-balatro-v0-3c2cz7ff2d9e1.webp").ToString();
+        StarsUrl = new Uri(new Uri(Nav.BaseUri), "images/Starry Night HD.jpg").ToString();
+        BalatroThumbUrl = new Uri(new Uri(Nav.BaseUri), "images/em8NcZnDpq7MZAgzMDerVi.jpg").ToString(); // ← clown JPG
+        AnimatedGifUrl = new Uri(new Uri(Nav.BaseUri), "images/download (3).gif").ToString();
+        MinecraftUrl = new Uri(new Uri(Nav.BaseUri), "images/download (11).jpg").ToString();
+
+        BuildAchievements();
+        // scripts not yet in DOM -> don't LoadState here
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotnetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("tutorlyCheat.init", _dotnetRef);
+
+            await LoadState();
+
+            // Reapply page background if it was saved previously
+            if (SelectedBackgroundId == "bg-grid")
+                PageBackgroundStyle = $"background: url('{BalatroUrl}') center / cover fixed no-repeat";
+            if (SelectedBackgroundId == "bg-stars")
+                PageBackgroundStyle = $"background: url('{StarsUrl}') center / cover fixed no-repeat";
+            StateHasChanged();
+
+            await LoadPlantState();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("tutorlyCheat.dispose"); } catch { }
+        _dotnetRef?.Dispose();
+    }
+
+    void BuildAchievements()
+    {
+        var list = new List<Ach>();
+        // (unchanged — all your achievements setup)
+        list.Add(new Ach("a-book-1", "First Booking", "Make your first tutoring booking.", "bronze", 1, () => SessionsBooked));
+        list.Add(new Ach("a-book-3", "Getting Started", "Book 3 sessions.", "bronze", 3, () => SessionsBooked));
+        list.Add(new Ach("a-book-5", "Busy Bee", "Book 5 sessions.", "silver", 5, () => SessionsBooked));
+        list.Add(new Ach("a-book-10", "On the Calendar", "Book 10 sessions.", "silver", 10, () => SessionsBooked));
+        list.Add(new Ach("a-book-20", "Scheduling Pro", "Book 20 sessions.", "gold", 20, () => SessionsBooked));
+        list.Add(new Ach("a-book-30", "Planner Extraordinaire", "Book 30 sessions.", "gold", 30, () => SessionsBooked));
+        list.Add(new Ach("a-attend-1", "Showed Up", "Attend your first session.", "bronze", 1, () => SessionsAttended));
+        list.Add(new Ach("a-attend-5", "Finding Rhythm", "Attend 5 sessions.", "bronze", 5, () => SessionsAttended));
+        list.Add(new Ach("a-attend-10", "Consistent Learner", "Attend 10 sessions.", "silver", 10, () => SessionsAttended));
+        list.Add(new Ach("a-attend-20", "Committed", "Attend 20 sessions.", "silver", 20, () => SessionsAttended));
+        list.Add(new Ach("a-attend-30", "Session Veteran", "Attend 30 sessions.", "gold", 30, () => SessionsAttended));
+        list.Add(new Ach("a-attend-50", "Iron Learner", "Attend 50 sessions.", "gold", 50, () => SessionsAttended));
+        list.Add(new Ach("a-fb-1", "First Thanks", "Leave feedback once.", "bronze", 1, () => FeedbackGiven));
+        list.Add(new Ach("a-fb-3", "Supporter", "Leave feedback 3 times.", "bronze", 3, () => FeedbackGiven));
+        list.Add(new Ach("a-fb-5", "Helpful Voice", "Leave feedback 5 times.", "silver", 5, () => FeedbackGiven));
+        list.Add(new Ach("a-fb-10", "Top Contributor", "Leave feedback 10 times.", "silver", 10, () => FeedbackGiven));
+        list.Add(new Ach("a-fb-20", "Feedback Champion", "Leave feedback 20 times.", "gold", 20, () => FeedbackGiven));
+        list.Add(new Ach("a-streak-3", "Warm Up", "Maintain a 3-day study streak.", "bronze", 3, () => StreakDays));
+        list.Add(new Ach("a-streak-5", "On a Roll", "Maintain a 5-day study streak.", "bronze", 5, () => StreakDays));
+        list.Add(new Ach("a-streak-7", "One Week Strong", "Maintain a 7-day streak.", "silver", 7, () => StreakDays));
+        list.Add(new Ach("a-streak-10", "Double Digits", "Maintain a 10-day streak.", "silver", 10, () => StreakDays));
+        list.Add(new Ach("a-streak-14", "Two Weeks", "Maintain a 14-day streak.", "silver", 14, () => StreakDays));
+        list.Add(new Ach("a-streak-20", "Focused Grind", "Maintain a 20-day streak.", "gold", 20, () => StreakDays));
+        list.Add(new Ach("a-streak-30", "Study Machine", "Maintain a 30-day streak.", "gold", 30, () => StreakDays));
+        list.Add(new Ach("a-best-3", "Personal Best: 3", "Reach a best streak of 3 days.", "bronze", 3, () => BestStreak));
+        list.Add(new Ach("a-best-10", "Personal Best: 10", "Reach a best streak of 10 days.", "silver", 10, () => BestStreak));
+        list.Add(new Ach("a-best-20", "Personal Best: 20", "Reach a best streak of 20 days.", "gold", 20, () => BestStreak));
+        list.Add(new Ach("a-best-30", "Personal Best: 30", "Reach a best streak of 30 days.", "gold", 30, () => BestStreak));
+        list.Add(new Ach("a-xp-250", "First Steps", "Reach 250 total XP.", "bronze", 250, () => XP));
+        list.Add(new Ach("a-xp-500", "Getting Momentum", "Reach 500 total XP.", "bronze", 500, () => XP));
+        list.Add(new Ach("a-xp-1000", "Level Up", "Reach 1000 total XP.", "silver", 1000, () => XP));
+        list.Add(new Ach("a-xp-1500", "XP Collector", "Reach 1500 total XP.", "silver", 1500, () => XP));
+        list.Add(new Ach("a-xp-2000", "Knowledge Seeker", "Reach 2000 total XP.", "silver", 2000, () => XP));
+        list.Add(new Ach("a-xp-3000", "Advanced Scholar", "Reach 3000 total XP.", "gold", 3000, () => XP));
+        list.Add(new Ach("a-xp-4000", "Expert Scholar", "Reach 4000 total XP.", "gold", 4000, () => XP));
+        list.Add(new Ach("a-xp-5000", "Elite Scholar", "Reach 5000 total XP.", "gold", 5000, () => XP));
+        list.Add(new Ach("a-coins-50", "Coin Curious", "Accumulate 50 TutorCoins.", "bronze", 50, () => Coins));
+        list.Add(new Ach("a-coins-100", "Coin Collector", "Accumulate 100 TutorCoins.", "bronze", 100, () => Coins));
+        list.Add(new Ach("a-coins-250", "Saver", "Accumulate 250 TutorCoins.", "silver", 250, () => Coins));
+        list.Add(new Ach("a-coins-500", "Investor", "Accumulate 500 TutorCoins.", "silver", 500, () => Coins));
+        list.Add(new Ach("a-coins-1000", "Whale", "Accumulate 1000 TutorCoins.", "gold", 1000, () => Coins));
+        list.Add(new Ach("a-level-2", "Level 2", "Reach Level 2.", "bronze", 2, () => Level));
+        list.Add(new Ach("a-level-5", "Level 5", "Reach Level 5.", "silver", 5, () => Level));
+        list.Add(new Ach("a-level-8", "Level 8", "Reach Level 8.", "silver", 8, () => Level));
+        list.Add(new Ach("a-level-10", "Level 10", "Reach Level 10.", "gold", 10, () => Level));
+        list.Add(new Ach("a-cos-1", "New Look", "Own 1 cosmetic.", "bronze", 1, () => OwnedCosmetics.Count));
+        list.Add(new Ach("a-cos-3", "Style Explorer", "Own 3 cosmetics.", "silver", 3, () => OwnedCosmetics.Count));
+        list.Add(new Ach("a-cos-5", "Fashionable", "Own 5 cosmetics.", "silver", 5, () => OwnedCosmetics.Count));
+        list.Add(new Ach("a-cos-7", "Drip Master", "Own 7 cosmetics.", "gold", 7, () => OwnedCosmetics.Count));
+        list.Add(new Ach("a-konami", "Legacy Codebreaker", "Enter the legendary cheat code to reveal a hidden cosmetic.", "gold", 1,
+            () => OwnedCosmetics.Contains(SecretFrameId) ? 1 : 0));
+        AllAchievements = list;
+    }
+    void DemoGrowOnce()
+    {
+        // Ensure structures exist
+        EnsureForestInitialized();
+
+        // Pretend the last growth + last study were “yesterday”
+        // so WaterToday() will allow progression again.
+        var yesterday = DateTime.UtcNow.AddDays(-1);
+
+        // Move the “last studied date” back one day so streak logic increments again
+        LastStudyDate = yesterday;
+
+        // Also set the active plant’s last growth to yesterday so it can grow again
+        var cur = Active;
+        Forest[ActiveIndex] = cur with { LastGrowthUtc = yesterday };
+
+        // Now use your normal flow (increments streak, grows plant, saves state)
+        _ = WaterToday();
+    }
+
+
+    // ---------- Actions / XP ----------
+    void AddXP(int amount, int coinGain, string reason)
+    {
+        XP += amount; Coins += coinGain;
+        if (reason.Contains("Booked")) { SessionsBooked++; IncQuest("q1"); }
+        if (reason.Contains("Attended")) { SessionsAttended++; IncQuest("q2"); }
+        if (reason.Contains("feedback")) { FeedbackGiven++; IncQuest("q3"); }
+        _ = SaveState();
+    }
+
+    void IncQuest(string id)
+    {
+        var q = Quests.FirstOrDefault(x => x.Id == id);
+        if (q is null) return;
+        var i = Quests.IndexOf(q);
+        Quests[i] = q with { Progress = Math.Min(q.Target, q.Progress + 1) };
+    }
+
+    void ClaimQuest(string id)
+    {
+        var q = Quests.First(x => x.Id == id);
+        if (q.Claimed || q.Progress < q.Target) return;
+        AddXP(q.RewardXP, q.RewardCoins, "Quest reward");
+        var i = Quests.IndexOf(q);
+        Quests[i] = q with { Claimed = true };
+    }
+
+    void MarkStudiedToday()
+    {
+        var today = DateTime.UtcNow.Date;
+        if (LastStudyDate is not null && LastStudyDate.Value.Date == today) return;
+
+        if (LastStudyDate is null || (today - LastStudyDate.Value.Date).TotalDays <= 1)
+            StreakDays++;
+        else
+            StreakDays = 1;
+
+        LastStudyDate = today;
+        BestStreak = Math.Max(BestStreak, StreakDays);
+
+        if (new[] { 5, 10, 20, 30 }.Contains(StreakDays))
+            AddXP(50, 10, $"Streak {StreakDays} days");
+
+        GrowActivePlantIfNewDay();   // link streak -> plant
+        _ = SaveState();
+    }
+
+    // ---------- Modals ----------
+    void ToggleAchievements() => ShowAchievements = !ShowAchievements;
+    void CloseAchievements() => ShowAchievements = false;
+    void CloseCheatModal() => ShowCheatModal = false;
+
+    void EquipFlameFrame()
+    {
+        SelectedFrameCss = SecretFrameId;
+        ShowCheatModal = false;
+        _ = SaveState();
+    }
+
+    // ---------- JS callback for Konami unlock ----------
+    [JSInvokable]
+    public async Task OnCheatFound()
+    {
+        if (!OwnedCosmetics.Contains(SecretFrameId))
+            OwnedCosmetics.Add(SecretFrameId);
+
+        if (string.IsNullOrWhiteSpace(SelectedFrameCss) || SelectedFrameCss != SecretFrameId)
+            SelectedFrameCss = SecretFrameId;
+
+        ShowAchievements = false;
+        ShowCheatModal = true;
+
+        await SaveState();
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+        await InvokeAsync(StateHasChanged);
+
+        try { await JS.InvokeVoidAsync("tutorlyCheat.burstSides"); }
+        catch { try { await JS.InvokeVoidAsync("tutorlyCheat.burst"); } catch { } }
+    }
+
+    // ---------- Shop ----------
+    void UnlockItem(ShopItem item)
+    {
+        if (OwnedCosmetics.Contains(item.Id)) return;
+        if (Level < item.RequiredLevel && Coins < item.Cost) return;
+
+        if (Level < item.RequiredLevel && Coins >= item.Cost) Coins -= item.Cost;
+        OwnedCosmetics.Add(item.Id);
+        ApplyItem(item);
+        _ = SaveState();
+    }
+
+    void ApplyItem(ShopItem item)
+    {
+        if (!OwnedCosmetics.Contains(item.Id)) return;
+
+        if (item.Kind == "frame")
+        {
+            SelectedFrameCss = item.Id;
+        }
+
+        if (item.Kind == "bg")
+        {
+            SelectedBackgroundId = item.Id;
+
+            // Keep the small avatar preview behaviour you already had
+            SelectedBackgroundCss = item.Id switch
+            {
+                "bg-grid" => "linear-gradient(#f8fafc 0 0), url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22><rect width=%2212%22 height=%2212%22 fill=%22none%22/><path d=%22M0 12h12M12 0v12M0 0h12M0 0v12%22 stroke=%22%23cbd5e1%22 stroke-width=%221%22 opacity=%220.5%22/></svg>')",
+                "bg-stars" => "linear-gradient(#0b1220, #1e293b)",
+                _ => ""
+            };
+
+            PageBackgroundStyle = item.Id switch
+            {
+                "bg-grid" => $"background: url('{BalatroUrl}') center / cover fixed no-repeat",
+                "bg-stars" => $"background: url('{StarsUrl}') center / cover fixed no-repeat",
+                _ => ""
+            };
+        }
+        else if (item.Kind == "icon" && item.Id == "icon-animated")
+        {
+            // ⭐ switch profile avatar to the GIF
+            AvatarUrl = AnimatedGifUrl;
+        }
+
+        _ = SaveState();
+    }
+
+    void RemoveItem(ShopItem item)
+    {
+        if (item.Kind == "frame")
+        {
+            if (SelectedFrameCss == item.Id) SelectedFrameCss = "";
+        }
+        else if (item.Kind == "bg")
+        {
+            if (SelectedBackgroundId == item.Id)
+            {
+                SelectedBackgroundId = "";
+                SelectedBackgroundCss = "";
+                PageBackgroundStyle = "";
+            }
+        }
+        else if (item.Kind == "icon" && item.Id == "icon-animated")
+        {
+            // ⭐ restore the default static avatar
+            AvatarUrl = DefaultAvatar;
+        }
+        _ = SaveState();
+    }
+
+    void RemoveFrame(ShopItem item) => RemoveItem(item);
+
+    // ---------- Mystery Reward ----------
+    async Task OpenMysteryReward()
+    {
+        if (!AllAchievementsComplete) return;
+        // keep your random goodies
+        var rand = new Random();
+        var roll = rand.Next(0, 3);
+        if (roll == 0) AddXP(120, 0, "Mystery XP");
+        else if (roll == 1) { Coins += 50; await SaveState(); }
+        else { OwnedCosmetics.Add("frame-gold"); ApplyItem(ShopItems.First(x => x.Id == "frame-gold")); }
+
+        // 🎁 BONUS: set the page background to Minecraft regardless of the roll
+        PageBackgroundStyle = $"background: url('{MinecraftUrl}') center / cover fixed no-repeat";
+
+        // clear any shop BG “applied” state so buttons don’t show “Remove” for a bg
+        SelectedBackgroundId = "";
+        SelectedBackgroundCss = "";
+
+        // persist + close the modal
+        await SaveState();
+        ShowAchievements = false;
+    }
+
+    // ---------- Persistence ----------
+    record SaveBlob(
+        int XP, int Coins, int SessionsBooked, int SessionsAttended, int FeedbackGiven,
+        int StreakDays, int BestStreak, DateTime? LastStudyDate, bool Hide,
+        string Frame, string Bg, string[] Owned,
+        string? BgId, string? PageBg
+    );
+
+    async Task SaveState()
+    {
+        var blob = new SaveBlob(
+            XP, Coins, SessionsBooked, SessionsAttended, FeedbackGiven,
+            StreakDays, BestStreak, LastStudyDate, HideMeOnLeaderboards,
+            SelectedFrameCss, SelectedBackgroundCss, OwnedCosmetics.ToArray(),
+            SelectedBackgroundId, PageBackgroundStyle
+        );
+        var json = JsonSerializer.Serialize(blob);
+        await JS.InvokeVoidAsync("tgStore.set", "tutorly.gamification", json);
+    }
+
+    async Task LoadState()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("tgStore.get", "tutorly.gamification");
+            if (string.IsNullOrWhiteSpace(json)) return;
+            var blob = JsonSerializer.Deserialize<SaveBlob>(json!);
+            if (blob is null) return;
+
+            XP = blob.XP; Coins = blob.Coins;
+            SessionsBooked = blob.SessionsBooked;
+            SessionsAttended = blob.SessionsAttended;
+            FeedbackGiven = blob.FeedbackGiven;
+            StreakDays = blob.StreakDays; BestStreak = blob.BestStreak; LastStudyDate = blob.LastStudyDate;
+            HideMeOnLeaderboards = blob.Hide;
+
+            SelectedFrameCss = blob.Frame;
+            SelectedBackgroundCss = blob.Bg;
+            SelectedBackgroundId = blob.BgId ?? "";
+            PageBackgroundStyle = blob.PageBg ?? "";
+
+            OwnedCosmetics = new HashSet<string>(blob.Owned ?? Array.Empty<string>());
+
+            // Back-compat inference
+            if (string.IsNullOrEmpty(SelectedBackgroundId) && !string.IsNullOrEmpty(SelectedBackgroundCss))
+            {
+                SelectedBackgroundId = SelectedBackgroundCss.Contains("#0b1220") ? "bg-stars"
+                                    : SelectedBackgroundCss.Contains("svg") ? "bg-grid"
+                                    : "";
+            }
+        }
+        catch { /* ignore */ }
+    }
+
+    void OnHideMeChanged(ChangeEventArgs e)
+    {
+        HideMeOnLeaderboards = e?.Value is bool b && b;
+        _ = SaveState();
+    }
+
+    RenderFragment TrophySvg(string kind) => builder =>
+    {
+        builder.AddMarkupContent(0,
+        @"<svg viewBox='0 0 24 24' width='24' height='24' fill='currentColor' aria-hidden='true'>
+            <path d='M6 3h12a1 1 0 0 1 1 1v2h2a1 1 0 0 1 1 1 5 5 0 0 1-5 5h-1.28A6 6 0 0 1 13 14.7V17h3a1 1 0 0 1 0 2H8a1 1 0 1 1 0-2h3v-2.3A6 6 0 0 1 7.28 12H6A5 5 0 0 1 1 7a1 1 0 0 1 1-1h2V4a1 1 0 0 1 1-1Zm13 3V6H5v0 0 0 0H3.07A3 3 0 0 0 6 9h1.28A6 6 0 0 1 12 5a6 6 0 0 1 4.72 4H18a3 3 0 0 0 2.93-3Z'/>
+        </svg>");
+    };
+
+    // ---------- Plant/Forest ----------
+    bool ShowPlantView = false;
+
+    readonly string[] StageNames = new[] { "Seed", "Sprout", "Sapling", "Young Tree", "Mature Tree" };
+    // Days required to advance from stage i to i+1 (final stage has no next):
+    readonly int[] StageDays = new[] { 1, 2, 3, 5 };
+
+    record Plant(int Stage, int Progress, int Required, DateTime? LastGrowthUtc);
+
+    List<Plant> Forest = new();
+    int ActiveIndex = 0;
+
+    Plant Active => Forest[Math.Clamp(ActiveIndex, 0, Math.Max(0, Forest.Count - 1))];
+    bool HasGrownToday => Active.LastGrowthUtc?.Date == DateTime.UtcNow.Date;
+
+    string RingStyle =>
+        $"--plant-pct:{Math.Clamp((Active.Required == 0 ? 1 : (double)Active.Progress / Math.Max(1, Active.Required)) * 100.0, 0, 100):0}%;";
+
+    void TogglePlantView()
+    {
+        EnsureForestInitialized();
+        ShowPlantView = !ShowPlantView;
+    }
+    void BackToGamification() => ShowPlantView = false;
+
+    void EnsureForestInitialized()
+    {
+        if (Forest.Count == 0)
+        {
+            Forest.Add(new Plant(Stage: 0, Progress: 0, Required: StageDays[0], LastGrowthUtc: null));
+            ActiveIndex = 0;
+        }
+    }
+
+    bool IsFinalStage(Plant p) => p.Stage >= StageNames.Length - 1;
+
+    async Task WaterToday()
+    {
+        // Watering also marks studied for convenience
+        MarkStudiedToday();
+        GrowActivePlantIfNewDay();
+        await SavePlantState();
+    }
+
+    void GrowActivePlantIfNewDay()
+    {
+        EnsureForestInitialized();
+
+        var today = DateTime.UtcNow.Date;
+        if (Active.LastGrowthUtc?.Date == today) return;
+
+        var before = MaturedCount;
+
+        // --- your existing progress / stage-up / spawn logic ---
+        var cur = Active;
+        var progressed = cur with { Progress = cur.Progress + 1, LastGrowthUtc = DateTime.UtcNow };
+
+        if (!IsFinalStage(progressed) && progressed.Progress >= progressed.Required)
+        {
+            var nextStage = progressed.Stage + 1;
+            var nextReq = (nextStage < StageDays.Length) ? StageDays[nextStage] : 0;
+            progressed = progressed with { Stage = nextStage, Progress = 0, Required = nextReq };
+        }
+
+        if (IsFinalStage(progressed))
+        {
+            Forest[ActiveIndex] = progressed; // keep matured tree
+            Forest.Add(new Plant(Stage: 0, Progress: 0, Required: StageDays[0], LastGrowthUtc: null)); // fresh seed
+            ActiveIndex = Forest.Count - 1;
+        }
+        else
+        {
+            Forest[ActiveIndex] = progressed;
+        }
+        // --------------------------------------------------------
+
+        var after = MaturedCount;
+
+        // ✅ If we *just now* hit a multiple of BoardSize, go to the new empty board
+        if (after > 0 && (after % BoardSize == 0) && after != before)
+        {
+            ForestPage = FilledBoards;   // e.g. 25 -> page 1, 50 -> page 2
+        }
+
+        // Keep in bounds against the stable TotalBoards
+        ForestPage = Math.Clamp(ForestPage, 0, TotalBoards - 1);
+
+        _ = SavePlantState();
+    }
+    void GoBoard(int page)
+    {
+        ForestPage = Math.Clamp(page, 0, Math.Max(0, TotalBoards - 1));
+    }
+
+    void PrevBoard() => GoBoard(ForestPage - 1);
+    void NextBoard() => GoBoard(ForestPage + 1);
+    // Simple SVGs for center illustration
+    string GetStageSvg(int stage) => stage switch
+    {
+        0 => @"<svg viewBox='0 0 64 64' width='116' height='116' aria-hidden='true'>
+                <circle cx='32' cy='36' r='6' fill='#8B5E3C'/>
+               </svg>",
+        1 => @"<svg viewBox='0 0 64 64' width='116' height='116' aria-hidden='true'>
+                <path d='M32 40c0-10 2-14 2-18' stroke='#2F855A' stroke-width='4' fill='none' stroke-linecap='round'/>
+                <path d='M30 26c6 2 10-1 12-6c-6-2-10 1-12 6Z' fill='#48BB78'/>
+               </svg>",
+        2 => @"<svg viewBox='0 0 64 64' width='116' height='116' aria-hidden='true'>
+                <path d='M32 44c0-14 2-18 2-24' stroke='#276749' stroke-width='4' fill='none' stroke-linecap='round'/>
+                <path d='M22 28c8 4 14 0 16-8c-8-4-14 0-16 8Z' fill='#38A169'/>
+                <path d='M28 36c6 2 10-1 12-6c-6-2-10 1-12 6Z' fill='#48BB78'/>
+               </svg>",
+        3 => @"<svg viewBox='0 0 64 64' width='116' height='116' aria-hidden='true'>
+                <path d='M32 48c0-18 3-24 3-32' stroke='#22543D' stroke-width='5' fill='none' stroke-linecap='round'/>
+                <circle cx='36' cy='18' r='12' fill='#34D399'/>
+               </svg>",
+        _ => @"<svg viewBox='0 0 64 64' width='116' height='116' aria-hidden='true'>
+                <path d='M32 52c0-22 4-30 4-40' stroke='#22543D' stroke-width='6' fill='none' stroke-linecap='round'/>
+                <circle cx='36' cy='16' r='14' fill='#10B981'/>
+                <circle cx='24' cy='22' r='10' fill='#34D399'/>
+               </svg>",
+    };
+
+    // ---------- Plant Persistence ----------
+    record PlantBlob(List<Plant> Forest, int ActiveIndex, int ForestPage);
+
+    async Task SavePlantState()
+    {
+        try
+        {
+            var blob = new PlantBlob(Forest, ActiveIndex, ForestPage);
+            var json = JsonSerializer.Serialize(blob);
+            await JS.InvokeVoidAsync("tgStore.set", "tutorly.plants", json);
+        }
+        catch { }
+    }
+
+    async Task LoadPlantState()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("tgStore.get", "tutorly.plants");
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                PlantBlob? blob = null;
+                try { blob = JsonSerializer.Deserialize<PlantBlob>(json!); }
+                catch { /* older shape */ }
+
+                if (blob is not null && blob.Forest?.Count > 0)
+                {
+                    Forest = blob.Forest;
+                    ActiveIndex = Math.Clamp(blob.ActiveIndex, 0, Forest.Count - 1);
+                    ForestPage = Math.Clamp(blob.ForestPage, 0, TotalBoards - 1); // NEW
+                }
+                else
+                {
+                    // old save (without ForestPage)
+                    var legacy = JsonSerializer.Deserialize<Dictionary<string, object>>(json!);
+                    if (legacy != null && legacy.TryGetValue("Forest", out var _))
+                    {
+                        // do nothing special; Forest will be initialized below
+                    }
+                }
+            }
+        }
+        catch { }
+        finally
+        {
+            EnsureForestInitialized();
+            StateHasChanged();
+        }
+    }
+
+
+    // ---------- Forest board helpers (for UI layout only) ----------
+    // Board geometry
+    const int Rows = 5;
+    const int Cols = 5;
+    int BoardSize => Rows * Cols;
+
+    // How many matured trees total
+    int MaturedCount => Forest.Count(p => IsFinalStage(p));
+
+    // FULL boards completed
+    int FilledBoards => MaturedCount / BoardSize;
+
+    // ✅ Always show one more board to grow into (even when exactly full)
+    int TotalBoards => Math.Max(1, FilledBoards + 1);
+
+    // Current board page (0-based)
+    int ForestPage = 0;
+
+    // Global index offset for the current page
+    int PageOffset => Math.Clamp(ForestPage, 0, TotalBoards - 1) * BoardSize;
+
+}
+
+<script>
+    (function(){
+      if (!window.tgStore) {
+        window.tgStore = {
+          set: function(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+          get: function(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+          remove: function(k){ try{ localStorage.removeItem(k); }catch(e){} }
+        };
+      }
+    })();
+
+    window.tutorlyCheat = (function(){
+      let inited=false, handler=null, ref=null;
+      const seq=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a','Enter'];
+      let buf=[];
+      const norm=k=>k&&k.length===1?k.toLowerCase():k;
+
+      function init(dotnetRef){
+        if(inited) return;
+        inited=true; ref=dotnetRef;
+        handler=(e)=>{
+          const k=norm(e.key); buf.push(k); if(buf.length>seq.length) buf.shift();
+          for(let i=0;i<seq.length;i++){ if(buf[i]!==seq[i]) return; }
+          buf=[]; if(ref) ref.invokeMethodAsync('OnCheatFound');
+        };
+        window.addEventListener('keydown', handler, {passive:true});
+      }
+
+      function burstSides(){
+        const root=document.createElement('div'); root.className='confetti-root'; document.body.appendChild(root);
+        const N=60;
+        for(let i=0;i<N;i++){
+          const L=document.createElement('span'); L.className='confetti-piece left';
+          L.style.top=(Math.random()*60)+'vh'; L.style.width=(6+Math.random()*6)+'px';
+          L.style.height=(8+Math.random()*8)+'px'; L.style.animationDelay=(Math.random()*0.35)+'s';
+          L.style.animationDuration=(1.8+Math.random()*1.4)+'s'; root.appendChild(L);
+          const R=document.createElement('span'); R.className='confetti-piece right';
+          R.style.top=(Math.random()*60)+'vh'; R.style.width=(6+Math.random()*6)+'px';
+          R.style.height=(8+Math.random()*8)+'px'; R.style.animationDelay=(Math.random()*0.35)+'s';
+          R.style.animationDuration=(1.8+Math.random()*1.4)+'s'; root.appendChild(R);
+        }
+        setTimeout(()=>root.remove(),3500);
+      }
+
+      function dispose(){ if(handler){window.removeEventListener('keydown',handler);handler=null;} inited=false; ref=null; }
+
+      return { init, burstSides, burst: burstSides, dispose };
+    })();
+</script>

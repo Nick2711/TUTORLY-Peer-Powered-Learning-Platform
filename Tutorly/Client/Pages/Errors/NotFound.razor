@@ -1,0 +1,46 @@
+﻿@page "/404"
+@page "/errors/notfound"
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<PageTitle>Page Not Found</PageTitle>
+
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div class="max-w-2xl w-full text-center" data-aos="zoom-in">
+        <div class="mx-auto h-16 w-16 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center shadow">
+            <i data-feather="alert-triangle" class="h-8 w-8"></i>
+        </div>
+        <h1 class="mt-6 text-3xl font-bold text-gray-900">We can’t find that page</h1>
+        <p class="mt-2 text-gray-600">
+            The page you’re looking for might have been moved, renamed, or doesn’t exist.
+        </p>
+
+        <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <button class="btn primary" @onclick="GoHome"><i data-feather="home" class="h-4 w-4"></i> Go Home</button>
+            <button class="btn ghost" @onclick="GoSupport"><i data-feather="life-buoy" class="h-4 w-4"></i> Get Help</button>
+        </div>
+
+        <div class="mt-8 max-w-md mx-auto">
+            <div class="relative">
+                <input class="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-indigo-500"
+                       placeholder="Search…">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-feather="search" class="h-5 w-5 text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private void GoHome() => Nav.NavigateTo("/");
+    private void GoSupport() => Nav.NavigateTo("/student/help");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JS.InvokeVoidAsync("ui.initFeather");
+        await JS.InvokeVoidAsync("ui.initAOS");
+        await JS.InvokeVoidAsync("ui.loadScript", "/js/status-pages.js");
+        await JS.InvokeVoidAsync("statusPages.initNotFound");
+    }
+}

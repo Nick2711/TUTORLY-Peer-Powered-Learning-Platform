@@ -1,0 +1,880 @@
+﻿/* ======================= Admin • Database (scoped) ======================= */
+#admin-db-app.db-v1 {
+    --bg: #f7f8fb;
+    --card: #fff;
+    --text: #0f172a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --brand: #10b981;
+    --accent: #4f46e5;
+    /* nav pill colors (same as Tutors/Analytics) */
+    --pill-bg: #eef;
+    --pill-fg: #3433aa;
+    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    color: var(--text);
+    background: var(--bg);
+}
+
+#admin-db-app * {
+    box-sizing: border-box
+}
+
+/* ----- Topbar (match Tutors/Analytics) ----- */
+#admin-db-app .ad-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    min-height: 64px;
+    padding: .6rem 1rem;
+    overflow: visible;
+}
+
+#admin-db-app .brand {
+    font-weight: 900;
+    font-size: 1.35rem
+}
+
+    #admin-db-app .brand span {
+        color: var(--brand)
+    }
+
+#admin-db-app .ad-topnav {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+    overflow: visible;
+    white-space: normal; /* no desktop scrollbar */
+}
+
+    #admin-db-app .ad-topnav .nav-item {
+        padding: .5rem .7rem;
+        border-radius: .6rem;
+        text-decoration: none;
+        color: #111827;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+        #admin-db-app .ad-topnav .nav-item.active,
+        #admin-db-app .ad-topnav .nav-item:hover {
+            background: var(--pill-bg);
+            color: var(--pill-fg);
+        }
+
+#admin-db-app .nav-toggle {
+    display: none;
+    width: 40px;
+    height: 36px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .6rem;
+    align-items: center;
+    justify-content: center;
+    gap: 3px
+}
+
+    #admin-db-app .nav-toggle span {
+        display: block;
+        width: 20px;
+        height: 2px;
+        background: #475569
+    }
+
+/* actions + popover anchor */
+#admin-db-app .top-actions {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    position: relative
+}
+
+#admin-db-app .icon-btn {
+    inline-size: 36px;
+    block-size: 36px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .7rem;
+    cursor: pointer
+}
+
+    #admin-db-app .icon-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: #64748b
+    }
+
+#admin-db-app .user-mini {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+    padding: .25rem .4rem;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .7rem;
+    cursor: pointer
+}
+
+    #admin-db-app .user-mini img {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover
+    }
+
+    #admin-db-app .user-mini .name {
+        font-weight: 800
+    }
+
+    #admin-db-app .user-mini .chev {
+        width: 16px;
+        height: 16px;
+        fill: #475569
+    }
+
+#admin-db-app .muted {
+    color: var(--muted)
+}
+
+/* ----- Popovers (aligned to avatar/right edge) ----- */
+#admin-db-app .aa-pop {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    min-width: 320px;
+    max-width: min(380px,96vw);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: 0 18px 40px rgba(2,8,23,.16);
+    padding: .65rem .9rem;
+    z-index: 3000;
+    transform-origin: 90% 0%;
+    animation: db-pop-in .12s ease-out;
+}
+
+    #admin-db-app .aa-pop[hidden] {
+        display: none !important
+    }
+
+@keyframes db-pop-in {
+    from {
+        transform: scale(.98);
+        opacity: 0
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1
+    }
+}
+
+#admin-db-app .aa-pop-title {
+    font-weight: 900;
+    color: #111827;
+    padding: .4rem 0 .25rem 2.2rem;
+    margin: 0
+}
+
+#admin-db-app .aa-notify ul {
+    list-style: none;
+    margin: 0;
+    padding: .25rem 0
+}
+
+#admin-db-app .aa-notify .note {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: .6rem;
+    padding: .55rem 0;
+    border-radius: .6rem
+}
+
+    #admin-db-app .aa-notify .note:hover {
+        background: #f5f7fa
+    }
+
+#admin-db-app .aa-notify .t {
+    font-weight: 800
+}
+
+#admin-db-app .aa-notify .s {
+    color: var(--muted);
+    font-size: .86rem
+}
+
+#admin-db-app .aa-profile .row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    column-gap: .75rem;
+    align-items: start;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    padding: .6rem 0;
+    border-radius: .6rem;
+    cursor: pointer
+}
+
+    #admin-db-app .aa-profile .row:hover {
+        background: #f5f7fa
+    }
+
+    #admin-db-app .aa-profile .row.danger .t {
+        color: #b91c1c
+    }
+
+#admin-db-app .aa-profile .ico {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    font-size: 18px
+}
+
+#admin-db-app .aa-profile .t {
+    font-weight: 800;
+    line-height: 1.15
+}
+
+#admin-db-app .aa-profile .s {
+    font-size: .86rem;
+    color: var(--muted);
+    margin-top: .2rem
+}
+
+/* ----- Page shell ----- */
+#admin-db-app .ad-main {
+    padding: 1rem 1.25rem 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto
+}
+
+/* Head row: title + select on left, actions on right */
+#admin-db-app .page-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: start;
+    margin: .4rem 0 1rem;
+}
+
+/* Title + below select */
+#admin-db-app .title-stack {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    min-width: 0
+}
+
+#admin-db-app .page-h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 900
+}
+
+/* “Table” select — grows neatly and never overflows */
+#admin-db-app .select.large.below {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    flex-wrap: wrap
+}
+
+#admin-db-app .select .lbl {
+    font-weight: 800;
+    color: #334155;
+    flex: 0 0 auto
+}
+
+#admin-db-app .select.large.below select {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .75rem;
+    padding: .55rem .75rem;
+    width: clamp(220px, 34vw, 460px); /* grows toward the right like your screenshot */
+    max-width: 100%;
+}
+
+/* Right-side actions */
+#admin-db-app .page-actions {
+    display: flex;
+    gap: .75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end
+}
+
+#admin-db-app .search {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .75rem;
+    padding: .5rem .75rem;
+    min-width: 280px
+}
+
+    #admin-db-app .search svg {
+        width: 18px;
+        height: 18px;
+        fill: #64748b
+    }
+
+    #admin-db-app .search input {
+        border: 0;
+        outline: 0;
+        width: 100%;
+        background: transparent
+    }
+
+#admin-db-app .btn {
+    border: 0;
+    border-radius: .9rem;
+    padding: .55rem .95rem;
+    font-weight: 900;
+    cursor: pointer
+}
+
+    #admin-db-app .btn.ghost {
+        background: #f3f4f6;
+        color: #111827
+    }
+
+    #admin-db-app .btn.primary {
+        background: linear-gradient(180deg,#6366f1,#4f46e5);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        box-shadow: 0 6px 18px rgba(79,70,229,.25)
+    }
+
+        #admin-db-app .btn.primary svg {
+            width: 18px;
+            height: 18px;
+            fill: #fff
+        }
+
+#admin-db-app .btn-row {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap
+}
+
+/* ----- Data viewer (full width card) ----- */
+#admin-db-app .viewer.card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    overflow: hidden;
+    width: 100%
+}
+
+#admin-db-app .viewer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid var(--border)
+}
+
+    #admin-db-app .viewer-head .title {
+        font-weight: 900;
+        font-size: 1.15rem;
+        color: #0b1731
+    }
+
+    #admin-db-app .viewer-head .muted {
+        color: var(--muted)
+    }
+
+#admin-db-app .pager {
+    display: flex;
+    gap: .6rem;
+    align-items: center
+}
+
+#admin-db-app .pg {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .6rem;
+    padding: .35rem .6rem;
+    cursor: pointer
+}
+
+    #admin-db-app .pg:disabled {
+        opacity: .4;
+        cursor: not-allowed
+    }
+
+#admin-db-app .viewer-body {
+    padding: .6rem
+}
+
+    #admin-db-app .viewer-body .empty {
+        padding: 1rem;
+        color: var(--muted);
+        font-weight: 700
+    }
+
+    #admin-db-app .viewer-body .scroll {
+        overflow: auto;
+        max-height: 460px;
+        border-radius: .6rem
+    }
+
+    #admin-db-app .viewer-body table.data {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0
+    }
+
+        #admin-db-app .viewer-body table.data thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #fafafb;
+            font-weight: 900;
+            color: #6b7280;
+            letter-spacing: .02em;
+            font-size: .85rem;
+            padding: .8rem 1rem;
+            border-bottom: 1px solid var(--border)
+        }
+
+        #admin-db-app .viewer-body table.data tbody td {
+            padding: .8rem 1rem;
+            border-bottom: 1px solid var(--border)
+        }
+
+#admin-db-app .row-btn {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .6rem;
+    padding: .35rem .6rem;
+    font-weight: 800;
+    cursor: pointer
+}
+
+#admin-db-app .ta-right {
+    text-align: right
+}
+
+/* ----- Error Logs ----- */
+#admin-db-app .err-table-section {
+    margin-top: 1.2rem
+}
+
+    #admin-db-app .err-table-section .log-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: .6rem
+    }
+
+    #admin-db-app .err-table-section h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 900;
+        color: #0b1731
+    }
+
+    #admin-db-app .err-table-section .log-actions {
+        display: flex;
+        gap: .6rem;
+        align-items: center
+    }
+
+#admin-db-app .select.small {
+    display: inline-flex;
+    gap: .45rem;
+    align-items: center
+}
+
+    #admin-db-app .select.small .lbl {
+        font-weight: 800;
+        color: #334155
+    }
+
+    #admin-db-app .select.small select {
+        border: 1px solid var(--border);
+        border-radius: .6rem;
+        padding: .4rem .55rem;
+        background: #fff
+    }
+
+#admin-db-app .chk {
+    display: inline-flex;
+    gap: .35rem;
+    align-items: center;
+    font-weight: 800;
+    color: #334155
+}
+
+#admin-db-app .table-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    overflow: hidden
+}
+
+#admin-db-app .db-table {
+    width: 100%;
+    border-collapse: collapse
+}
+
+    #admin-db-app .db-table thead th {
+        background: #fafafb;
+        text-align: left;
+        color: #6b7280;
+        font-weight: 900;
+        letter-spacing: .02em;
+        font-size: .85rem;
+        padding: .9rem 1rem;
+        border-bottom: 1px solid var(--border)
+    }
+
+    #admin-db-app .db-table tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border)
+    }
+
+#admin-db-app .badge {
+    display: inline-block;
+    font-weight: 800;
+    padding: .25rem .6rem;
+    border-radius: 999px;
+    font-size: .8rem
+}
+
+    #admin-db-app .badge.green {
+        background: #e9f9ef;
+        color: #15803d
+    }
+
+    #admin-db-app .badge.amber {
+        background: #fff6d8;
+        color: #a16207
+    }
+
+    #admin-db-app .badge.red {
+        background: #ffe9ea;
+        color: #b91c1c
+    }
+
+    #admin-db-app .badge.blue {
+        background: #eaf2ff;
+        color: #1d4ed8
+    }
+
+#admin-db-app .switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 26px
+}
+
+    #admin-db-app .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0
+    }
+
+    #admin-db-app .switch span {
+        position: absolute;
+        inset: 0;
+        background: #e5e7eb;
+        border-radius: 999px;
+        transition: .15s
+    }
+
+        #admin-db-app .switch span:before {
+            content: "";
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: .15s;
+            box-shadow: 0 1px 2px rgba(0,0,0,.15)
+        }
+
+    #admin-db-app .switch input:checked + span {
+        background: #bbf7d0
+    }
+
+        #admin-db-app .switch input:checked + span:before {
+            transform: translateX(20px)
+        }
+
+#admin-db-app .err-table-section .empty {
+    padding: 1rem;
+    color: var(--muted);
+    font-weight: 700;
+    text-align: center
+}
+
+/* ----- Modals (shared popup style) ----- */
+#admin-db-app .aa-modal {
+    position: fixed;
+    inset: 0;
+    display: none
+}
+
+    #admin-db-app .aa-modal.open {
+        display: block;
+        z-index: 1000
+    }
+
+    #admin-db-app .aa-modal .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,.45)
+    }
+
+    #admin-db-app .aa-modal .dialog {
+        position: relative;
+        z-index: 1;
+        width: min(720px,96vw);
+        margin: 7vh auto;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 18px 48px rgba(2,8,20,.18);
+        display: flex;
+        flex-direction: column
+    }
+
+    #admin-db-app .aa-modal .m-head {
+        padding: 1rem 1rem .9rem;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg,var(--brand),#0fb28a);
+        color: #fff;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        position: relative
+    }
+
+        #admin-db-app .aa-modal .m-head h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 900
+        }
+
+        #admin-db-app .aa-modal .m-head .x {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            border: 0;
+            background: rgba(255,255,255,.22);
+            color: #fff;
+            border-radius: .65rem;
+            padding: .35rem .6rem;
+            cursor: pointer
+        }
+
+    #admin-db-app .aa-modal .m-body {
+        padding: 1.1rem 1.1rem 1.2rem;
+        display: grid;
+        grid-template-columns: repeat(12,1fr);
+        gap: 1rem 1.1rem
+    }
+
+        #admin-db-app .aa-modal .m-body.photo-grid {
+            grid-template-columns: 240px 1fr;
+            gap: 1.1rem
+        }
+
+    #admin-db-app .aa-modal .m-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: .65rem;
+        padding: .8rem 1.1rem 1.1rem
+    }
+
+    #admin-db-app .aa-modal .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem
+    }
+
+    #admin-db-app .aa-modal .field {
+        grid-column: span 6
+    }
+
+        #admin-db-app .aa-modal .field.full {
+            grid-column: 1 / -1
+        }
+
+        #admin-db-app .aa-modal .field label, #admin-db-app .aa-modal .field > span {
+            display: block;
+            font-weight: 900;
+            margin-bottom: .35rem
+        }
+
+        #admin-db-app .aa-modal .field input, #admin-db-app .aa-modal .field select, #admin-db-app .aa-modal .field textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: .7rem;
+            padding: .62rem .75rem;
+            background: #fff;
+            font: inherit
+        }
+
+    #admin-db-app .aa-modal .req {
+        color: #ef4444;
+        font-weight: 900
+    }
+
+    /* Change Photo (card style like your screenshot) */
+    #admin-db-app .aa-modal.photo .dialog {
+        width: min(760px,96vw)
+    }
+
+    #admin-db-app .aa-modal.photo .m-head {
+        background: #fff;
+        color: var(--text);
+        border-bottom: 1px solid var(--border)
+    }
+
+        #admin-db-app .aa-modal.photo .m-head h3 {
+            font-size: 1.25rem;
+            font-weight: 900;
+            margin: 0
+        }
+
+        #admin-db-app .aa-modal.photo .m-head .x {
+            background: #f3f4f6;
+            color: #111827;
+            border: 0;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 12px;
+            display: grid;
+            place-items: center
+        }
+
+            #admin-db-app .aa-modal.photo .m-head .x:hover {
+                background: #e5e7eb
+            }
+
+    #admin-db-app .aa-modal.photo .m-body.photo-grid {
+        grid-template-columns: 110px 1fr;
+        align-items: center;
+        gap: 1.2rem
+    }
+
+    #admin-db-app .aa-modal.photo .photo-preview {
+        width: 110px;
+        height: 110px;
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+        background: #f8fafc;
+        display: grid;
+        place-items: center
+    }
+
+        #admin-db-app .aa-modal.photo .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover
+        }
+
+    #admin-db-app .aa-modal.photo .file-wrap input[type="file"] {
+        margin-bottom: .45rem
+    }
+
+    #admin-db-app .aa-modal.photo .file-wrap .help {
+        color: var(--muted);
+        font-weight: 700
+    }
+
+    #admin-db-app .aa-modal.photo .file-wrap .err {
+        color: #b91c1c;
+        font-weight: 900
+    }
+
+    #admin-db-app .aa-modal.photo .btn.ghost {
+        background: #fff;
+        border: 1px solid var(--border);
+        color: #111827
+    }
+
+    #admin-db-app .aa-modal.photo .btn.primary {
+        background: linear-gradient(180deg,#6366f1,#4f46e5);
+        color: #fff;
+        box-shadow: 0 10px 24px rgba(79,70,229,.35)
+    }
+
+/* ----- Responsive ----- */
+@media (max-width:980px) {
+    #admin-db-app .ad-topbar {
+        grid-template-columns: auto auto auto
+    }
+
+    #admin-db-app .nav-toggle {
+        display: inline-flex
+    }
+
+    #admin-db-app .ad-topnav {
+        display: none
+    }
+
+        #admin-db-app .ad-topnav.is-open {
+            display: flex;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 58px;
+            z-index: 1500;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: .5rem .75rem;
+            gap: .25rem;
+            flex-wrap: wrap;
+            white-space: normal
+        }
+
+    #admin-db-app .page-head {
+        grid-template-columns: 1fr
+    }
+
+    #admin-db-app .page-actions {
+        justify-content: flex-start
+    }
+
+    #admin-db-app .search {
+        min-width: unset;
+        width: 100%
+    }
+}
+
+@media (max-width:680px) {
+    #admin-db-app .aa-modal .m-body {
+        grid-template-columns: 1fr
+    }
+
+        #admin-db-app .aa-modal .m-body.photo-grid {
+            grid-template-columns: 1fr
+        }
+
+    #admin-db-app .photo-preview {
+        width: 100%;
+        height: 240px
+    }
+}

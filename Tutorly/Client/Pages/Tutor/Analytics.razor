@@ -1,0 +1,536 @@
+﻿@page "/tutor/analytics"
+@using System.Linq
+@using Tutorly.Shared
+@using System.Net.Http.Json
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Analytics | Tutorly</PageTitle>
+
+<link rel="stylesheet" href="css/Analytics.css" />
+
+<div id="page-tutor-analytics" class="an-root" @onclick="CloseEverywhere">
+    <!-- NAVBAR -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <!-- Theme toggle -->
+                <button class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="anToggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                    </svg>
+                </button>
+
+                <a class="db-brand" href="/tutor/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="anMainNav">
+                <a class="db-nav__link" href="/tutor/dashboard">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a 1 1 0 0 1-1-1z" /></svg><span>Home</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/availability">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg><span>Availability</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/queue">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/resources" data-tab="resources">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                    <span>Resources</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" href="/tutor/messages" data-tab="messages" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" href="/tutor/analytics" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg><span>Analytics</span>
+                </a>
+                <a class="db-nav__link" href="/tutorforum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a4 4 0 0 1-4 4H9l-4 3V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4z" />
+                        <path d="M7 14H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2" />
+                    </svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/tutorsessiondetails">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span>
+                </a>
+            </nav>
+
+            <!-- Actions: search, notifications, profile -->
+            <div class="db-actions" @onclick:stopPropagation="true">
+                <!-- Search that expands left -->
+                <div class="search-host @(ShowSearch ? "is-open" : "")">
+                    <input id="navSearch" class="search-input" placeholder="Search..." @onblur="OnSearchBlur" />
+                    <button class="icon-btn" title="Search" @onclick="ToggleSearch" aria-expanded="@ShowSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="M20 20l-3.5-3.5" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Notifications -->
+                <div class="dropdown-host">
+                    <button class="icon-btn" @onclick="ToggleNotifications" title="Notifications" aria-expanded="@ShowNotifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+                            <path d="M9 17a3 3 0 0 0 6 0" />
+                        </svg>
+                    </button>
+
+                    @if (ShowNotifications)
+                    {
+                        <div class="dropdown dropdown--right soft-panel" @onclick:stopPropagation="true">
+                            <div class="dropdown__head">Notifications</div>
+
+                            <div class="note-row">
+                                <div class="note-icon cal">📅</div>
+                                <div class="note-main">
+                                    <div class="note-title">Session starts soon</div>
+                                    <div class="note-sub">Algebra Basics at 5:00 PM.</div>
+                                </div>
+                            </div>
+
+                            <div class="note-row">
+                                <div class="note-icon star">⭐</div>
+                                <div class="note-main">
+                                    <div class="note-title">New rating</div>
+                                    <div class="note-sub">You received a 5★ from Alex.</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Profile -->
+                <div class="dropdown-host">
+                    <button class="db-avatar" @onclick="ToggleProfile" aria-expanded="@ShowProfile">
+                        <img src="https://i.pravatar.cc/40?img=4" alt="Me">
+                    </button>
+
+                    @if (ShowProfile)
+                    {
+                        <div class="dropdown dropdown--right profile-dd soft-panel" @onclick:stopPropagation="true">
+                            <div class="dropdown__head">My Profile</div>
+
+                            <button class="menu-row" @onclick="@(() => { ShowChangePhoto = true; CloseMenus(); })">
+                                <span class="mr-12 icon">🖼️</span>
+                                <div>
+                                    <div class="menu-title">Change Photo</div>
+                                    <div class="menu-sub">Upload a new profile picture.</div>
+                                </div>
+                            </button>
+
+                            <button class="menu-row" @onclick="@(() => { ShowSettings = true; CloseMenus(); })">
+                                <span class="mr-12 icon">⚙️</span>
+                                <div>
+                                    <div class="menu-title">Settings</div>
+                                    <div class="menu-sub">Manage account and preferences.</div>
+                                </div>
+                            </button>
+
+                            <button class="menu-row" @onclick="@(() => { ShowAchievements = true; CloseMenus(); })">
+                                <span class="mr-12 icon">🏆</span>
+                                <div>
+                                    <div class="menu-title">Achievements</div>
+                                    <div class="menu-sub">See all earned badges.</div>
+                                </div>
+                            </button>
+
+                            <button class="menu-row danger" @onclick="Logout">
+                                <span class="mr-12 icon">🚪</span>
+                                <div>
+                                    <div class="menu-title">Logout</div>
+                                    <div class="menu-sub">Sign out of your account.</div>
+                                </div>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- BODY -->
+    <div class="wrap">
+        <section class="panel">
+            <div class="panel__head an-head">
+                <div>
+                    <div class="an-title">Tutor Analytics</div>
+                    <div class="an-sub">Simple overview of your sessions, hours, and ratings.</div>
+                </div>
+                <div class="an-actions btnbar">
+                    <button class="btn btn--pill" @onclick="ExportCsv">Export CSV</button>
+                    <button class="btn btn--pill" @onclick="ExportPdf">Export PDF</button>
+                    <a class="btn btn--pill" href="/tutor/tutorsessiondetails">+ New Session</a>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters">
+                <div class="filter">
+                    <label>Range</label>
+                    <select class="in" @bind="Range">
+                        <option value="7">Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="180">Last 6 months</option>
+                        <option value="365">Last 12 months</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="cards">
+                @if (IsLoading)
+                {
+                    <div class="kpi"><div class="kpi__label">Loading...</div><div class="kpi__value">—</div></div>
+                }
+                else if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="kpi"><div class="kpi__label">Error</div><div class="kpi__value">@ErrorMessage</div></div>
+                }
+                else
+                {
+                    <div class="kpi"><div class="kpi__label">Sessions</div><div class="kpi__value">@KpiSessions</div></div>
+                    <div class="kpi"><div class="kpi__label">Students</div><div class="kpi__value">@KpiStudents</div></div>
+                    <div class="kpi"><div class="kpi__label">Hours</div><div class="kpi__value">@KpiHours.ToString("0.0")</div></div>
+                    <div class="kpi"><div class="kpi__label">Avg Rating</div><div class="kpi__value">@KpiRating.ToString("0.0")</div></div>
+                    <div class="kpi"><div class="kpi__label">No-Show Rate</div><div class="kpi__value">@KpiNoShowRate.ToString("0.0%")</div></div>
+                    <div class="kpi"><div class="kpi__label">Verified Responses</div><div class="kpi__value">@KpiVerifiedResponses</div></div>
+                }
+            </div>
+
+            <div class="bottom-grid">
+                <!-- Top students -->
+                <div class="list-card">
+                    <div class="list-card__head"><div class="chart-title">Top Students (by hours)</div></div>
+                    <ul class="simple-list">
+                        @foreach (var s in TopStudents)
+                        {
+                            <li class="simple-row">
+                                <div class="left">
+                                    <img src="https://i.pravatar.cc/40?u=@Uri.EscapeDataString(s.StudentName)" alt="@s.StudentName" />
+                                    <div>
+                                        <div class="name">@s.StudentName</div>
+                                        <div class="sub">@s.SessionCount sessions</div>
+                                    </div>
+                                </div>
+                                <div class="right">@($"{s.TotalHours:0.0}h")</div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+
+                <!-- Recent sessions -->
+                <div class="table-card">
+                    <div class="table-card__head"><div class="chart-title">Recent Sessions</div></div>
+                    <div class="tbl-wrap">
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Subject</th>
+                                    <th>Student</th>
+                                    <th>Minutes</th>
+                                    <th>Rating</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in RecentSessions)
+                                {
+                                    <tr>
+                                        <td>@s.ScheduledStart.ToString("MMM d, yyyy h:mm tt")</td>
+                                        <td>@s.ModuleName</td>
+                                        <td>@s.StudentName</td>
+                                        <td>@s.DurationMinutes</td>
+                                        <td>@(s.Rating.HasValue? s.Rating.Value.ToString("0.0") : "—")</td>
+                                        <td>
+                                            @if (s.IsNoShow)
+                                            {
+                                                <span class="badge badge--warn">No-Show</span>
+                                            }
+                                            else if (s.Status == "Cancelled")
+                                            {
+                                                <span class="badge">Cancelled</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge--ok">Completed</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- Modals -->
+@* Change Photo *@
+@if (ShowChangePhoto)
+{
+    <div class="modal" @onclick="CloseAllModals">
+        <div class="modal__card" @onclick:stopPropagation="true">
+            <div class="modal__head">
+                <div class="modal__title">Change Photo</div>
+                <button class="xbtn" @onclick="CloseAllModals">✕</button>
+            </div>
+            <div class="modal__body">
+                <div class="avatar-line">
+                    <img class="avatar-lg" src="https://i.pravatar.cc/80?img=4" alt="Me" />
+                    <input type="file" />
+                </div>
+                <div class="muted">PNG/JPG up to ~2MB works best.</div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn btn--ghost" @onclick="CloseAllModals">Cancel</button>
+                <button class="btn btn--confirm" @onclick="CloseAllModals">Save</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* Settings *@
+@if (ShowSettings)
+{
+    <div class="modal" @onclick="CloseAllModals">
+        <div class="modal__card" @onclick:stopPropagation="true">
+            <div class="modal__head">
+                <div class="modal__title">Profile Settings</div>
+                <button class="xbtn" @onclick="CloseAllModals">✕</button>
+            </div>
+            <div class="modal__body">
+                <label class="lbl">First name<input class="in w-full" placeholder="Jane" /></label>
+                <label class="lbl">Last name<input class="in w-full" placeholder="Doe" /></label>
+                <label class="lbl">
+                    Degree
+                    <select class="in w-full">
+                        <option>Select...</option>
+                        <option>BSc</option>
+                        <option>MSc</option>
+                        <option>PhD</option>
+                    </select>
+                </label>
+                <div class="muted">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn btn--ghost" @onclick="CloseAllModals">Cancel</button>
+                <button class="btn btn--confirm" @onclick="CloseAllModals">Save</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* Achievements *@
+@if (ShowAchievements)
+{
+    <div class="modal" @onclick="CloseAllModals">
+        <div class="modal__card" @onclick:stopPropagation="true">
+            <div class="modal__head">
+                <div class="modal__title">Your Achievements</div>
+                <button class="xbtn" @onclick="CloseAllModals">✕</button>
+            </div>
+            <div class="modal__body">
+                <p><strong>Active Learner</strong> — asked 10+ questions this week</p>
+                <p><strong>Helper</strong> — answered 3 peer questions</p>
+                <p><strong>On Track</strong> — met your weekly goal</p>
+            </div>
+            <div class="modal__foot">
+                <button class="btn btn--confirm" @onclick="CloseAllModals">Nice!</button>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    (function () {
+        // Theme: saved or system preference
+        try {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'dark') document.documentElement.classList.add('theme-dark');
+            else if (saved === 'light') document.documentElement.classList.remove('theme-dark');
+            else {
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.classList.toggle('theme-dark', prefersDark);
+                localStorage.setItem('theme', prefersDark ? 'dark' : 'light');
+            }
+        } catch (_) {}
+
+        window.anToggleTheme = function () {
+            const isDark = document.documentElement.classList.toggle('theme-dark');
+            try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (_) {}
+        };
+
+        // Active nav link
+        const nav = document.getElementById('anMainNav');
+        if (nav) {
+            const links = [...nav.querySelectorAll('a.db-nav__link')];
+            const curr = links.find(a => a.getAttribute('href') === location.pathname);
+            if (curr) {
+                links.forEach(a => a.classList.remove('db-nav__link--active'));
+                curr.classList.add('db-nav__link--active');
+                curr.setAttribute('aria-current', 'page');
+            }
+        }
+
+        // Direct download helper
+        window.downloadFile = function (url, filename) {
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // Focus helper for search
+        window.anFocus = function (selector) {
+            const el = document.querySelector(selector);
+            if (el) setTimeout(() => el.focus(), 0);
+        };
+    })();
+</script>
+
+@code {
+    // --- UI state for dropdowns / modals / search ---
+    bool ShowNotifications;
+    bool ShowProfile;
+    bool ShowChangePhoto;
+    bool ShowSettings;
+    bool ShowAchievements;
+    bool ShowSearch;
+
+    void ToggleNotifications() { ShowNotifications = !ShowNotifications; ShowProfile = false; }
+    void ToggleProfile() { ShowProfile = !ShowProfile; ShowNotifications = false; }
+    void CloseMenus() { ShowNotifications = false; ShowProfile = false; }
+    void CloseEverywhere() { CloseMenus(); ShowSearch = false; } // close on any outside click
+
+    async Task ToggleSearch()
+    {
+        ShowSearch = !ShowSearch;
+        if (ShowSearch)
+            await JSRuntime.InvokeVoidAsync("anFocus", "#navSearch");
+    }
+    void OnSearchBlur(FocusEventArgs _) { ShowSearch = false; }
+
+    void CloseAllModals() { ShowChangePhoto = ShowSettings = ShowAchievements = false; }
+
+    async Task Logout()
+    {
+        try { try { await Http.PostAsync("/api/auth/logout", null); } catch { } }
+        finally { Nav.NavigateTo("/login", true); }
+    }
+
+    // --- Real data from API ---
+    TutorAnalyticsDto? AnalyticsData;
+    bool IsLoading = true;
+    string? ErrorMessage;
+
+    // --- Filters ---
+    int _range = 30;
+    int Range { get => _range; set { if (_range != value) { _range = value; LoadAnalytics(); } } }
+
+    // --- Computed/UI ---
+    int KpiSessions => AnalyticsData?.TotalSessions ?? 0;
+    int KpiStudents => AnalyticsData?.UniqueStudents ?? 0;
+    double KpiHours => AnalyticsData?.TotalHours ?? 0.0;
+    double KpiRating => AnalyticsData?.AverageRating ?? 0.0;
+    double KpiNoShowRate => AnalyticsData?.NoShowRate ?? 0.0;
+    int KpiVerifiedResponses => AnalyticsData?.VerifiedResponses ?? 0;
+
+    List<TutorAnalyticsSessionDto> RecentSessions => AnalyticsData?.RecentSessions ?? new();
+    List<TutorAnalyticsStudentDto> TopStudents => AnalyticsData?.TopStudents ?? new();
+
+    protected override async Task OnInitializedAsync() { await LoadAnalytics(); }
+
+    private async Task LoadAnalytics()
+    {
+        try
+        {
+            IsLoading = true; ErrorMessage = null;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userIdClaim = authState.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim)) { ErrorMessage = "User not authenticated"; return; }
+
+            var profileResponse = await Http.GetAsync("/api/profile/me");
+            if (!profileResponse.IsSuccessStatusCode) { ErrorMessage = "Failed to load user profile"; return; }
+
+            var session = await profileResponse.Content.ReadFromJsonAsync<UnifiedSessionDto>();
+            if (session?.Profile == null) { ErrorMessage = "Invalid profile data"; return; }
+
+            var tutorId = session.Profile.TutorId;
+            if (!tutorId.HasValue) { ErrorMessage = "Tutor ID not found in profile"; return; }
+
+            var response = await Http.GetAsync($"/api/booking/analytics/{tutorId}?days={Range}");
+            if (!response.IsSuccessStatusCode) { ErrorMessage = $"Failed to load analytics: {response.StatusCode}"; return; }
+
+            AnalyticsData = await response.Content.ReadFromJsonAsync<TutorAnalyticsDto>();
+        }
+        catch (Exception ex) { ErrorMessage = $"Error loading analytics: {ex.Message}"; }
+        finally { IsLoading = false; StateHasChanged(); }
+    }
+
+    private async Task ExportCsv()
+    {
+        try
+        {
+            if (AnalyticsData == null) return;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userIdClaim = authState.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim)) return;
+
+            var profileResponse = await Http.GetAsync("/api/profile/me");
+            if (!profileResponse.IsSuccessStatusCode) return;
+
+            var session = await profileResponse.Content.ReadFromJsonAsync<UnifiedSessionDto>();
+            if (session?.Profile?.TutorId == null) return;
+
+            var tutorId = session.Profile.TutorId.Value;
+            var csvUrl = $"/api/booking/analytics/{tutorId}/export-csv?days={Range}";
+            await JSRuntime.InvokeVoidAsync("downloadFile", csvUrl, $"TutorAnalytics_{DateTime.Now:yyyyMMdd}.csv");
+        }
+        catch (Exception) { }
+    }
+
+    private async Task ExportPdf()
+    {
+        try
+        {
+            if (AnalyticsData == null) return;
+
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userIdClaim = authState.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+            if (string.IsNullOrEmpty(userIdClaim)) return;
+
+            var profileResponse = await Http.GetAsync("/api/profile/me");
+            if (!profileResponse.IsSuccessStatusCode) return;
+
+            var session = await profileResponse.Content.ReadFromJsonAsync<UnifiedSessionDto>();
+            if (session?.Profile?.TutorId == null) return;
+
+            var tutorId = session.Profile.TutorId.Value;
+            var pdfUrl = $"/api/booking/analytics/{tutorId}/export-pdf?days={Range}";
+            await JSRuntime.InvokeVoidAsync("downloadFile", pdfUrl, $"TutorAnalytics_{DateTime.Now:yyyyMMdd}.pdf");
+        }
+        catch (Exception) { }
+    }
+}

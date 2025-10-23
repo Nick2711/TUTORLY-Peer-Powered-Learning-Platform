@@ -1,0 +1,803 @@
+﻿@page "/tutor/queue"
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject HttpClient Http
+@using Tutorly.Shared
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Tutor Calendar | Tutorly</PageTitle>
+
+<div id="page-tutor-queue" class="q-root">
+    <!-- ================== NAVBAR (same as other tutor pages) ================== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="tqToggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/tutor/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="tqMainNav">
+                <a class="db-nav__link" href="/tutor/dashboard">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+                    <span>Home</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/availability">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg>
+                    <span>Availability</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" href="/tutor/queue" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/resources">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 4v16" /></svg>
+                    <span>Resources</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/analytics">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg>
+                    <span>Analytics</span>
+                </a>
+                <a class="db-nav__link" href="/tutorforum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- main bubble -->
+                        <path d="M21 12a4 4 0 0 1-4 4H9l-4 3V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4z" />
+                        <!-- secondary bubble -->
+                        <path d="M7 14H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2" />
+                    </svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/tutorsessiondetails">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span>
+                </a>
+            </nav>
+
+            <div class="db-actions" id="tqActionsBar">
+                <div class="search-wrap" id="tqSearchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="tqBtnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="tqSearchInput" type="text" placeholder="Search…">
+                </div>
+
+                <!-- NEW: Notifications -->
+                <div class="notify-host">
+                    <button class="db-iconbtn" id="tqBtnBell" aria-haspopup="true" aria-expanded="false" title="Notifications">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0" /></svg>
+                    </button>
+                    <div class="soft-panel notify-panel" id="tqPopNotes" role="menu" aria-label="Notifications">
+                        <div class="dropdown__head">Notifications</div>
+                        <div class="note-row">
+                            <div class="note-icon cal">📅</div>
+                            <div>
+                                <div class="note-title">Session starts soon</div>
+                                <div class="note-sub">Algebra Basics at 5:00 PM.</div>
+                            </div>
+                        </div>
+                        <div class="note-row">
+                            <div class="note-icon star">⭐</div>
+                            <div>
+                                <div class="note-title">New rating</div>
+                                <div class="note-sub">You received a 5★ from Alex.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: Profile button + popover -->
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="tqBtnProfile">
+                        <img id="tqAvatarImg" src="https://i.pravatar.cc/40?img=4" alt="Me">
+                    </button>
+                    <div class="pop" id="tqPopProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#tqModalPhoto">
+                                <div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#tqModalSettings">
+                                <div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#tqModalBadges">
+                                <div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-action="logout">
+                                <div class="pop__row"><div class="pop__icon">🚪</div><div><div class="pop__title">Logout</div><div class="pop__text">Sign out of your account.</div></div></div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================== CALENDAR ================== -->
+    <div class="wrap">
+        <section class="panel">
+            <div class="panel__head q-head">
+                <div>
+                    <div class="q-title">Calendar</div>
+                    <div class="q-sub">Manage your sessions, office hours, and bookings</div>
+                </div>
+
+                <div class="q-toolbar">
+                    <div class="seg" id="tqViewBtns">
+                        <button class="seg__btn" data-view="month">Month</button>
+                        <button class="seg__btn is-active" data-view="week">Week</button>
+                        <button class="seg__btn" data-view="day">Day</button>
+                        <button class="seg__btn" data-view="agenda">Agenda</button>
+                    </div>
+                    <div class="seg">
+                        <button class="seg__btn" id="tqPrev">‹ Prev</button>
+                        <button class="seg__btn" id="tqToday">Today</button>
+                        <button class="seg__btn" id="tqNext">Next ›</button>
+                        <button class="seg__btn seg__btn--primary" id="tqNew">+ New Session</button>
+                        <button class="seg__btn seg__btn--secondary" @onclick="NavigateToBookingRequests" id="tqStudentsWaiting">
+                            👥 Students Waiting (@pendingRequestsCount)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Month -->
+            <div class="cal-month" id="tqMonth" hidden></div>
+
+            <!-- Week/Day -->
+            <div class="cal" id="tqWeekDay">
+                <div class="cal__head" id="tqCalHead"></div>
+                <div class="cal__grid" id="tqCalGrid"></div>
+                <div class="tz-note" id="tqTz"></div>
+            </div>
+
+            <!-- Agenda -->
+            <div class="agenda" id="tqAgenda" hidden>
+                <ul id="tqAgendaList" class="agenda__list"></ul>
+                <div class="tz-note" id="tqTz2"></div>
+            </div>
+        </section>
+
+        <!-- ================== UPCOMING SESSIONS ================== -->
+        <section class="upcoming">
+            <h3 class="upc-title">Upcoming Sessions</h3>
+            <div class="upc-grid">
+                @if (isLoadingSessions)
+                {
+                    <div class="upc-card">
+                        <div class="upc-card__head">
+                            <div class="upc-card__title">Loading sessions...</div>
+                        </div>
+                    </div>
+                }
+                else if (!upcomingSessions.Any())
+                {
+                    <div class="upc-card">
+                        <div class="upc-card__head">
+                            <div class="upc-card__title">No upcoming sessions</div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var session in upcomingSessions)
+                    {
+                        <div class="upc-card @GetStatusClass(session.StatusColor)">
+                            <div class="upc-card__head">
+                                <div class="upc-card__title">@session.ModuleName</div>
+                                <span class="badge badge-@session.StatusColor">@session.Status</span>
+                            </div>
+                            <div class="upc-card__when">@session.DateDisplay • @session.TimeDisplay</div>
+                            <div class="upc-card__foot">
+                                @if (session.CanJoin)
+                                {
+                                    <a class="btn btn--primary" href="/room/@session.StudyRoomId">Join Meeting</a>
+                                }
+                                else if (session.CanReschedule)
+                                {
+                                    <button class="btn btn--secondary" @onclick="() => RescheduleSession(session.SessionId)">Reschedule</button>
+                                }
+                                @if (session.CanCancel)
+                                {
+                                    <button class="btn btn--danger" @onclick="() => CancelSession(session.SessionId)">Cancel</button>
+                                }
+                                <span class="muted">@session.ParticipantName</span>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== MODALS (same as other page) ===== -->
+    <div class="modal" id="tqModalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="tqModalPhotoTitle">
+            <div class="modal__head"><span id="tqModalPhotoTitle">Change Photo</span><button class="btn btn--ghost" data-close="tqModalPhoto">✕</button></div>
+            <div class="modal__body">
+                <div class="photo-row">
+                    <img id="tqPhotoPreview" src="https://i.pravatar.cc/80?img=4" alt="Preview">
+                    <div>
+                        <input type="file" id="tqPhotoInput" accept="image/*">
+                        <div class="muted" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__foot"><button class="btn" data-close="tqModalPhoto">Cancel</button><button class="btn btn--primary" id="tqSavePhotoBtn">Save</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="tqModalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="tqModalSettingsTitle">
+            <div class="modal__head"><span id="tqModalSettingsTitle">Profile Settings</span><button class="btn btn--ghost" data-close="tqModalSettings">✕</button></div>
+            <div class="modal__body">
+                <div class="field"><label for="tqFirstName">First name</label><input id="tqFirstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label for="tqLastName">Last name</label><input id="tqLastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label for="tqDegree">Degree</label>
+                    <select id="tqDegree"><option value="">Select…</option><option>BComp</option><option>BIT</option><option>DIT</option><option>Other</option></select>
+                </div>
+                <div class="muted">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot"><button class="btn" data-close="tqModalSettings">Cancel</button><button class="btn btn--primary" id="tqSaveSettingsBtn">Save</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="tqModalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="tqModalBadgesTitle">
+            <div class="modal__head"><span id="tqModalBadgesTitle">Your Achievements</span><button class="btn btn--ghost" data-close="tqModalBadges">✕</button></div>
+            <div class="modal__body">
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>Active Learner</strong> — asked 10+ questions this week</li>
+                    <li><strong>Helper</strong> — answered 3 peer questions</li>
+                    <li><strong>On Track</strong> — met your weekly goal</li>
+                </ul>
+            </div>
+            <div class="modal__foot"><button class="btn btn--primary" data-close="tqModalBadges">Nice!</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ---------- Ensure CSS is loaded even on Blazor hot nav ---------- */
+    (function tqEnsureStyles(){
+      if(document.getElementById('queue-css')) return;
+      const href = 'css/Queue.css';
+      const l = document.createElement('link');
+      l.id='queue-css'; l.rel='stylesheet'; l.href=href;
+      l.onerror = () => { setTimeout(() => {
+          const b=document.createElement('link'); b.rel='stylesheet'; b.href = href + '?v=' + Date.now();
+          document.head.appendChild(b);
+      }, 60); };
+      document.head.appendChild(l);
+    })();
+
+    /* ---------- Theme + navbar + profile/notifications wiring ---------- */
+    (function tqInitBar(){
+      try{ const saved=localStorage.getItem('theme'); if(saved==='dark'){ document.documentElement.classList.add('theme-dark'); } }catch(_){}
+      const sw=document.getElementById('tqSearchWrap'), sb=document.getElementById('tqBtnSearch'), si=document.getElementById('tqSearchInput');
+      sb?.addEventListener('click', (e)=>{ e.preventDefault(); const o=sw.classList.toggle('open'); if(o){ si?.focus(); }});
+      const nav=document.getElementById('tqMainNav');
+      if(nav){
+        const links=[...nav.querySelectorAll('a')];
+        const curr=links.find(a=>a.getAttribute('href')===location.pathname);
+        if(curr){ links.forEach(x=>x.classList.remove('db-nav__link--active')); curr.classList.add('db-nav__link--active'); curr.setAttribute('aria-current','page'); }
+      }
+
+      // NEW: Notifications + Profile pop behaviours
+      const bar = document.getElementById('tqActionsBar');
+
+      // Notifications
+      const btnBell = document.getElementById('tqBtnBell');
+      const popNotes = document.getElementById('tqPopNotes');
+      btnBell?.addEventListener('click',(e)=>{
+        e.preventDefault();
+        const open = popNotes.classList.toggle('show');
+        btnBell.setAttribute('aria-expanded', open?'true':'false');
+      });
+
+      // Profile
+      const btnProfile = document.getElementById('tqBtnProfile');
+      const popProfile = document.getElementById('tqPopProfile');
+      btnProfile?.addEventListener('click',(e)=>{
+        e.preventDefault();
+        const s = popProfile.classList.toggle('show');
+        btnProfile.setAttribute('aria-expanded', s ? 'true' : 'false');
+      });
+
+      // Close both when clicking outside
+      document.addEventListener('click',(e)=>{
+        const within = e.target.closest('#tqActionsBar');
+        if(!within){
+          popNotes?.classList.remove('show');  btnBell?.setAttribute('aria-expanded','false');
+          popProfile?.classList.remove('show'); btnProfile?.setAttribute('aria-expanded','false');
+        }
+      });
+
+      // Profile menu -> open modals
+      document.querySelectorAll('#tqPopProfile .clickable[data-target]').forEach(li=>{
+        li.addEventListener('click',()=>{
+          const sel = li.getAttribute('data-target');
+          if(sel){ document.querySelector(sel)?.classList.add('show'); popProfile?.classList.remove('show'); }
+        });
+      });
+
+      // Logout clears local profile bits then redirects
+      popProfile?.querySelector('[data-action="logout"]')?.addEventListener('click',()=>{
+        try{
+          localStorage.removeItem('profile.photo');
+          localStorage.removeItem('profile.first');
+          localStorage.removeItem('profile.last');
+          localStorage.removeItem('profile.degree');
+        }catch(_){}
+        location.href='/login';
+      });
+
+      // Modal close (ESC, backdrop, buttons)
+      document.querySelectorAll('.modal').forEach(m=>{
+        m.addEventListener('click',(e)=>{ if(e.target===m) m.classList.remove('show'); });
+      });
+      document.querySelectorAll('[data-close]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const id = btn.getAttribute('data-close');
+          document.getElementById(id)?.classList.remove('show');
+        });
+      });
+      document.addEventListener('keydown',(e)=>{
+        if(e.key==='Escape'){ document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show')); }
+      });
+
+      // Photo preview + save
+      const photoInput = document.getElementById('tqPhotoInput');
+      const photoPreview = document.getElementById('tqPhotoPreview');
+      const avatarImg    = document.getElementById('tqAvatarImg');
+      document.getElementById('tqSavePhotoBtn')?.addEventListener('click',()=>{
+        try{ localStorage.setItem('profile.photo', photoPreview.src); avatarImg.src = photoPreview.src; }catch(_){}
+        document.getElementById('tqModalPhoto')?.classList.remove('show');
+      });
+      photoInput?.addEventListener('change',()=>{
+        const f = photoInput.files?.[0]; if(!f) return;
+        const r = new FileReader(); r.onload=()=>{ photoPreview.src = r.result; }; r.readAsDataURL(f);
+      });
+
+      // Settings save / load
+      const firstName = document.getElementById('tqFirstName');
+      const lastName  = document.getElementById('tqLastName');
+      const degree    = document.getElementById('tqDegree');
+      document.getElementById('tqSaveSettingsBtn')?.addEventListener('click',()=>{
+        try{
+          localStorage.setItem('profile.first', firstName.value.trim());
+          localStorage.setItem('profile.last',  lastName.value.trim());
+          localStorage.setItem('profile.degree', degree.value);
+        }catch(_){}
+        document.getElementById('tqModalSettings')?.classList.remove('show');
+      });
+
+      (function load(){
+        try{
+          const p = localStorage.getItem('profile.photo');
+          if(p){ avatarImg.src=p; const prev = document.getElementById('tqPhotoPreview'); if(prev) prev.src=p; }
+          if(firstName) firstName.value = localStorage.getItem('profile.first') || '';
+          if(lastName)  lastName.value  = localStorage.getItem('profile.last')  || '';
+          if(degree)    degree.value    = localStorage.getItem('profile.degree')|| '';
+        }catch(_){}
+      })();
+    })();
+
+    function tqToggleTheme(){
+      const el=document.documentElement; const isDark=el.classList.toggle('theme-dark');
+      try{ localStorage.setItem('theme', isDark ? 'dark' : 'light'); }catch(_){}
+    }
+
+    /* ---------- Calendar (original functionality preserved) ---------- */
+    (function tutorCalendar(){
+      const host = document.getElementById('page-tutor-queue');
+      if(!host || host.dataset.wired==='1') return;
+      host.dataset.wired='1';
+
+      // DOM
+      const elMonth  = document.getElementById('tqMonth');
+      const elWDHead = document.getElementById('tqCalHead');
+      const elWDGrid = document.getElementById('tqCalGrid');
+      const elTz     = document.getElementById('tqTz');
+      const elTz2    = document.getElementById('tqTz2');
+      const elAgenda = document.getElementById('tqAgenda');
+      const elWDWrap = document.getElementById('tqWeekDay');
+      const viewBtns = document.getElementById('tqViewBtns');
+      const upcWrap  = document.getElementById('tqUpcoming');
+
+      // View state
+      let view = 'week';            // 'month' | 'week' | 'day' | 'agenda'
+      let ref  = new Date();        // anchor date
+      const H_START=9, H_END=18;    // 9:00–18:00 half-hour rows
+
+      // Helpers
+      const fmtTZ = ()=> {
+        try{
+          const fmt = new Intl.DateTimeFormat(undefined,{timeZoneName:'short'});
+          return fmt.formatToParts(new Date()).find(p=>p.type==='timeZoneName')?.value || '';
+        }catch(_){ return ''; }
+      };
+      const monday = (d)=>{ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; };
+      const startOfMonth = (d)=>{ const x=new Date(d); x.setDate(1); x.setHours(0,0,0,0); return x; };
+      const endOfMonth   = (d)=>{ const x=new Date(d); x.setMonth(x.getMonth()+1,0); x.setHours(23,59,59,999); return x; };
+      const daysInMonth  = (d)=> endOfMonth(d).getDate();
+
+      // Parse availability saved by Availability page
+      function readAvailability(){
+        try{ return JSON.parse(localStorage.getItem('tutorAvailability')||'[]') || []; }catch(_){ return []; }
+      }
+      function parseTime(s){
+        s=(s||'').trim(); const ampm=/am|pm/i.test(s)?s.match(/am|pm/i)[0].toLowerCase():null;
+        const nums=s.replace(/[^\d:]/g,'').split(':'); let h=parseInt(nums[0]||'0',10); const m=parseInt(nums[1]||'0',10);
+        if(ampm==='pm' && h<12) h+=12; if(ampm==='am' && h===12) h=0; return {h,m};
+      }
+      function rowIndex(h,m){ return ((h-H_START)*2)+Math.round(m/30)+1; }
+
+      // Calendar events - will be updated by Blazor
+      let CALENDAR_EVENTS = [];
+
+      // Function to update calendar events from Blazor
+      window.updateCalendarEvents = function(events) {
+        console.log("DEBUG: updateCalendarEvents called with:", events);
+        console.log("DEBUG: events type:", typeof events);
+        console.log("DEBUG: events isArray:", Array.isArray(events));
+        console.log("DEBUG: events constructor:", events?.constructor?.name);
+
+        // Handle different data formats
+        if (Array.isArray(events)) {
+          CALENDAR_EVENTS = events;
+        } else if (events && typeof events === 'object') {
+          // Check if it's an array-like object (has numeric keys and length)
+          const keys = Object.keys(events);
+          const numericKeys = keys.filter(k => !isNaN(k));
+
+          console.log("DEBUG: Object keys:", keys);
+          console.log("DEBUG: Numeric keys:", numericKeys);
+
+          if (numericKeys.length === keys.length && numericKeys.length > 0) {
+            // It's an array-like object, convert properly
+            CALENDAR_EVENTS = Object.values(events);
+            console.log("DEBUG: Converted array-like object to array");
+          } else if (events.length !== undefined) {
+            // It has a length property, try to convert
+            CALENDAR_EVENTS = Array.from(events);
+            console.log("DEBUG: Converted using Array.from");
+          } else {
+            // It's a regular object, wrap it in an array
+            CALENDAR_EVENTS = [events];
+            console.log("DEBUG: Wrapped single object in array");
+          }
+        } else {
+          CALENDAR_EVENTS = [];
+          console.log("DEBUG: Set empty array");
+        }
+
+        console.log("DEBUG: Final CALENDAR_EVENTS array length:", CALENDAR_EVENTS.length);
+        console.log("DEBUG: Final CALENDAR_EVENTS array:", CALENDAR_EVENTS);
+
+        // Re-render the calendar to show events
+        render();
+      };
+
+      // Add calendar refresh listener
+      window.addCalendarRefreshListener = function(component) {
+        console.log("DEBUG: Tutor Queue - Adding calendar refresh listener");
+        window.addEventListener('calendarRefresh', function() {
+          console.log("DEBUG: Tutor Queue - calendarRefresh event received");
+          component.invokeMethodAsync('RefreshCalendarData');
+        });
+      };
+
+      function buildWeek(){
+        elWDHead.innerHTML=''; elWDGrid.innerHTML='';
+        elWDWrap.hidden=false; elMonth.hidden=true; elAgenda.hidden=true;
+
+        const start=monday(ref);
+        for(let i=0;i<8;i++){
+          const cell=document.createElement('div');
+          if(i===0){ cell.className='time-gutter'; elWDHead.appendChild(cell); continue; }
+          const d=new Date(start); d.setDate(start.getDate()+i-1);
+          cell.className='day';
+          cell.innerHTML=`<div class="d-title">${d.toLocaleDateString(undefined,{weekday:'short'})}</div><div class="d-date">${d.getDate()}</div>`;
+          elWDHead.appendChild(cell);
+        }
+
+        const rows=(H_END-H_START)*2;
+        for(let r=0;r<rows;r++){
+          const h=H_START+Math.floor(r/2); const m=r%2?'30':'00';
+          const t=document.createElement('div');
+          t.className='tcell' + (m==='00' ? ' time':'');
+          t.style.gridColumn='1';
+          t.style.gridRow=r+1;
+          if(m==='00'){ const hh=(h%12)||12; const ap=h<12?'AM':'PM'; t.textContent=`${hh}:00 ${ap}`; }
+          elWDGrid.appendChild(t);
+          for(let c=0;c<7;c++){
+            const cell=document.createElement('div');
+            cell.className='cell';
+            cell.style.gridColumn=c+2;
+            cell.style.gridRow=r+1;
+            elWDGrid.appendChild(cell);
+          }
+        }
+
+        const slots=readAvailability();
+        slots.forEach(s=>{
+          const st=parseTime(s.start), en=parseTime(s.end);
+          const rs=rowIndex(st.h,st.m), re=rowIndex(en.h,en.m);
+          (s.days||[]).forEach(di=>{
+            const ev=document.createElement('div');
+            ev.className='ev ev--avail';
+            ev.style.gridColumn=(di+2)+' / '+(di+3);   /* <-- spans exactly one column */
+            ev.style.gridRow=rs+' / '+re;
+            ev.innerHTML=`<div class="ev-title">Available</div><div class="ev-time">${s.start} – ${s.end}</div>`;
+            elWDGrid.appendChild(ev);
+          });
+        });
+
+        // Add calendar events (sessions)
+        if (CALENDAR_EVENTS && CALENDAR_EVENTS.length > 0) {
+          CALENDAR_EVENTS.forEach(event => {
+            const eventDate = new Date(event.date + 'T' + event.start);
+            const eventEnd = new Date(event.date + 'T' + event.end);
+            const dayOfWeek = eventDate.getDay();
+            const dayIndex = (dayOfWeek + 6) % 7; // Convert Sunday=0 to Monday=0
+
+            const startHour = eventDate.getHours();
+            const startMin = eventDate.getMinutes();
+            const endHour = eventEnd.getHours();
+            const endMin = eventEnd.getMinutes();
+
+            const rs = rowIndex(startHour, startMin);
+            const re = rowIndex(endHour, endMin);
+
+            const ev = document.createElement('div');
+            ev.className = 'ev ev--session';
+            ev.style.gridColumn = (dayIndex + 2) + ' / ' + (dayIndex + 3);
+            ev.style.gridRow = rs + ' / ' + re;
+            ev.innerHTML = `<div class="ev-title">${event.title}</div><div class="ev-time">${event.start} – ${event.end}</div><div class="ev-participant">${event.participantName || 'Student'}</div>`;
+            elWDGrid.appendChild(ev);
+          });
+        }
+
+        elTz.textContent = `All times are shown in your local time (${fmtTZ()}).`;
+      }
+
+      function buildDay(){ buildWeek(); const dow=(ref.getDay()+6)%7; elWDWrap.dataset.dayOnly=String(dow); }
+      function buildMonth(){
+        elWDWrap.hidden=true; elAgenda.hidden=true; elMonth.hidden=false; elMonth.innerHTML='';
+        const start=startOfMonth(ref); const firstWeekMon=monday(start); const weeks=6;
+
+        const header=document.createElement('div'); header.className='m-head';
+        ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(n=>{ const d=document.createElement('div'); d.textContent=n; header.appendChild(d); });
+        elMonth.appendChild(header);
+
+        const grid=document.createElement('div'); grid.className='m-grid';
+        for(let w=0; w<weeks; w++){
+          for(let d=0; d<7; d++){
+            const cell=document.createElement('div'); cell.className='m-cell';
+            const date=new Date(firstWeekMon); date.setDate(firstWeekMon.getDate()+(w*7)+d);
+            const inMonth=(date.getMonth()===ref.getMonth()); if(!inMonth) cell.classList.add('is-faded');
+            cell.innerHTML=`<div class="m-date">${date.getDate()}</div>`;
+            grid.appendChild(cell);
+          }
+        }
+        elMonth.appendChild(grid);
+      }
+      function buildAgenda(){
+        elWDWrap.hidden=true; elMonth.hidden=true; elAgenda.hidden=false;
+        const list=document.getElementById('tqAgendaList'); list.innerHTML='';
+        const start=monday(ref); const end=new Date(start); end.setDate(start.getDate()+7);
+        const weekItems=SESSIONS.filter(s=>{ const d=new Date(s.date+'T00:00:00'); return d>=start && d<end; });
+        if(!weekItems.length){ list.innerHTML='<li class="agenda__empty">No items this week.</li>'; }
+        else{
+          weekItems.forEach(item=>{ const li=document.createElement('li'); li.className='agenda__item';
+            li.innerHTML=`<div class="ag-title">${item.title}</div><div class="ag-sub">${new Date(item.date).toLocaleDateString(undefined,{month:'short',day:'numeric'})} • ${item.start} – ${item.end}</div>`;
+            list.appendChild(li);
+          });
+        }
+        elTz2.textContent=`All times are shown in your local time (${fmtTZ()}).`;
+      }
+
+      // ---------- Controls ----------
+      document.getElementById('tqPrev')?.addEventListener('click',()=>{ if(view==='month') ref.setMonth(ref.getMonth()-1); else ref.setDate(ref.getDate()-7); render(); });
+      document.getElementById('tqNext')?.addEventListener('click',()=>{ if(view==='month') ref.setMonth(ref.getMonth()+1); else ref.setDate(ref.getDate()+7); render(); });
+      document.getElementById('tqToday')?.addEventListener('click',()=>{ ref=new Date(); render(); });
+
+      // >>> UPDATED: route to TutorSessionDetails
+      document.getElementById('tqNew')?.addEventListener('click',()=>{ location.href = "/tutor/tutorsessiondetails"; });
+
+      document.getElementById('tqViewBtns')?.addEventListener('click',(e)=>{
+        const btn=e.target.closest('[data-view]'); if(!btn) return;
+        view=btn.dataset.view;
+        [...document.querySelectorAll('#tqViewBtns .seg__btn')].forEach(b=>b.classList.remove('is-active'));
+        btn.classList.add('is-active');
+        render();
+      });
+
+      function render(){ document.getElementById('tqWeekDay').dataset.dayOnly=''; if(view==='month') buildMonth(); else if(view==='day') buildDay(); else if(view==='agenda') buildAgenda(); else buildWeek(); }
+      render();
+    })();
+</script>
+
+@code {
+    private List<CalendarEventDto> calendarEvents = new();
+    private List<UpcomingSessionDto> upcomingSessions = new();
+    private int currentTutorId = 1; // Will be set from auth context
+    private bool isLoading = true;
+    private bool isLoadingSessions = true;
+    private int pendingRequestsCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get user profile to extract tutor ID
+            var profile = await Http.GetFromJsonAsync<UnifiedSessionDto>("/api/profile/me");
+            if (profile?.Profile?.TutorId != null)
+            {
+                currentTutorId = profile.Profile.TutorId.Value;
+                Console.WriteLine($"DEBUG: Tutor Queue - Using TutorId: {currentTutorId}");
+            }
+            else
+            {
+                Console.WriteLine("DEBUG: Tutor Queue - No valid tutor ID found in profile");
+            }
+
+            await LoadCalendarEvents();
+            await LoadPendingRequestsCount();
+            await LoadUpcomingSessions();
+
+            // Listen for calendar refresh events
+            await JS.InvokeVoidAsync("addCalendarRefreshListener", DotNetObjectReference.Create(this));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tutor profile: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadCalendarEvents()
+    {
+        try
+        {
+            Console.WriteLine($"DEBUG: Tutor Queue - Loading calendar events for tutor {currentTutorId}");
+            var startDate = DateTime.Today.AddDays(-30);
+            var endDate = DateTime.Today.AddDays(60);
+
+            var response = await Http.GetFromJsonAsync<List<CalendarEventDto>>(
+                $"/api/booking/calendar/{currentTutorId}?startDate={startDate:O}&endDate={endDate:O}");
+
+            if (response != null)
+            {
+                calendarEvents = response;
+                Console.WriteLine($"DEBUG: Tutor Queue - Loaded {calendarEvents.Count} calendar events");
+                var eventsData = calendarEvents.Select(e => new
+                {
+                    title = e.Title,
+                    date = e.Start.ToString("yyyy-MM-dd"),
+                    start = e.Start.ToString("HH:mm"),
+                    end = e.End.ToString("HH:mm"),
+                    type = e.Type,
+                    studyRoomId = e.StudyRoomId,
+                    participantName = e.ParticipantName,
+                    status = e.Status
+                }).ToList();
+
+                Console.WriteLine($"DEBUG: C# - Sending {eventsData.Count} calendar events to JavaScript");
+                await JS.InvokeVoidAsync("updateCalendarEvents", eventsData);
+            }
+            else
+            {
+                Console.WriteLine("DEBUG: Tutor Queue - No calendar events received");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading calendar events: {ex.Message}");
+        }
+    }
+
+    private async Task LoadPendingRequestsCount()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<BookingRequestDto>>($"/api/booking/pending-requests/{currentTutorId}");
+            if (response != null)
+            {
+                pendingRequestsCount = response.Count;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading pending requests count: {ex.Message}");
+        }
+    }
+
+    private async Task LoadUpcomingSessions()
+    {
+        try
+        {
+            isLoadingSessions = true;
+
+            // Get upcoming sessions from the API
+            var response = await Http.GetFromJsonAsync<List<UpcomingSessionDto>>(
+                $"/api/booking/upcoming-sessions/{currentTutorId}?limit=3"
+            );
+
+            if (response != null)
+            {
+                upcomingSessions = response;
+                Console.WriteLine($"Loaded {upcomingSessions.Count} upcoming sessions for tutor {currentTutorId}");
+            }
+            else
+            {
+                upcomingSessions = new List<UpcomingSessionDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading upcoming sessions: {ex.Message}");
+            upcomingSessions = new List<UpcomingSessionDto>();
+        }
+        finally
+        {
+            isLoadingSessions = false;
+        }
+    }
+
+    [JSInvokable]
+    public async Task RefreshCalendarData()
+    {
+        Console.WriteLine("DEBUG: Tutor Queue - Calendar refresh triggered");
+        await LoadCalendarEvents();
+        await LoadUpcomingSessions();
+        StateHasChanged();
+        Console.WriteLine("DEBUG: Tutor Queue - Calendar refresh completed");
+    }
+
+    private void NavigateToBookingRequests()
+    {
+        Nav.NavigateTo("/tutor/booking-requests");
+    }
+
+    private string GetStatusClass(string statusColor)
+    {
+        return statusColor switch
+        {
+            "success" => "upc-card--success",
+            "warning" => "upc-card--warning",
+            "danger" => "upc-card--danger",
+            "info" => "upc-card--info",
+            _ => ""
+        };
+    }
+
+    private async Task RescheduleSession(Guid sessionId)
+    {
+        // TODO: Implement reschedule functionality
+        await JS.InvokeVoidAsync("alert", "Reschedule functionality coming soon!");
+    }
+
+    private async Task CancelSession(Guid sessionId)
+    {
+        // TODO: Implement cancel functionality
+        await JS.InvokeVoidAsync("alert", "Cancel functionality coming soon!");
+    }
+}

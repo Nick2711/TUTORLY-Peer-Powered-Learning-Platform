@@ -1,0 +1,1276 @@
+@page "/modules/detail"
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject ModuleService ModuleService
+@inject ResourceService ResourceService
+@inject HttpClient Http
+@using Tutorly.Shared
+@using System.Text.Json
+
+<PageTitle>Module Detail | Tutorly</PageTitle>
+
+<link href="css/ModuleDetail.css" rel="stylesheet" />
+
+<style>
+    /* Override for selected slots - ensure visibility */
+    #page-module-detail .cal-slot.is-selected {
+        background: var(--cal-selected) !important;
+        border-color: var(--cal-selected-border) !important;
+        box-shadow: inset 0 0 0 2px var(--cal-selected-border) !important;
+    }
+
+    .theme-dark #page-module-detail .cal-slot.is-selected {
+        background: var(--cal-selected) !important;
+        border-color: var(--cal-selected-border) !important;
+        box-shadow: inset 0 0 0 2px var(--cal-selected-border) !important;
+    }
+</style>
+
+<div id="page-module-detail" class="module-detail-page">
+    <!-- ======= NAVBAR (Home • Modules • Module Details • Messages • Forum • Meetings) ======= -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path></svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="mainNav">
+                <a class="db-nav__link" href="/dashboard" data-tab="home">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg><span>Home</span>
+                </a>
+                <a class="db-nav__link" href="/modules" data-tab="modules">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" /></svg><span>Modules</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" href="/modules/detail" data-tab="module-details" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16v16H4zM8 8h8M8 12h6M8 16h4" />
+                    </svg>
+                    <span>Module Details</span>
+                </a>
+                <a class="db-nav__link" href="/messages" data-tab="messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" />
+                    </svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/forum" data-tab="forum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg><span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/calendar/overview" data-tab="meetings">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg><span>Meetings</span>
+                </a>
+            </nav>
+
+            <div class="db-actions" id="actionsBar">
+                <div class="search-wrap" id="searchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="searchInput" type="text" placeholder="Search…">
+                </div>
+                <div style="position:relative">
+                    <button class="db-iconbtn" aria-haspopup="true" aria-expanded="false" id="btnNotif">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                    </button>
+                    <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                        <div class="pop__head">Notifications</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">🎓</div><div><div class="pop__title">New badge unlocked</div><div class="pop__text">You earned “Active Learner”.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">💬</div><div><div class="pop__title">Reply from Anouk</div><div class="pop__text">She commented on your thread.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">📅</div><div><div class="pop__title">Session reminder</div><div class="pop__text">Query Review tomorrow 1:00 PM.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=3" alt="Profile" />
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#modalPhoto">
+                                <div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalSettings">
+                                <div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalBadges">
+                                <div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div>
+                            </li>
+                            <li class="pop__item">
+                                <a class="pop__row pop__logout" href="#" id="btnLogout" role="button">
+                                    <div class="pop__icon">🚪</div><div><div class="pop__title">Logout</div><div class="pop__text">Sign out of your account.</div></div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ======= MODULE HEADER ======= -->
+    <div class="md-wrap">
+        <button class="md-back" @onclick="GoBackToModules" aria-label="Back to Modules">
+            <svg viewBox="0 0 24 24" class="md-back__icon" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            <span>Back to modules</span>
+        </button>
+        <div>
+            <h1 class="md-title">@HeaderTitle</h1>
+            <p class="md-sub">@Selected?.ModuleDescription</p>
+            <div class="md-badges">
+                <span class="md-badge md-badge--core">Core Module</span>
+                <span class="md-badge md-badge--y3">@Selected?.Year</span>
+                <span class="md-badge md-badge--cred">@Credits Credits</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======= PAGE GRID ======= -->
+    <div class="md-wrap md-grid" style="display:@(Selected is null ? "none" : "grid")">
+        <section class="db-card">
+            <div class="db-card__head"><h3 class="db-card__title">Available Tutors</h3></div>
+            <div class="md-tutorList">
+                @foreach (var t in Tutors)
+                {
+                    <article class="md-tutor">
+                        <div class="md-tutor__top">
+                            <div class="md-ava"><img src="@t.Photo" alt="@t.Full_Name" /></div>
+                            <div><div class="md-name">@t.Full_Name</div><div class="md-role">@t.Role</div></div>
+                        </div>
+                        <div class="md-desc">@t.Blurb</div>
+                        <div class="md-stars">@t.Stars <span style="font-size:12px">@t.Rating.ToString("0.0")</span></div>
+                        <div class="md-cta">
+                            <button class="md-btn md-btn--primary"
+                                    type="button"
+                                    @onclick="@(() => OnBookTutor(t))">
+                                Book Tutor
+                            </button>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <aside class="db-card">
+            <div class="db-card__head"><h3 class="db-card__title">Tutor Resources</h3></div>
+            <div class="md-resFilters">
+                <button class="md-chip @(ActiveFilter == "All" ? "is-active" : null)" @onclick='@(() => SetFilter("All"))'>All</button>
+                @foreach (var n in TutorNames)
+                {
+                    <button class="md-chip @(ActiveFilter == n ? "is-active" : null)" @onclick='@(() => SetFilter(n))'>@n</button>
+                }
+            </div>
+            <ul class="md-resList">
+                @if (ModuleResources.Any())
+                {
+                    @foreach (var r in FilteredModuleResources)
+                    {
+                        <li class="md-resRow">
+                            <div class="md-resIcon">@r.FileIcon</div>
+                            <div>
+                                <div class="md-resTitle">@r.ResourceName</div>
+                                <div class="md-resMeta">@r.ContentType • @r.FileSizeFormatted • @r.CreatedAt.ToString("MMM dd")</div>
+                            </div>
+                        </li>
+                    }
+                }
+                else
+                {
+                    <li class="md-resRow">
+                        <div class="md-resIcon">📁</div>
+                        <div>
+                            <div class="md-resTitle">No resources available</div>
+                            <div class="md-resMeta">Resources will appear here when uploaded</div>
+                        </div>
+                        <span class="md-link">-</span>
+                    </li>
+                }
+            </ul>
+        </aside>
+    </div>
+
+    <!-- Fallback -->
+    <div class="md-wrap" style="display:@(Selected is null ? "block" : "none")">
+        <div class="db-card" style="padding:16px">
+            <div class="db-card__head"><h3 class="db-card__title">Module not found</h3></div>
+            <div style="padding:16px">Couldn’t find that module. <a class="md-link" href="/modules">Back to Modules</a></div>
+        </div>
+    </div>
+
+    <!-- ===== Profile Pack Modals ===== -->
+    <div class="modal" id="modalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+            <div class="modal__head"><span id="modalPhotoTitle">Change Photo</span><button class="btn btn--ghost" data-close="modalPhoto">✕</button></div>
+            <div class="modal__body">
+                <div class="photo-row">
+                    <img id="photoPreview" src="https://i.pravatar.cc/80?img=3" alt="Preview">
+                    <div>
+                        <input type="file" id="photoInput" accept="image/*">
+                        <div class="pop__text" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="modalPhoto">Cancel</button>
+                <button class="btn btn--primary" id="savePhotoBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle">
+            <div class="modal__head"><span id="modalSettingsTitle">Profile Settings</span><button class="btn btn--ghost" data-close="modalSettings">✕</button></div>
+            <div class="modal__body">
+                <div class="field"><label for="firstName">First name</label><input id="firstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label for="lastName">Last name</label><input id="lastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label for="degree">Degree</label>
+                    <select id="degree">
+                        <option value="">Select…</option>
+                        <option>BComp</option>
+                        <option>BIT</option>
+                        <option>DIT</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="pop__text">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="modalSettings">Cancel</button>
+                <button class="btn btn--primary" id="saveSettingsBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalBadgesTitle">
+            <div class="modal__head"><span id="modalBadgesTitle">Your Achievements</span><button class="btn btn--ghost" data-close="modalBadges">✕</button></div>
+            <div class="modal__body">
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>Active Learner</strong> — asked 10+ questions this week</li>
+                    <li><strong>Helper</strong> — answered 3 peer questions</li>
+                    <li><strong>On Track</strong> — met your weekly goal</li>
+                </ul>
+            </div>
+            <div class="modal__foot"><button class="btn btn--primary" data-close="modalBadges">Nice!</button></div>
+        </div>
+    </div>
+
+    <!-- ===== Tutor Booking Modal ===== -->
+    <div class="modal" id="modalTutor" aria-hidden="true">
+        <div class="modal__card tb-card"
+             role="dialog" aria-modal="true" aria-labelledby="modalTutorTitle"
+             style="width:min(1500px,96vw);max-width:96vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+            <div class="modal__head">
+                <div class="tb-head" style="display:flex;align-items:center;gap:12px">
+                    <div class="tb-ava" style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid #e5f2f2">
+                        <img data-bind="tutorPhoto" alt="Tutor photo" style="width:100%;height:100%;object-fit:cover">
+                    </div>
+                    <div>
+                        <div class="tb-name" data-bind="tutorName" style="font-weight:900">Tutor</div>
+                        <div class="tb-role" data-bind="tutorRole" style="font-size:12px;color:var(--db-muted)">tutor</div>
+                    </div>
+                </div>
+                <button class="btn btn--ghost" data-close="modalTutor" aria-label="Close">✕</button>
+            </div>
+
+            <div class="modal__body" style="flex:1 1 auto;overflow:auto;padding:14px 16px">
+                <div class="tb-grid"
+                     style="display:grid;grid-template-columns:1.25fr 1.05fr 0.9fr;gap:16px;align-items:start;min-height:0">
+
+                    <!-- LEFT COLUMN -->
+                    <div class="tb-col" style="min-width:0">
+                        <h3 class="tb-section" style="margin:0 0 8px 0;font-size:16px">
+                            Apply for tutoring for @Selected?.ModuleCode
+                        </h3>
+
+                        <div class="field"><label>When would you like to start?</label><input type="date" /></div>
+
+                        <div class="field">
+                            <label>How often would you like to meet?</label>
+                            <select>
+                                <option>Weekly</option>
+                                <option>Twice per week</option>
+                                <option>Every two weeks</option>
+                                <option>On demand / ad-hoc</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Typical weekly hours</label>
+                            <select>
+                                <option>1 hour</option>
+                                <option>2 hours</option>
+                                <option>3 hours</option>
+                                <option>4+ hours</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Preferred days</label>
+                            <div id="tbDays" class="tb-chips" style="display:flex;flex-wrap:wrap;gap:8px">
+                                <label class="tb-chip" data-day="Mon" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Mon</label>
+                                <label class="tb-chip" data-day="Tue" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Tue</label>
+                                <label class="tb-chip" data-day="Wed" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Wed</label>
+                                <label class="tb-chip" data-day="Thu" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Thu</label>
+                                <label class="tb-chip" data-day="Fri" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Fri</label>
+                                <label class="tb-chip" data-day="Sat" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Sat</label>
+                                <label class="tb-chip" data-day="Sun" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Sun</label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Preferred time of day</label>
+                            <div id="tbTimes" class="tb-chips" style="display:flex;flex-wrap:wrap;gap:8px">
+                                <label class="tb-chip" data-time="Morning" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Morning</label>
+                                <label class="tb-chip" data-time="Afternoon" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Afternoon</label>
+                                <label class="tb-chip" data-time="Evening" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Evening</label>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Format preference</label>
+                            <select id="tbFormat">
+                                <option>Online</option>
+                                <option>In person</option>
+                                <option>Hybrid</option>
+                            </select>
+                        </div>
+
+                        <div class="tb-box" style="padding:10px;border:1px dashed var(--db-border);border-radius:12px;background:rgba(0,0,0,.02)">
+                            <div class="field">
+                                <label>Campus / location (if in person)</label>
+                                <input type="text" placeholder="e.g., Main campus, Library, Room 2.15" />
+                            </div>
+                            <div class="field">
+                                <label>Online platform (if online)</label>
+                                <select>
+                                    <option>Zoom</option>
+                                    <option>Microsoft Teams</option>
+                                    <option>Google Meet</option>
+                                    <option>Discord</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MIDDLE COLUMN -->
+                    <div class="tb-col" style="min-width:0">
+                        <div class="field">
+                            <label>Language preference</label>
+                            <select>
+                                <option>No preference</option>
+                                <option>English</option>
+                                <option>Afrikaans</option>
+                                <option>Zulu</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label>Module goals / topics (optional)</label>
+                            <textarea rows="6" placeholder="Tell the tutor what you’d like help with for this module (e.g., normalization, SQL joins, exam prep)…"></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label>Accessibility or accommodations (optional)</label>
+                            <textarea rows="4" placeholder="Anything we should know to support you best?"></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label>How may the tutor contact you?</label>
+                            <div class="tb-chips" style="display:flex;flex-wrap:wrap;gap:8px">
+                                <label class="tb-chip" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox" checked>Chat / Messages</label>
+                                <label class="tb-chip" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Email</label>
+                                <label class="tb-chip" style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--db-border);border-radius:999px"><input type="checkbox">Phone</label>
+                            </div>
+                        </div>
+
+                        <div class="tb-note" style="font-size:12px;color:var(--db-muted);background:rgba(0,0,0,.03);border:1px solid var(--db-border);border-radius:10px;padding:10px">
+                            <strong>Heads-up:</strong> This request is for ongoing help in
+                            <em> @Selected?.ModuleCode – @Selected?.ModuleName</em>. You’ll coordinate actual meeting
+                            times with the tutor after they accept. Credits are only used when sessions are scheduled.
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN (SUMMARY) -->
+                    <aside class="tb-summary"
+                           style="border:1px solid var(--db-border);border-radius:12px;padding:12px;background:var(--db-surface);box-shadow:var(--db-shadow)">
+                        <div class="tb-badge" style="display:inline-block;background:var(--pill-year-bg);border:1px solid var(--db-border);border-radius:999px;padding:4px 10px;font-weight:800;font-size:12px;margin-bottom:6px">
+                            @Selected?.ModuleCode
+                        </div>
+                        <div class="tb-modname" style="font-weight:900;margin-bottom:10px">@Selected?.ModuleName</div>
+
+                        <div class="tb-slist" style="display:grid;gap:8px">
+                            <div class="tb-srow" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                                <span style="color:var(--db-muted);font-size:12px">Module</span><strong>@Selected?.ModuleCode • @Selected?.ModuleName</strong>
+                            </div>
+                            <div class="tb-srow" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                                <span style="color:var(--db-muted);font-size:12px">Tutor</span><strong data-bind="tutorName">Tutor</strong>
+                            </div>
+                            <div class="tb-srow" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                                <span style="color:var(--db-muted);font-size:12px">Format</span><strong id="tbSummaryFormat">Online / In-person</strong>
+                            </div>
+                            <div class="tb-srow" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                                <span style="color:var(--db-muted);font-size:12px">Frequency</span><strong>Set in form</strong>
+                            </div>
+                            <div class="tb-srow" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                                <span style="color:var(--db-muted);font-size:12px">Weekly hours</span><strong>Set in form</strong>
+                            </div>
+                        </div>
+
+                        <div class="tb-credits" style="margin-top:12px;padding-top:10px;border-top:1px solid var(--db-border)">
+                            <div class="tb-ctitle" style="font-weight:800">Credits & policy</div>
+                            <div class="tb-cmeta" style="font-size:12px;color:var(--db-muted)">
+                                Typical 60-min session uses 2 credits (demo). You’ll only be charged for scheduled sessions.
+                                Free cancellation up to 12 hours before a session.
+                            </div>
+                        </div>
+                    </aside>
+
+                </div>
+            </div>
+
+            <div class="modal__foot">
+                <button class="btn" data-close="modalTutor">Cancel</button>
+                <button class="btn btn--primary" @onclick="CheckAvailability" title="Check tutor availability">Check Tutor Availability</button>
+
+            </div>
+        </div>
+    </div>
+    <!-- /Tutor Booking Modal -->
+    <!-- ===== Availability Calendar Modal ===== -->
+    <div class="modal @(showAvailabilityModal ? "show" : "")" id="modalAvail" aria-hidden="@(!showAvailabilityModal)">
+        <div class="modal__card avail-card" role="dialog" aria-modal="true" aria-labelledby="modalAvailTitle">
+            <div class="modal__head">
+                <span id="modalAvailTitle">Matching availability</span>
+                <button class="btn btn--ghost" @onclick="CloseAvailabilityModal">✕</button>
+            </div>
+
+            <div class="modal__body">
+                <div class="cal-info">
+                    Your availability preferences are compared with <strong id="availTutorName">Tutor</strong>. Click any highlighted time to select it.
+                </div>
+
+                <div id="calWrap" class="cal-wrap"><!-- grid is injected here --></div>
+            </div>
+
+            <div class="modal__foot">
+                <button class="btn" @onclick="CloseAvailabilityModal">Close</button>
+                <button class="btn btn--primary" @onclick="RequestSession">Request Session</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Busy overlay (spinner) -->
+    <div id="busyOverlay" class="busy-overlay" aria-hidden="true">
+        <div class="busy">
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="busy-text">Aligning tutor availability…</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    /* ===== Theme (persist) ===== */
+    (function initTheme() {
+        try { if (localStorage.getItem('theme') === 'dark') { document.documentElement.classList.add('theme-dark'); } } catch (_) { }
+        window.toggleTheme = function () {
+            const el = document.documentElement;
+            const d = el.classList.toggle('theme-dark');
+            try { localStorage.setItem('theme', d ? 'dark' : 'light'); } catch (_) { }
+        };
+    })();
+
+    /* ===== Global delegated UI (one listener handles everything) ===== */
+    (function initUI() {
+        if (window.__uiInit) return; window.__uiInit = true;
+
+        const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const TIMES = ['Morning', 'Afternoon', 'Evening'];
+        const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17];
+        const TOD_HOURS = { Morning: [9, 10, 11], Afternoon: [12, 13, 14, 15], Evening: [16, 17] };
+
+        const fmtTime = (h24) => {
+            const ampm = h24 >= 12 ? 'PM' : 'AM';
+            let h = h24 % 12; if (h === 0) h = 12;
+            return `${h}:00 ${ampm}`;
+        };
+
+        function showBusy(text) {
+            const ov = document.getElementById('busyOverlay');
+            if (!ov) return;
+            const t = ov.querySelector('.busy-text'); if (t && text) t.textContent = text;
+            ov.classList.add('show');
+        }
+        function hideBusy() {
+            document.getElementById('busyOverlay')?.classList.remove('show');
+        }
+
+        // Global functions for C# to call
+        window.openModal = function (modalId) {
+            document.getElementById(modalId)?.classList.add('show');
+        };
+
+        window.closeModal = function (modalId) {
+            document.getElementById(modalId)?.classList.remove('show');
+        };
+
+        window.getStudentAvailabilityFormData = function () {
+            const days = [];
+            const times = [];
+
+            // Get selected days
+            document.querySelectorAll('#tbDays input[type="checkbox"]:checked').forEach(checkbox => {
+                const label = checkbox.closest('label');
+                if (label && label.dataset.day) {
+                    days.push(label.dataset.day);
+                }
+            });
+
+            // Get selected times
+            document.querySelectorAll('#tbTimes input[type="checkbox"]:checked').forEach(checkbox => {
+                const label = checkbox.closest('label');
+                if (label && label.dataset.time) {
+                    times.push(label.dataset.time);
+                }
+            });
+
+            console.log('Student availability form data:', { days: days, times: times });
+            return { days: days, times: times };
+        };
+
+        // Store reference to Blazor component for slot selection
+        window.blazorComponent = null;
+        window.setBlazorComponent = function (component) {
+            window.blazorComponent = component;
+        };
+
+
+        window.renderRealAvailabilityCalendar = function (calendarData) {
+            const calWrap = document.getElementById('calWrap');
+            if (!calWrap) return;
+
+            // Create a Set of available time slots like the original function expected
+            const keys = new Set();
+            calendarData.forEach(slot => {
+                if (slot.isAvailable) {
+                    const slotDate = new Date(slot.slotStart);
+                    const slotDay = DAYS[(slotDate.getDay() + 6) % 7]; // Convert to Mon=0, Sun=6
+                    const slotHour = slotDate.getHours();
+                    const k = `${slotDay}-${slotHour}`;
+                    keys.add(k);
+                }
+            });
+
+            // Use the original buildAvailabilityCalendar function structure
+            let html = `<div class="cal-grid">`;
+            html += `<div class="cal-corner"></div>`;
+            for (const d of DAYS) html += `<div class="cal-head">${d}</div>`;
+            for (const h of HOURS) {
+                html += `<div class="cal-time">${fmtTime(h)}</div>`;
+                for (const d of DAYS) {
+                    const k = `${d}-${h}`;
+                    const avail = keys.has(k);
+                    html += `<button class="cal-slot ${avail ? 'is-available' : ''}" data-day="${d}" data-hour="${h}" ${avail ? '' : 'disabled'} aria-label="${d} ${fmtTime(h)}"></button>`;
+                }
+            }
+            html += `</div>`;
+            calWrap.innerHTML = html;
+
+            // Add click event listeners to available slots
+            calWrap.querySelectorAll('.cal-slot.is-available').forEach(slot => {
+                slot.addEventListener('click', function () {
+                    // Toggle selection
+                    const selected = this.classList.toggle('is-selected');
+
+                    // Force green styles inline so nothing overrides them
+                    if (selected) {
+                        this.style.background = 'var(--cal-selected)';
+                        this.style.borderColor = 'var(--cal-selected-border)';
+                        this.style.boxShadow = 'inset 0 0 0 2px var(--cal-selected-border)';
+                    } else {
+                        this.style.background = '';
+                        this.style.borderColor = '';
+                        this.style.boxShadow = '';
+                    }
+
+                    // Update selected slots in Blazor
+                    const day = this.dataset.day;
+                    const hour = parseInt(this.dataset.hour, 10);
+
+                    // Convert today's day to Mon=0..Sun=6 to match DAYS
+                    const now = new Date();
+                    const todayMonIndex = (now.getDay() + 6) % 7; // Sun=0 -> 6, Mon=1 -> 0, etc.
+                    const dayIndex = DAYS.indexOf(day);
+
+                    const targetDate = new Date(now);
+                    targetDate.setDate(now.getDate() + ((dayIndex - todayMonIndex + 7) % 7));
+                    targetDate.setHours(hour, 0, 0, 0);
+
+                    if (window.blazorComponent) {
+                        window.blazorComponent.invokeMethodAsync('ToggleSlotSelection', targetDate.toISOString());
+                    }
+                });
+            });
+
+
+            // Update tutor name in banner
+            const tn = document.getElementById('availTutorName');
+            if (tn) tn.textContent = 'Tutor'; // You can pass tutor name if needed
+        };
+
+        function synthTutorAvailability(name) {
+            // deterministic pseudo-random schedule based on tutor name
+            const seed = (name || 'Tutor').split('').reduce((s, c) => s + c.charCodeAt(0), 0) || 12345;
+            let x = seed % 2147483647; if (x <= 0) x += 2147483646;
+            const rand = () => (x = x * 16807 % 2147483647) / 2147483647;
+
+            const map = {};
+            DAYS.forEach(d => {
+                if (rand() > 0.30) { // available this day
+                    const slots = TIMES.filter(() => rand() > 0.45);
+                    if (!slots.length) slots.push(TIMES[Math.floor(rand() * TIMES.length)]);
+                    map[d] = slots; // e.g., ['Morning','Evening']
+                }
+            });
+            return map;
+        }
+
+        function computeOverlapCalendar() {
+            const modal = document.getElementById('modalTutor'); if (!modal) return { tutor: 'Tutor', keys: new Set() };
+
+            const tutor = (modal.querySelector('[data-bind="tutorName"]')?.textContent || 'Tutor').trim();
+
+            // Student selected days & times
+            const selDays = [...modal.querySelectorAll('#tbDays .tb-chip input')].filter(c => c.checked).map(c => c.parentElement.dataset.day);
+            const selTimes = [...modal.querySelectorAll('#tbTimes .tb-chip input')].filter(c => c.checked).map(c => c.parentElement.dataset.time);
+
+            const daysToUse = selDays.length ? selDays : DAYS;
+            const timesToUse = selTimes.length ? selTimes : TIMES;
+
+            const avail = synthTutorAvailability(tutor);
+            const keys = new Set(); // "Day-Hour" strings for overlap
+
+            daysToUse.forEach(d => {
+                const tutorTOD = avail[d] || [];
+                tutorTOD.forEach(tod => {
+                    if (timesToUse.includes(tod)) {
+                        (TOD_HOURS[tod] || []).forEach(h => keys.add(`${d}-${h}`));
+                    }
+                });
+            });
+
+            return { tutor, keys };
+        }
+
+        function buildAvailabilityCalendar(tutor, keys) {
+            // Inject an 8-column grid (time + 7 days)
+            const wrap = document.getElementById('calWrap'); if (!wrap) return;
+
+            let html = `<div class="cal-grid">`;
+            html += `<div class="cal-corner"></div>`;
+            for (const d of DAYS) html += `<div class="cal-head">${d}</div>`;
+            for (const h of HOURS) {
+                html += `<div class="cal-time">${fmtTime(h)}</div>`;
+                for (const d of DAYS) {
+                    const k = `${d}-${h}`;
+                    const avail = keys.has(k);
+                    html += `<button class="cal-slot ${avail ? 'is-available' : ''}" data-day="${d}" data-hour="${h}" ${avail ? '' : 'disabled'} aria-label="${d} ${fmtTime(h)}"></button>`;
+                }
+            }
+            html += `</div>`;
+            wrap.innerHTML = html;
+
+            // update tutor name in banner
+            const tn = document.getElementById('availTutorName');
+            if (tn) tn.textContent = tutor;
+        }
+
+        document.addEventListener('click', (e) => {
+            /* NAV: active state */
+            const navLink = e.target.closest('#mainNav a');
+            if (navLink) {
+                const nav = document.getElementById('mainNav');
+                if (nav) { [...nav.querySelectorAll('a')].forEach(x => x.classList.remove('db-nav__link--active')); navLink.classList.add('db-nav__link--active'); }
+                const href = (navLink.getAttribute('href') || '').trim();
+                if (href === '' || href === '#') { e.preventDefault(); }
+                return;
+            }
+
+            /* Search */
+            const sb = e.target.closest('#btnSearch');
+            if (sb) {
+                e.preventDefault();
+                const sw = document.getElementById('searchWrap');
+                const si = document.getElementById('searchInput');
+                const pn = document.getElementById('popNotif');
+                const pp = document.getElementById('popProfile');
+                const o = sw?.classList.toggle('open'); if (o && si) si.focus();
+                pn?.classList.remove('show'); pp?.classList.remove('show');
+                return;
+            }
+
+            /* Notifications popover */
+            const bn = e.target.closest('#btnNotif');
+            if (bn) {
+                e.preventDefault();
+                const pn = document.getElementById('popNotif');
+                const pp = document.getElementById('popProfile');
+                const sw = document.getElementById('searchWrap');
+                const s = pn?.classList.toggle('show'); bn.setAttribute('aria-expanded', s ? 'true' : 'false');
+                pp?.classList.remove('show'); sw?.classList.remove('open');
+                return;
+            }
+
+            /* Profile popover */
+            const bp = e.target.closest('#btnProfile');
+            if (bp) {
+                e.preventDefault();
+                const pp = document.getElementById('popProfile');
+                const pn = document.getElementById('popNotif');
+                const sw = document.getElementById('searchWrap');
+                const s = pp?.classList.toggle('show'); bp.setAttribute('aria-expanded', s ? 'true' : 'false');
+                pn?.classList.remove('show'); sw?.classList.remove('open');
+                return;
+            }
+
+            /* Open profile sub-modals */
+            const li = e.target.closest('#popProfile .clickable');
+            if (li) {
+                const target = li.getAttribute('data-target');
+                if (target) document.querySelector(target)?.classList.add('show');
+                document.getElementById('popProfile')?.classList.remove('show');
+                return;
+            }
+
+            /* Close any modal via data-close */
+            const closeBtn = e.target.closest('[data-close]');
+            if (closeBtn) {
+                const id = closeBtn.getAttribute('data-close');
+                if (id) document.getElementById(id)?.classList.remove('show');
+                return;
+            }
+
+            /* Clicking backdrop closes modal */
+            if (e.target.classList && e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+                return;
+            }
+
+            /* Logout (client-side) */
+            const lg = e.target.closest('#btnLogout, .pop__logout');
+            if (lg) {
+                e.preventDefault();
+                try { fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => { }); } catch (_) { }
+                try {
+                    const theme = localStorage.getItem('theme');
+                    sessionStorage.clear(); localStorage.clear();
+                    if (theme) localStorage.setItem('theme', theme);
+                } catch (_) { }
+                document.getElementById('popProfile')?.classList.remove('show');
+                window.location.href = '/';
+                return;
+            }
+
+            /* Book Tutor (open + bind summary) */
+            const bookBtn = e.target.closest('.js-book-tutor');
+            if (bookBtn) {
+                e.preventDefault();
+                const modal = document.getElementById('modalTutor'); if (!modal) return;
+
+                const nameEl = modal.querySelector('[data-bind="tutorName"]');
+                const roleEl = modal.querySelector('[data-bind="tutorRole"]');
+                const photoEl = modal.querySelector('[data-bind="tutorPhoto"]');
+                const formatSel = modal.querySelector('#tbFormat');
+                const summaryFormat = modal.querySelector('#tbSummaryFormat');
+
+                if (nameEl) nameEl.textContent = bookBtn.getAttribute('data-tutor') || 'Tutor';
+                if (roleEl) roleEl.textContent = bookBtn.getAttribute('data-role') || '';
+                if (photoEl) photoEl.src = bookBtn.getAttribute('data-photo') || 'https://i.pravatar.cc/80';
+
+                modal.classList.add('show');
+
+                if (formatSel && !formatSel.__wired) {
+                    formatSel.addEventListener('change', () => { if (summaryFormat) summaryFormat.textContent = formatSel.value; });
+                    formatSel.__wired = true;
+                }
+                return;
+            }
+
+            /* Check Tutor Availability */
+            const chk = e.target.closest('#btnCheckAvail');
+            if (chk) {
+                e.preventDefault();
+                showBusy('Aligning tutor availability…');
+                setTimeout(() => {
+                    const { tutor, keys } = computeOverlapCalendar();
+                    buildAvailabilityCalendar(tutor, keys);
+                    hideBusy();
+                    document.getElementById('modalAvail')?.classList.add('show');
+                }, 850);
+                return;
+            }
+
+            // Make the busy overlay callable from C#
+            window.busy = {
+                show: (text) => { try { showBusy(text || 'Aligning tutor availability…'); } catch (_) { } },
+                hide: () => { try { hideBusy(); } catch (_) { } }
+            };
+
+
+            /* Toggle an available calendar slot (purple -> selected green) */
+            const slot = e.target.closest('#modalAvail .cal-slot.is-available');
+            if (slot) {
+                slot.classList.toggle('is-selected');
+                return;
+            }
+
+            /* Request Session using selected slots */
+            const req = e.target.closest('#btnReqSession');
+            if (req) {
+                const sel = [...document.querySelectorAll('#modalAvail .cal-slot.is-selected')];
+                if (!sel.length) { alert('Please select at least one time slot.'); return; }
+                const picks = sel.map(s => `${s.dataset.day} ${fmtTime(parseInt(s.dataset.hour))}`);
+                alert(`Session requested for:\n\n• ${picks.join('\n• ')}`);
+                document.getElementById('modalAvail')?.classList.remove('show');
+                return;
+            }
+
+            /* Click outside topbar pops closes them */
+            const inside = e.target.closest('#actionsBar') || e.target.closest('.db-topbar__left');
+            if (!inside) {
+                document.getElementById('popNotif')?.classList.remove('show');
+                document.getElementById('popProfile')?.classList.remove('show');
+                document.getElementById('searchWrap')?.classList.remove('open');
+            }
+        }, { passive: false });
+
+        // ESC closes any open modal
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show')); } });
+
+        /* Persisted profile fields (load fast) */
+        function loadPersisted() {
+            try {
+                const p = localStorage.getItem('profile.photo');
+                const avatarImg = document.getElementById('avatarImg'); if (p && avatarImg) avatarImg.src = p;
+                const fn = document.getElementById('firstName'); if (fn) fn.value = localStorage.getItem('profile.first') || '';
+                const ln = document.getElementById('lastName'); if (ln) ln.value = localStorage.getItem('profile.last') || '';
+                const dg = document.getElementById('degree'); if (dg) dg.value = localStorage.getItem('profile.degree') || '';
+                const prev = document.getElementById('photoPreview'); if (prev && p) prev.src = p;
+            } catch (_) { }
+        }
+        if (document.readyState !== 'loading') loadPersisted();
+        else document.addEventListener('DOMContentLoaded', loadPersisted);
+
+        /* Photo input + saves (delegated) */
+        document.addEventListener('change', (e) => {
+            const input = e.target && e.target.id === 'photoInput' ? e.target : null; if (!input) return;
+            const f = input.files?.[0]; if (!f) return;
+            const r = new FileReader(); r.onload = () => { const prev = document.getElementById('photoPreview'); if (prev) prev.src = r.result; }; r.readAsDataURL(f);
+        });
+        document.addEventListener('click', (e) => {
+            const savePhoto = e.target.closest('#savePhotoBtn');
+            if (savePhoto) {
+                try {
+                    const prev = document.getElementById('photoPreview');
+                    if (prev && prev.src) { localStorage.setItem('profile.photo', prev.src); const avatarImg = document.getElementById('avatarImg'); if (avatarImg) avatarImg.src = prev.src; }
+                } catch (_) { }
+                document.getElementById('modalPhoto')?.classList.remove('show');
+            }
+            const saveSettings = e.target.closest('#saveSettingsBtn');
+            if (saveSettings) {
+                try {
+                    const fn = document.getElementById('firstName'); const ln = document.getElementById('lastName'); const dg = document.getElementById('degree');
+                    localStorage.setItem('profile.first', fn?.value?.trim() || '');
+                    localStorage.setItem('profile.last', ln?.value?.trim() || '');
+                    localStorage.setItem('profile.degree', dg?.value || '');
+                } catch (_) { }
+                document.getElementById('modalSettings')?.classList.remove('show');
+            }
+        });
+    })();
+</script>
+
+@code {
+    [Parameter, SupplyParameterFromQuery(Name = "code")]
+    public string? Code { get; set; }
+
+    public class ModuleItem
+    {
+        public string Code { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Department { get; set; } = "";
+        public string Level { get; set; } = "";
+        public string Description { get; set; } = "";
+        public List<string> Tags { get; set; } = new();
+        public int Tutors { get; set; }
+        public string Year => Code.FirstOrDefault(char.IsDigit) switch
+        { '1' => "Year 1", '2' => "Year 2", '3' => "Year 3", '4' => "Year 4", _ => "Other" };
+    }
+    public record ResourceItem(string Title, string Meta, string Icon, string Action, string By);
+
+    List<Module> All = new();
+
+    Module? Selected;
+    List<TutorSummary> Tutors = new();
+    List<Resource> ModuleResources = new();
+    string ActiveFilter = "All";
+    int Credits = 15;
+
+    string HeaderTitle => Selected is null ? "" : $"{Selected.ModuleCode} - {Selected.ModuleName}";
+    IEnumerable<string> TutorNames => Tutors.Select(t => t.Full_Name);
+    IEnumerable<Resource> FilteredModuleResources => ActiveFilter == "All" ? ModuleResources : ModuleResources.Where(r => r.UploadedBy == ActiveFilter);
+    void SetFilter(string name) { ActiveFilter = name; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        All = await ModuleService.GetAllModules() ?? new List<Module>();
+
+        // Get current student ID from authentication
+        await GetCurrentStudentId();
+
+        // Set up JavaScript interop for slot selection
+        await JS.InvokeVoidAsync("setBlazorComponent", DotNetObjectReference.Create(this));
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var key = (Code ?? "").Trim();
+        Selected = All.FirstOrDefault(m => m.ModuleCode.Equals(key, StringComparison.OrdinalIgnoreCase))
+                   ?? All.FirstOrDefault();
+
+        if (Selected != null)
+        {
+            await LoadModuleTutors();
+        }
+
+        StateHasChanged();
+    }
+
+    async Task LoadModuleTutors()
+    {
+        Tutors.Clear();
+        ModuleResources.Clear();
+        ActiveFilter = "All";
+
+        if (Selected == null) return;
+
+        try
+        {
+            var moduleTutors = await ModuleService.GetTutorsByModuleId(Selected.ModuleId);
+            if (moduleTutors.Count > 0) Tutors.AddRange(moduleTutors);
+
+            try
+            {
+                var resourcesByCode = await ResourceService.GetModuleResourcesByCodeAsync(Selected.ModuleCode);
+                if (resourcesByCode.Any())
+                    ModuleResources.AddRange(resourcesByCode);
+                else
+                    ModuleResources.AddRange(await ResourceService.GetModuleResourcesAsync(Selected.ModuleId));
+            }
+            catch { }
+        }
+        catch { }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await JS.InvokeVoidAsync("console.debug", "ModuleDetail mounted");
+    }
+
+    // Booking-related properties
+    private int selectedTutorId;
+    private int currentStudentId = 1; // Will be set from auth context
+    private StudentAvailabilityDto studentAvailability = new();
+    private List<BookableSlotDto> bookableSlots = new();
+    private List<DateTime> selectedSlots = new();
+    private bool showAvailabilityModal = false;
+
+    private async Task GetCurrentStudentId()
+    {
+        try
+        {
+            // Get user profile to extract student ID
+            var profile = await Http.GetFromJsonAsync<UnifiedSessionDto>("/api/profile/me");
+            if (profile?.Profile?.StudentId != null)
+            {
+                currentStudentId = profile.Profile.StudentId.Value;
+                Console.WriteLine($"Current student ID: {currentStudentId}");
+            }
+            else
+            {
+                Console.WriteLine("Warning: Could not get student ID from profile, using default");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting current student ID: {ex.Message}");
+        }
+    }
+
+    private string GetUserFriendlyError(string errorCode, string message)
+    {
+        return errorCode switch
+        {
+            BookingErrorCodes.SLOT_LOCKED =>
+                "This time slot is currently being booked by another student. Please select another slot.",
+            BookingErrorCodes.SLOT_NO_LONGER_AVAILABLE =>
+                "This tutor is no longer available for that time slot. Please select another.",
+            BookingErrorCodes.MINIMUM_ADVANCE_NOT_MET =>
+                "Sessions must be booked at least 7 days in advance. Please select a later date.",
+            BookingErrorCodes.DAILY_LIMIT_REACHED =>
+                "You've reached the maximum number of sessions for that day. Please choose another date.",
+            BookingErrorCodes.BOOKING_WINDOW_EXCEEDED =>
+                "This booking is too far in the future. Please select a date within the booking window.",
+            BookingErrorCodes.BUFFER_CONFLICT =>
+                "This time slot conflicts with another session. Please select a different time.",
+            BookingErrorCodes.STUDENT_PREFERENCE_MISMATCH =>
+                "This time doesn't match your availability preferences. Please select a different time.",
+            BookingErrorCodes.LEAD_TIME_NOT_MET =>
+                "This session is too soon. Please book at least 4 hours in advance.",
+            _ => message
+        };
+    }
+
+    private async Task OnBookTutor(TutorSummary tutor)
+    {
+        selectedTutorId = tutor.Tutor_Id;
+        // Open modal - this will be handled by JavaScript
+        await JS.InvokeVoidAsync("openModal", "modalTutor");
+    }
+
+    private async Task<StudentAvailabilityDto> GetStudentAvailability()
+    {
+        // Use JavaScript to read the form data
+        var formData = await JS.InvokeAsync<object>("getStudentAvailabilityFormData");
+
+        // Parse the JavaScript object
+        var json = System.Text.Json.JsonSerializer.Serialize(formData);
+        var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+
+        var selectedDays = new List<int>();
+        var selectedTimes = new List<string>();
+
+        // Get selected days from checkboxes (Mon=1, Tue=2, etc.)
+        var dayMapping = new Dictionary<string, int>
+        {
+            { "Mon", 1 }, { "Tue", 2 }, { "Wed", 3 }, { "Thu", 4 },
+            { "Fri", 5 }, { "Sat", 6 }, { "Sun", 0 }
+        };
+
+        if (data.ContainsKey("days") && data["days"] is System.Text.Json.JsonElement daysElement)
+        {
+            foreach (var day in daysElement.EnumerateArray())
+            {
+                if (dayMapping.TryGetValue(day.GetString(), out int dayNumber))
+                {
+                    selectedDays.Add(dayNumber);
+                }
+            }
+        }
+
+        if (data.ContainsKey("times") && data["times"] is System.Text.Json.JsonElement timesElement)
+        {
+            foreach (var time in timesElement.EnumerateArray())
+            {
+                selectedTimes.Add(time.GetString());
+            }
+        }
+
+        return new StudentAvailabilityDto
+            {
+                PreferredDays = selectedDays,
+                PreferredTimes = selectedTimes
+            };
+    }
+
+    private async Task CheckAvailability()
+    {
+        // show the loading overlay immediately
+        await JS.InvokeVoidAsync("busy.show", "Aligning tutor availability…");
+
+        try
+        {
+            // Get student availability from form
+            studentAvailability = await GetStudentAvailability();
+
+            var request = new
+            {
+                StudentId = currentStudentId,
+                TutorId = selectedTutorId,
+                ModuleId = Selected?.ModuleId ?? 0,
+                StartDate = DateTime.Now.AddDays(1),
+                EndDate = DateTime.Now.AddDays(21),
+                StudentAvailability = studentAvailability
+            };
+
+            Console.WriteLine($"Checking availability for StudentId: {currentStudentId}, TutorId: {selectedTutorId}, ModuleId: {Selected?.ModuleId}");
+            Console.WriteLine($"Student availability: {System.Text.Json.JsonSerializer.Serialize(studentAvailability)}");
+
+            var response = await Http.PostAsJsonAsync("/api/booking/preview-slots", request);
+            if (response.IsSuccessStatusCode)
+            {
+                // reset any previous selections
+                selectedSlots.Clear();
+
+                bookableSlots = await response.Content.ReadFromJsonAsync<List<BookableSlotDto>>() ?? new();
+
+                Console.WriteLine($"Received {bookableSlots.Count} bookable slots");
+                foreach (var slot in bookableSlots.Take(5))
+                    Console.WriteLine($"Slot: {slot.SlotStart} - {slot.SlotEnd}, Available: {slot.IsAvailable}, Reason: {slot.UnavailableReason}");
+
+                // paint purple slots and wire click → green
+                await RenderRealAvailabilityCalendar();
+
+                showAvailabilityModal = true;   // open modal (Razor adds .show)
+                StateHasChanged();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"API Error: {response.StatusCode} - {errorContent}");
+
+                try
+                {
+                    var errorResponse = System.Text.Json.JsonSerializer.Deserialize<ServiceResult>(errorContent);
+                    var userFriendlyMessage = GetUserFriendlyError(
+                        errorResponse?.ErrorCode ?? "",
+                        errorResponse?.Message ?? "Failed to check availability. Please try again."
+                    );
+                    await JS.InvokeVoidAsync("alert", userFriendlyMessage);
+                }
+                catch
+                {
+                    await JS.InvokeVoidAsync("alert", "Failed to check availability. Please try again.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Exception in CheckAvailability: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Error checking availability: {ex.Message}");
+        }
+        finally
+        {
+            // always hide spinner
+            await JS.InvokeVoidAsync("busy.hide");
+        }
+    }
+
+
+    private async Task RequestSession()
+    {
+        try
+        {
+            var selectedSlots = GetSelectedSlots(); // Get from calendar UI
+            if (!selectedSlots.Any())
+            {
+                await JS.InvokeVoidAsync("alert", "Please select at least one time slot.");
+                return;
+            }
+
+            var bookingRequest = new BookingRequestDto
+                {
+                    StudentId = currentStudentId,
+                    TutorId = selectedTutorId,
+                    ModuleId = Selected?.ModuleId ?? 0,
+                    RequestedSlots = selectedSlots,
+                    StudentPreferencesJson = JsonSerializer.Serialize(studentAvailability),
+                    Status = "Pending"
+                };
+
+            var response = await Http.PostAsJsonAsync("/api/booking/request", bookingRequest);
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "Booking request sent to tutor!");
+                await JS.InvokeVoidAsync("closeModal", "modalAvail");
+                await JS.InvokeVoidAsync("closeModal", "modalTutor");
+                Nav.NavigateTo("/calendar/overview");
+            }
+            else
+            {
+                // Try to parse error response for user-friendly message
+                try
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    var errorResponse = System.Text.Json.JsonSerializer.Deserialize<ServiceResult>(errorContent);
+                    var userFriendlyMessage = GetUserFriendlyError(errorResponse?.ErrorCode ?? "", errorResponse?.Message ?? "Failed to send booking request. Please try again.");
+                    await JS.InvokeVoidAsync("alert", userFriendlyMessage);
+                }
+                catch
+                {
+                    await JS.InvokeVoidAsync("alert", "Failed to send booking request. Please try again.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error sending booking request: {ex.Message}");
+        }
+    }
+
+    private List<DateTime> GetSelectedSlots()
+    {
+        // This will be populated by JavaScript when slots are selected
+        return selectedSlots;
+    }
+
+    [JSInvokable]
+    public void ToggleSlotSelection(string slotDateTime)
+    {
+        Console.WriteLine($"ToggleSlotSelection called with: {slotDateTime}");
+        var slotDate = DateTime.Parse(slotDateTime);
+
+        if (selectedSlots.Contains(slotDate))
+        {
+            selectedSlots.Remove(slotDate);
+            Console.WriteLine($"Removed slot: {slotDate}, remaining: {selectedSlots.Count}");
+        }
+        else
+        {
+            selectedSlots.Add(slotDate);
+            Console.WriteLine($"Added slot: {slotDate}, total: {selectedSlots.Count}");
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task RenderRealAvailabilityCalendar()
+    {
+        // Pass the real availability data to JavaScript
+        var calendarData = bookableSlots.Select(slot => new
+        {
+            slot.SlotStart,
+            slot.SlotEnd,
+            slot.IsAvailable,
+            slot.UnavailableReason,
+            slot.DisplayTime
+        }).ToList();
+
+        await JS.InvokeVoidAsync("renderRealAvailabilityCalendar", calendarData);
+    }
+
+    private void CloseAvailabilityModal()
+    {
+        showAvailabilityModal = false;
+        StateHasChanged();
+    }
+
+    private void GoBackToModules()
+    {
+        Nav.NavigateTo("/modules");
+    }
+}

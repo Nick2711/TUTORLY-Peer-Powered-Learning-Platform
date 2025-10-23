@@ -1,0 +1,843 @@
+﻿/* ============================================================
+   Admin • User Management (scoped)
+   Scope root: #um-app.um-v2
+   ============================================================ */
+#um-app.um-v2 {
+    --bg: #f7f8fb;
+    --card: #fff;
+    --text: #0f172a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --accent: #5b5bd6;
+    --brand: #10b981;
+    --brand-700: #0ea371;
+    --shadow-1: 0 8px 24px rgba(2,8,20,.08);
+    --shadow-2: 0 18px 48px rgba(2,8,20,.18);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+}
+
+    /* ---------- Topbar ---------- */
+    #um-app.um-v2 .ad-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 1rem;
+        align-items: center;
+        padding: .6rem 1rem
+    }
+
+    #um-app.um-v2 .brand {
+        font-weight: 900;
+        font-size: 1.35rem
+    }
+
+        #um-app.um-v2 .brand span {
+            color: var(--brand)
+        }
+
+    #um-app.um-v2 .ad-topnav {
+        display: flex;
+        gap: .6rem;
+        align-items: center;
+        overflow: auto;
+        white-space: nowrap
+    }
+
+    #um-app.um-v2 .nav-item {
+        padding: .5rem .7rem;
+        border-radius: .6rem;
+        text-decoration: none;
+        color: #111827;
+        font-weight: 700
+    }
+
+        #um-app.um-v2 .nav-item.active, #um-app.um-v2 .nav-item:hover {
+            background: #eef;
+            color: #3433aa
+        }
+
+    #um-app.um-v2 .nav-toggle {
+        display: none;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: .6rem;
+        width: 40px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        gap: 3px
+    }
+
+        #um-app.um-v2 .nav-toggle span {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: #475569
+        }
+
+    #um-app.um-v2 .top-actions {
+        display: flex;
+        gap: .5rem;
+        align-items: center
+    }
+
+    #um-app.um-v2 .icon-btn {
+        inline-size: 36px;
+        block-size: 36px;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: .7rem;
+        display: inline-grid;
+        place-items: center;
+        cursor: pointer
+    }
+
+        #um-app.um-v2 .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: #64748b
+        }
+
+    #um-app.um-v2 .user-mini {
+        display: flex;
+        gap: .6rem;
+        align-items: center;
+        padding-left: .4rem;
+        border: 1px solid var(--border);
+        border-radius: .7rem;
+        background: #fff;
+        cursor: pointer
+    }
+
+        #um-app.um-v2 .user-mini img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover
+        }
+
+        #um-app.um-v2 .user-mini .chev {
+            width: 16px;
+            height: 16px;
+            margin-left: .25rem;
+            fill: #475569
+        }
+
+    #um-app.um-v2 .muted {
+        color: var(--muted)
+    }
+
+    /* ---------- Popovers ---------- */
+    #um-app.um-v2 .aa-pop {
+        position: absolute;
+        width: min(320px,calc(100vw - 16px));
+        min-width: 280px;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: .9rem;
+        box-shadow: var(--shadow-2);
+        padding: .5rem;
+        z-index: 900
+    }
+
+        #um-app.um-v2 .aa-pop[hidden] {
+            display: none !important
+        }
+
+    #um-app.um-v2 .aa-pop-title {
+        font-weight: 900;
+        padding: .5rem .6rem .35rem;
+        color: #111827
+    }
+
+    #um-app.um-v2 .aa-profile .row {
+        display: grid;
+        grid-template-columns: 28px 1fr;
+        gap: .6rem;
+        align-items: center;
+        width: 100%;
+        background: transparent;
+        border: 0;
+        text-align: left;
+        padding: .55rem .6rem;
+        border-radius: .6rem;
+        cursor: pointer
+    }
+
+        #um-app.um-v2 .aa-profile .row:hover {
+            background: #f3f4f6
+        }
+
+        #um-app.um-v2 .aa-profile .row.danger .t {
+            color: #b91c1c
+        }
+
+    #um-app.um-v2 .aa-profile .ico {
+        width: 28px;
+        height: 28px;
+        display: grid;
+        place-items: center
+    }
+
+    #um-app.um-v2 .aa-profile .t {
+        font-weight: 800
+    }
+
+    #um-app.um-v2 .aa-profile .s {
+        font-size: .86rem;
+        color: var(--muted)
+    }
+
+    #um-app.um-v2 .aa-notify ul {
+        list-style: none;
+        margin: 0;
+        padding: .25rem
+    }
+
+    #um-app.um-v2 .aa-notify .note {
+        display: grid;
+        grid-template-columns: 32px 1fr;
+        gap: .6rem;
+        padding: .55rem;
+        border-radius: .6rem
+    }
+
+        #um-app.um-v2 .aa-notify .note:hover {
+            background: #f3f4f6
+        }
+
+    #um-app.um-v2 .aa-notify .t {
+        font-weight: 800
+    }
+
+    #um-app.um-v2 .aa-notify .s {
+        color: var(--muted);
+        font-size: .86rem
+    }
+
+    #um-app.um-v2 .aa-notify .ico {
+        font-size: 18px;
+        line-height: 1
+    }
+
+    /* ---------- Page container ---------- */
+    #um-app.um-v2 .ad-main {
+        padding: 1rem 1.25rem 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto
+    }
+
+    #um-app.um-v2 .um-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin: 1.25rem 0 .75rem
+    }
+
+    #um-app.um-v2 .um-actions {
+        display: flex;
+        gap: .75rem;
+        align-items: center
+    }
+
+    /* Search */
+    #um-app.um-v2 .um-search {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid var(--border);
+        padding: .5rem .75rem;
+        border-radius: .75rem;
+        min-width: 280px;
+        background: #fff
+    }
+
+        #um-app.um-v2 .um-search .i {
+            width: 18px;
+            height: 18px;
+            fill: #94a3b8
+        }
+
+        #um-app.um-v2 .um-search input {
+            border: 0;
+            outline: 0;
+            width: 100%
+        }
+
+    /* Buttons */
+    #um-app.um-v2 .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid transparent;
+        border-radius: .75rem;
+        padding: .6rem .9rem;
+        font-weight: 700;
+        cursor: pointer
+    }
+
+        #um-app.um-v2 .btn .i {
+            width: 18px;
+            height: 18px;
+            fill: currentColor
+        }
+
+    #um-app.um-v2 .btn-primary {
+        background: var(--accent);
+        color: #fff
+    }
+
+    /* ---------- Filter pills (collision-proof) ---------- */
+    #um-app.um-v2 .um-filter {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
+        margin: 0 0 1rem
+    }
+
+        #um-app.um-v2 .um-filter .pill {
+            all: unset;
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: #f4f5f7;
+            border: 1px solid var(--border);
+            padding: .45rem .8rem;
+            border-radius: 999px;
+            font-weight: 700;
+            cursor: pointer;
+            line-height: 1.1;
+            min-width: 0
+        }
+
+            #um-app.um-v2 .um-filter .pill::before, #um-app.um-v2 .um-filter .pill::after {
+                content: none !important
+            }
+
+            #um-app.um-v2 .um-filter .pill.is-active {
+                background: #eef;
+                border-color: #cdd;
+                color: #3433aa
+            }
+
+    /* ---------- Table ---------- */
+    #um-app.um-v2 .um-table-wrap {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        overflow: hidden
+    }
+
+    #um-app.um-v2 table {
+        width: 100%;
+        border-collapse: collapse
+    }
+
+    #um-app.um-v2 thead th {
+        font-size: .78rem;
+        letter-spacing: .03em;
+        text-align: left;
+        color: var(--muted);
+        background: #fafafa;
+        border-bottom: 1px solid var(--border);
+        padding: .9rem 1rem
+    }
+
+    #um-app.um-v2 tbody td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle
+    }
+
+    #um-app.um-v2 .user {
+        display: flex;
+        gap: .75rem;
+        align-items: center
+    }
+
+        #um-app.um-v2 .user img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover
+        }
+
+    #um-app.um-v2 .name {
+        font-weight: 700
+    }
+
+    #um-app.um-v2 .ta-right {
+        text-align: right
+    }
+
+    /* Row actions */
+    #um-app.um-v2 .icon-btn {
+        inline-size: 34px;
+        block-size: 34px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: .6rem;
+        border: 1px solid var(--border);
+        background: #fff;
+        margin-left: .25rem
+    }
+
+        #um-app.um-v2 .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: #64748b
+        }
+
+        #um-app.um-v2 .icon-btn.warn svg {
+            fill: #f59e0b
+        }
+
+        #um-app.um-v2 .icon-btn.danger svg {
+            fill: #ef4444
+        }
+
+        #um-app.um-v2 .icon-btn.success svg {
+            fill: #22c55e
+        }
+
+        #um-app.um-v2 .icon-btn.pulse {
+            animation: pulse .35s ease
+        }
+
+@keyframes pulse {
+    from {
+        transform: scale(.9)
+    }
+
+    to {
+        transform: scale(1)
+    }
+}
+
+/* Badges */
+#um-app.um-v2 .badge {
+    display: inline-block;
+    font-weight: 700;
+    font-size: .8rem;
+    padding: .25rem .55rem;
+    border-radius: .75rem
+}
+
+#um-app.um-v2 .badge-green {
+    background: #ecfdf5;
+    color: #047857
+}
+
+#um-app.um-v2 .badge-amber {
+    background: #fffbeb;
+    color: #b45309
+}
+
+#um-app.um-v2 .badge-red {
+    background: #fef2f2;
+    color: #b91c1c
+}
+
+#um-app.um-v2 .badge-blue {
+    background: #eff6ff;
+    color: #1d4ed8
+}
+
+#um-app.um-v2 .badge-indigo {
+    background: #eef2ff;
+    color: #4338ca
+}
+
+#um-app.um-v2 .badge-purple {
+    background: #f5f3ff;
+    color: #6d28d9
+}
+
+/* ---------- Modal (base – neutral) ---------- */
+#um-app.um-v2 .aa-modal {
+    position: fixed;
+    inset: 0;
+    display: none
+}
+
+    #um-app.um-v2 .aa-modal.open {
+        display: block;
+        z-index: 1000
+    }
+
+    #um-app.um-v2 .aa-modal .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,.45)
+    }
+
+    #um-app.um-v2 .aa-modal .dialog {
+        position: relative;
+        z-index: 1;
+        width: min(1040px,96vw);
+        margin: 7vh auto;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-2);
+        display: flex;
+        flex-direction: column
+    }
+
+    #um-app.um-v2 .aa-modal .m-head {
+        padding: 1rem 1rem .9rem;
+        border-bottom: 1px solid var(--border);
+        background: #fff;
+        color: #0f172a;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        position: relative
+    }
+
+        #um-app.um-v2 .aa-modal .m-head h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 900
+        }
+
+        #um-app.um-v2 .aa-modal .m-head .x {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            border: 0;
+            background: #f3f4f6;
+            color: #111827;
+            border-radius: .65rem;
+            padding: .35rem .6rem;
+            cursor: pointer
+        }
+
+            #um-app.um-v2 .aa-modal .m-head .x:hover {
+                background: #e8eaef
+            }
+
+/* ---------- ADD USER modal – brand GREEN overrides ---------- */
+#um-app.um-v2 #umAddModal .m-head {
+    background: linear-gradient(180deg,var(--brand),#0fb28a);
+    color: #fff;
+}
+
+    #um-app.um-v2 #umAddModal .m-head .x {
+        background: rgba(255,255,255,.22);
+        color: #fff;
+    }
+
+        #um-app.um-v2 #umAddModal .m-head .x:hover {
+            background: rgba(255,255,255,.32)
+        }
+
+#um-app.um-v2 #umAddModal .role-switch {
+    background: rgba(255,255,255,.24);
+    margin-top: .6rem;
+    padding: .38rem;
+    border-radius: 999px;
+}
+
+    #um-app.um-v2 #umAddModal .role-switch .role-btn {
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        padding: .48rem .9rem;
+        border-radius: 999px;
+        font-weight: 900;
+        color: #0c3b2f;
+        background: #d6f4ea;
+        white-space: nowrap;
+        transition: transform .08s,background .15s,color .15s,box-shadow .15s;
+    }
+
+        #um-app.um-v2 #umAddModal .role-switch .role-btn:hover {
+            background: #c9f1e5
+        }
+
+        #um-app.um-v2 #umAddModal .role-switch .role-btn.is-active {
+            background: #0fb28a;
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(15,178,138,.28);
+        }
+
+        #um-app.um-v2 #umAddModal .role-switch .role-btn:active {
+            transform: translateY(1px)
+        }
+
+/* ---------- Add User body grid ---------- */
+#um-app.um-v2 .aa-modal .m-body {
+    padding: 1.1rem 1.1rem 1.2rem;
+    display: grid;
+    grid-template-columns: repeat(12,1fr);
+    gap: 1rem 1.1rem
+}
+
+#um-app.um-v2 .aa-modal .field {
+    grid-column: span 4;
+    min-width: 0
+}
+
+    #um-app.um-v2 .aa-modal .field.full {
+        grid-column: 1 / -1
+    }
+
+    #um-app.um-v2 .aa-modal .field label {
+        display: inline-flex;
+        align-items: baseline;
+        gap: .35rem;
+        font-weight: 900;
+        margin-bottom: .35rem
+    }
+
+#um-app.um-v2 .aa-modal .req {
+    display: inline-block;
+    color: #ef4444;
+    line-height: 1;
+    transform: translateY(-.05em)
+}
+
+#um-app.um-v2 .aa-modal .field input,
+#um-app.um-v2 .aa-modal .field select,
+#um-app.um-v2 .aa-modal .field textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: .7rem;
+    padding: .62rem .75rem;
+    font: inherit;
+    background: #fff
+}
+
+#um-app.um-v2 .aa-modal .hint {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: .88rem
+}
+
+/* Tutor modules */
+#um-app.um-v2 .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin-top: .35rem
+}
+
+#um-app.um-v2 .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    background: #eefaf5;
+    color: #0b8a61;
+    border: 1px solid #b7f3dd;
+    padding: .28rem .6rem;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: .9rem
+}
+
+    #um-app.um-v2 .chip .x {
+        border: 0;
+        background: transparent;
+        color: #0b8a61;
+        cursor: pointer
+    }
+
+#um-app.um-v2 .chooser {
+    position: relative;
+    margin-top: .45rem
+}
+
+#um-app.um-v2 .btn.ghost.small {
+    padding: .45rem .75rem
+}
+
+#um-app.um-v2 .options-list {
+    position: absolute;
+    z-index: 30;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: .6rem;
+    box-shadow: var(--shadow-1);
+    margin-top: .35rem;
+    max-height: 260px;
+    overflow: auto;
+    padding: .25rem;
+    width: 100%
+}
+
+    #um-app.um-v2 .options-list[hidden] {
+        display: none !important
+    }
+
+    #um-app.um-v2 .options-list button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        padding: .55rem .65rem;
+        border-radius: .5rem;
+        cursor: pointer;
+        font-weight: 700
+    }
+
+        #um-app.um-v2 .options-list button:hover {
+            background: #f3f4f6
+        }
+
+    #um-app.um-v2 .options-list .empty {
+        color: var(--muted);
+        padding: .6rem
+    }
+
+/* Modal footer */
+#um-app.um-v2 .aa-modal .m-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: .65rem;
+    padding: .8rem 1.1rem 1.1rem
+}
+
+#um-app.um-v2 .aa-modal .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid transparent;
+    border-radius: .75rem;
+    padding: .6rem .95rem;
+    font-weight: 900;
+    cursor: pointer
+}
+
+    #um-app.um-v2 .aa-modal .btn.ghost {
+        background: #f3f4f6;
+        color: #111827
+    }
+
+    #um-app.um-v2 .aa-modal .btn.primary {
+        background: linear-gradient(180deg,#6366f1,#4f46e5);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(79,70,229,.25)
+    }
+
+/* ---------- Change Photo modal specifics (neutral) ---------- */
+#um-app.um-v2 .aa-modal.photo .dialog {
+    width: min(720px,96vw)
+}
+
+#um-app.um-v2 .aa-modal.photo .m-body.photo-grid {
+    grid-template-columns: 240px 1fr;
+    gap: 1.1rem
+}
+
+#um-app.um-v2 .photo-preview {
+    width: 240px;
+    height: 240px;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #f8fafc;
+    display: grid;
+    place-items: center
+}
+
+    #um-app.um-v2 .photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover
+    }
+
+#um-app.um-v2 .file-wrap input[type="file"] {
+    display: block;
+    width: 100%
+}
+
+#um-app.um-v2 .file-wrap .help {
+    margin-top: .4rem;
+    color: var(--muted);
+    font-weight: 700
+}
+
+#um-app.um-v2 .file-wrap .err {
+    margin-top: .45rem;
+    color: #b91c1c;
+    font-weight: 900
+}
+
+@media (max-width:640px) {
+    #um-app.um-v2 .aa-modal .dialog {
+        width: min(96vw,640px)
+    }
+
+    #um-app.um-v2 .aa-modal .m-body {
+        grid-template-columns: 1fr;
+        gap: .85rem
+    }
+
+    #um-app.um-v2 .aa-modal.photo .m-body.photo-grid {
+        grid-template-columns: 1fr
+    }
+
+    #um-app.um-v2 .photo-preview {
+        width: 100%;
+        height: 240px
+    }
+}
+
+/* ---------- Responsive nav ---------- */
+@media (max-width:980px) {
+    #um-app.um-v2 .ad-topbar {
+        grid-template-columns: auto auto auto
+    }
+
+    #um-app.um-v2 .nav-toggle {
+        display: inline-flex
+    }
+
+    #um-app.um-v2 .ad-topnav {
+        display: none
+    }
+
+        #um-app.um-v2 .ad-topnav.is-open {
+            display: flex;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 58px;
+            z-index: 19;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: .5rem .75rem;
+            gap: .25rem;
+            flex-wrap: wrap
+        }
+}
+
+/* Page H1 consistency */
+#um-app.um-v2 .ad-main h1,
+#um-app.um-v2 .um-topbar h1,
+#um-app.um-v2 h1.page-title,
+#um-app.um-v2 .page-h1 {
+    margin: .25rem 0 1rem;
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: .01em;
+    color: #0f172a
+}
+
+/* Error message styling */
+#um-app.um-v2 .error-message {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}

@@ -1,0 +1,781 @@
+﻿@page "/admin/database"
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@using System.Text.Json
+
+<PageTitle>Admin • Database</PageTitle>
+<HeadContent>
+    <link rel="stylesheet" href="css/AdminDatabase.css" />
+</HeadContent>
+
+<div id="admin-db-app" class="db-v1">
+    <!-- ===== Top Nav (consistent with other admin pages) ===== -->
+    <header class="ad-topbar">
+        <div class="brand">Tutorly<span>Admin</span></div>
+
+        <button class="nav-toggle" id="dbNavToggle" aria-controls="dbTopnav" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav class="ad-topnav" id="dbTopnav" aria-label="Primary">
+            <NavLink class="nav-item" href="/admin/dashboard">Dashboard</NavLink>
+            <NavLink class="nav-item" href="/admin/user-management">User Management</NavLink>
+            <NavLink class="nav-item" href="/admin/forum-moderation">Forum Moderation</NavLink>
+            <NavLink class="nav-item" href="/admin/module-management">Module Management</NavLink>
+            <NavLink class="nav-item" href="/admin/tutors">Tutors</NavLink>
+            <NavLink class="nav-item" href="/admin/analytics">Analytics</NavLink>
+            <NavLink class="nav-item" href="/admin/database" Match="NavLinkMatch.All">Database</NavLink>
+            <NavLink class="nav-item" href="/admin/faqs">FAQs</NavLink>
+        </nav>
+
+        <div class="top-actions">
+            <button class="icon-btn" id="btnNotify" title="Notifications" aria-haspopup="true" aria-expanded="false">
+                <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 002-2H10a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z" /></svg>
+            </button>
+
+            <!-- Profile button opens POPOVER -->
+            <div class="user-mini" id="btnAccount" role="button" tabindex="0" aria-expanded="false">
+                <img src="https://i.pravatar.cc/40?img=8" alt="">
+                <div><div class="name">Admin User</div><div class="muted">Super Admin</div></div>
+                <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z" /></svg>
+            </div>
+        </div>
+
+        <!-- Notifications popover -->
+        <div id="dbNotifyMenu" class="aa-pop aa-notify" hidden>
+            <div class="aa-pop-title">Notifications</div>
+            <ul>
+                <li class="note">
+                    <div class="ico">🔔</div>
+                    <div>
+                        <div class="t">Import finished</div>
+                        <div class="s">users.csv imported successfully</div>
+                    </div>
+                </li>
+                <li class="note">
+                    <div class="ico">⚠️</div>
+                    <div>
+                        <div class="t">Slow query detected</div>
+                        <div class="s">reports table took 3.2s</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Profile popover (same as other pages) -->
+        <div id="dbProfileMenu" class="aa-pop aa-profile" hidden>
+            <div class="aa-pop-title">Account</div>
+            <button class="row" id="actChangePhoto">
+                <div class="ico">🖼️</div>
+                <div><div class="t">Change photo</div><div class="s">Update your avatar</div></div>
+            </button>
+            <a class="row" href="/admin/settings">
+                <div class="ico">⚙️</div>
+                <div><div class="t">Settings</div><div class="s">Preferences &amp; security</div></div>
+            </a>
+            <button class="row danger" id="actLogout">
+                <div class="ico">🚪</div>
+                <div><div class="t">Log out</div><div class="s">Sign out of Admin</div></div>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== Page ===== -->
+    <main class="ad-main">
+        <!-- Title + dropdown immediately below -->
+        <header class="page-head">
+            <div class="title-stack">
+                <h1 class="page-h1">Database</h1>
+                <label class="select large below">
+                    <span class="lbl">Table</span>
+                    <select @bind="selectedTable" @bind:after="OnTableChanged" aria-label="Select table">
+                        <option value="">Select table…</option>
+                        @foreach (var table in availableTables)
+                        {
+                            <option value="@table.TableName">@table.DisplayName</option>
+                        }
+                    </select>
+                </label>
+            </div>
+
+            <div class="page-actions">
+                <div class="search">
+                    <svg viewBox="0 0 24 24"><path d="M10.5 3a7.5 7.5 0 015.94 12.18l3.69 3.69-1.41 1.41-3.69-3.69A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" /></svg>
+                    <input @bind="searchQuery" @oninput="OnSearchInput" placeholder="Search records…">
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn ghost" @onclick="OnEditSchema">Edit schema</button>
+                    <button class="btn ghost" @onclick="OnAlterTable">Alter table</button>
+                    <button class="btn ghost" @onclick="OnExportCsv" disabled="@(string.IsNullOrEmpty(selectedTable))">Export CSV</button>
+                    <button class="btn primary" @onclick="OnImportCsv">
+                        <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 19h16" /></svg>
+                        Import CSV
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Data viewer -->
+        <section class="viewer card" aria-live="polite">
+            <div class="viewer-head">
+                <div class="meta">
+                    <div class="title"><span>@(currentTableData?.TableName ?? "Select a table")</span></div>
+                    <div class="muted">
+                        @if (currentTableData != null)
+                        {
+                            <span>@currentTableData.TotalRecords.ToString("N0") rows • @(GetTableSize())</span>
+                        }
+                        else
+                        {
+                            <span>No table selected</span>
+                        }
+                    </div>
+                </div>
+                @if (currentTableData != null && currentTableData.TotalPages > 1)
+                {
+                    <div class="pager">
+                        <button class="pg" @onclick="OnPreviousPage" disabled="@(currentPage <= 1)" aria-label="Previous page">‹</button>
+                        <span>@currentPage / @currentTableData.TotalPages</span>
+                        <button class="pg" @onclick="OnNextPage" disabled="@(currentPage >= currentTableData.TotalPages)" aria-label="Next page">›</button>
+                    </div>
+                }
+            </div>
+
+            <div class="viewer-body">
+                @if (isLoading)
+                {
+                    <div class="empty">Loading table data...</div>
+                }
+                else if (currentTableData == null)
+                {
+                    <div class="empty">Choose a table from the dropdown to view its records.</div>
+                }
+                else if (currentTableData.Records.Count == 0)
+                {
+                    <div class="empty">No records found.</div>
+                }
+                else
+                {
+                    <div class="scroll">
+                        <table class="data">
+                            <thead>
+                                <tr>
+                                    @foreach (var column in currentTableData.Columns)
+                                    {
+                                        <th>@column</th>
+                                    }
+                                    <th style="width:120px">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var record in currentTableData.Records)
+                                {
+                                    <tr>
+                                        @foreach (var column in currentTableData.Columns)
+                                        {
+                                            <td>@GetRecordValue(record, column)</td>
+                                        }
+                                        <td class="ta-right">
+                                            <button class="row-btn edit" @onclick="() => OnEditRecord(record)">Edit</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- Error Logs -->
+        <section id="dbErrorLogs" class="err-table-section" aria-labelledby="dbErrTitle">
+            <div class="log-head">
+                <h3 id="dbErrTitle">Database Error Logs</h3>
+                <div class="log-actions">
+                    <label class="select small">
+                        <span class="lbl">Type</span>
+                        <select @bind="errorTypeFilter" @bind:after="OnErrorFilterChanged">
+                            <option value="0">All</option>
+                            <option value="200">200 OK</option>
+                            <option value="400">400 Client</option>
+                            <option value="500">500 Server</option>
+                        </select>
+                    </label>
+                    <label class="chk">
+                        <input type="checkbox" @bind="onlyUnresolvedErrors" @bind:after="OnErrorFilterChanged">
+                        <span>Only unresolved</span>
+                    </label>
+                    <button class="btn ghost" @onclick="OnMarkAllErrorsResolved">Mark all resolved</button>
+                </div>
+            </div>
+
+            <div class="table-card">
+                @if (errorLogs.Count == 0)
+                {
+                    <div class="empty">No database errors found.</div>
+                }
+                else
+                {
+                    <table class="db-table" aria-describedby="dbErrTitle">
+                        <thead>
+                            <tr>
+                                <th style="width:90px">ID</th>
+                                <th style="width:110px">Line</th>
+                                <th style="width:180px">Type</th>
+                                <th>Description</th>
+                                <th style="width:140px">Resolved</th>
+                                <th class="ta-right" style="width:160px">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var error in errorLogs)
+                            {
+                                <tr>
+                                    <td>@error.ErrorId</td>
+                                    <td>@error.ErrorLine</td>
+                                    <td>
+                                        <span class="badge @GetErrorTypeClass(error.ErrorType)">@GetErrorTypeLabel(error.ErrorType)</span>
+                                    </td>
+                                    <td>@error.ErrorDescription</td>
+                                    <td>
+                                        <label class="switch">
+                                            <input type="checkbox" @bind="error.ErrorResolved" @bind:after="() => OnToggleErrorResolved(error)" />
+                                            <span></span>
+                                        </label>
+                                    </td>
+                                    <td class="ta-right">
+                                        <button class="row-btn resolve" @onclick="() => OnToggleErrorResolved(error)">
+                                            @(error.ErrorResolved ? "Unresolve" : "Resolve")
+                                        </button>
+                                        <button class="row-btn del" @onclick="() => OnDeleteError(error)">Delete</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </section>
+    </main>
+
+    <!-- ========= Modals ========= -->
+    <!-- Change Photo modal (now identical style to other page popups) -->
+    <div class="aa-modal photo" id="photoModal" aria-hidden="true">
+        <div class="scrim" data-close="#photoModal"></div>
+        <div class="dialog">
+            <div class="m-head">
+                <h3>Change Photo</h3>
+                <button class="x" data-close="#photoModal">✕</button>
+            </div>
+            <div class="m-body photo-grid">
+                <div class="photo-preview"><img id="photoPreview" src="https://i.pravatar.cc/160?img=8" alt=""></div>
+                <div class="file-wrap">
+                    <label class="field full">
+                        <span>Upload file</span>
+                        <input type="file" id="photoFile" accept="image/png, image/jpeg">
+                    </label>
+                    <div class="help">PNG/JPG up to ~2MB.</div>
+                    <div class="err" id="photoErr" hidden>File is too large or unsupported.</div>
+                </div>
+            </div>
+            <div class="m-foot">
+                <button class="btn ghost" data-close="#photoModal">Cancel</button>
+                <button class="btn primary" id="photoSave">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import CSV modal -->
+    <div class="aa-modal" id="csvModal" aria-hidden="true">
+        <div class="scrim" data-close="#csvModal"></div>
+        <div class="dialog">
+            <div class="m-head">
+                <h3>Import CSV</h3>
+                <button class="x" data-close="#csvModal">✕</button>
+            </div>
+            <div class="m-body">
+                <div class="field">
+                    <label>Target table <span class="req">*</span></label>
+                    <select @bind="csvImportTable" @bind:after="OnCsvTableChanged">
+                        <option value="">Select table…</option>
+                        @foreach (var table in availableTables)
+                        {
+                            <option value="@table.TableName">@table.DisplayName</option>
+                        }
+                    </select>
+                </div>
+                <div class="field full">
+                    <label>CSV File <span class="req">*</span></label>
+                    <input type="file" @ref="csvFileInput" accept=".csv" @onchange="OnCsvFileSelected">
+                    <div class="hint">UTF-8 CSV. First row is header.</div>
+                </div>
+            </div>
+            <div class="m-foot">
+                <button class="btn ghost" @onclick="OnCloseCsvModal">Cancel</button>
+                <button class="btn primary" @onclick="OnSubmitCsvImport" disabled="@(string.IsNullOrEmpty(csvImportTable) || csvFileContent == null)">Import</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Record modal (NEW) -->
+    <div class="aa-modal" id="editRecordModal" aria-hidden="true">
+        <div class="scrim" @onclick="OnCloseEditRecordModal"></div>
+        <div class="dialog">
+            <div class="m-head">
+                <h3>Edit Record</h3>
+                <button class="x" @onclick="OnCloseEditRecordModal">✕</button>
+            </div>
+            <div class="m-body" id="editRecordBody">
+                @if (editingRecord != null && currentTableData != null)
+                {
+                    @foreach (var column in currentTableData.Columns)
+                    {
+                        <div class="field">
+                            <label>@column</label>
+                            <input @bind="editingRecord.Data[column]"
+                                   disabled="@(column.Equals(currentTableData.PrimaryKey, StringComparison.OrdinalIgnoreCase))" />
+                        </div>
+                    }
+                }
+            </div>
+            <div class="m-foot">
+                <button class="btn ghost" @onclick="OnCloseEditRecordModal">Cancel</button>
+                <button class="btn primary" @onclick="OnSaveRecord">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // State variables
+    private List<DatabaseTableInfo> availableTables = new();
+    private string selectedTable = "";
+    private string searchQuery = "";
+    private int currentPage = 1;
+    private const int pageSize = 10;
+    private bool isLoading = false;
+    private DatabaseTableData? currentTableData = null;
+    private List<DatabaseErrorLog> errorLogs = new();
+    private string errorTypeFilter = "0";
+    private bool onlyUnresolvedErrors = false;
+    private string csvImportTable = "";
+    private string? csvFileContent = null;
+    private ElementReference csvFileInput;
+    private DatabaseRecord? editingRecord = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTablesAsync();
+        await LoadErrorLogsAsync();
+    }
+
+    private async Task LoadTablesAsync()
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.GetAsync("/api/admin/database/tables");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+                if (result.TryGetProperty("tables", out var tablesElement))
+                {
+                    availableTables = JsonSerializer.Deserialize<List<DatabaseTableInfo>>(tablesElement.GetRawText()) ?? new();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tables: {ex.Message}");
+        }
+    }
+
+    private async Task LoadTableDataAsync()
+    {
+        if (string.IsNullOrEmpty(selectedTable)) return;
+
+        isLoading = true;
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var url = $"/api/admin/database/tables/{selectedTable}/data?page={currentPage}&pageSize={pageSize}&searchQuery={Uri.EscapeDataString(searchQuery)}";
+            var response = await Http.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+                if (result.TryGetProperty("data", out var dataElement))
+                {
+                    currentTableData = JsonSerializer.Deserialize<DatabaseTableData>(dataElement.GetRawText());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading table data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadErrorLogsAsync()
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var url = $"/api/admin/database/error-logs?page=1&pageSize=50&typeFilter={errorTypeFilter}&onlyUnresolved={onlyUnresolvedErrors}";
+            var response = await Http.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<JsonElement>(content);
+                if (result.TryGetProperty("logs", out var logsElement))
+                {
+                    errorLogs = JsonSerializer.Deserialize<List<DatabaseErrorLog>>(logsElement.GetRawText()) ?? new();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading error logs: {ex.Message}");
+        }
+    }
+
+    private async Task OnTableChanged()
+    {
+        currentPage = 1;
+        searchQuery = "";
+        await LoadTableDataAsync();
+    }
+
+    private async Task OnSearchInput()
+    {
+        currentPage = 1;
+        await LoadTableDataAsync();
+    }
+
+    private async Task OnPreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadTableDataAsync();
+        }
+    }
+
+    private async Task OnNextPage()
+    {
+        if (currentTableData != null && currentPage < currentTableData.TotalPages)
+        {
+            currentPage++;
+            await LoadTableDataAsync();
+        }
+    }
+
+    private async Task OnErrorFilterChanged()
+    {
+        await LoadErrorLogsAsync();
+    }
+
+    private async Task OnToggleErrorResolved(DatabaseErrorLog error)
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.PutAsync($"/api/admin/database/error-logs/{error.ErrorId}/resolve", null);
+            if (response.IsSuccessStatusCode)
+            {
+                error.ErrorResolved = !error.ErrorResolved;
+                error.ResolvedAt = error.ErrorResolved ? DateTime.UtcNow : null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling error resolved status: {ex.Message}");
+        }
+    }
+
+    private async Task OnDeleteError(DatabaseErrorLog error)
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.DeleteAsync($"/api/admin/database/error-logs/{error.ErrorId}");
+            if (response.IsSuccessStatusCode)
+            {
+                errorLogs.Remove(error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error deleting error log: {ex.Message}");
+        }
+    }
+
+    private async Task OnMarkAllErrorsResolved()
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.PutAsync("/api/admin/database/error-logs/resolve-all", null);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadErrorLogsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error marking all errors as resolved: {ex.Message}");
+        }
+    }
+
+    private async Task OnExportCsv()
+    {
+        if (string.IsNullOrEmpty(selectedTable)) return;
+
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.GetAsync($"/api/admin/database/tables/{selectedTable}/export");
+            if (response.IsSuccessStatusCode)
+            {
+                var csvContent = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("downloadFile", csvContent, $"{selectedTable}.csv", "text/csv");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error exporting CSV: {ex.Message}");
+        }
+    }
+
+    private void OnImportCsv()
+    {
+        csvImportTable = selectedTable;
+    }
+
+    private void OnCsvTableChanged()
+    {
+        // This method is called when the CSV import table selection changes
+        // No additional action needed for now
+    }
+
+    private async Task OnCsvFileSelected(ChangeEventArgs e)
+    {
+        var file = (IBrowserFile?)e.Value;
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream();
+            using var reader = new StreamReader(stream);
+            csvFileContent = await reader.ReadToEndAsync();
+        }
+    }
+
+    private async Task OnSubmitCsvImport()
+    {
+        if (string.IsNullOrEmpty(csvImportTable) || string.IsNullOrEmpty(csvFileContent)) return;
+
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var request = new CsvImportRequest
+                {
+                    TableName = csvImportTable,
+                    CsvContent = csvFileContent,
+                    HasHeader = true
+                };
+
+            var response = await Http.PostAsJsonAsync("/api/admin/database/tables/import", request);
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "CSV imported successfully!");
+                OnCloseCsvModal();
+                await LoadErrorLogsAsync(); // Refresh error logs to show import success
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error importing CSV: {ex.Message}");
+        }
+    }
+
+    private void OnCloseCsvModal()
+    {
+        csvImportTable = "";
+        csvFileContent = null;
+    }
+
+    private void OnEditRecord(DatabaseRecord record)
+    {
+        editingRecord = record;
+        // The modal will be opened via JavaScript
+        JS.InvokeVoidAsync("openModal", "#editRecordModal");
+    }
+
+    private async Task OnSaveRecord()
+    {
+        if (editingRecord == null || currentTableData == null) return;
+
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var request = new RecordUpdateRequest
+                {
+                    Updates = editingRecord.Data
+                };
+
+            var response = await Http.PutAsJsonAsync($"/api/admin/database/tables/{selectedTable}/records/{editingRecord.Data[currentTableData.PrimaryKey]}", request);
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("closeModal", "#editRecordModal");
+                await LoadTableDataAsync(); // Refresh the table data
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating record: {ex.Message}");
+        }
+    }
+
+    private void OnCloseEditRecordModal()
+    {
+        editingRecord = null;
+        JS.InvokeVoidAsync("closeModal", "#editRecordModal");
+    }
+
+    private void OnEditSchema()
+    {
+        if (string.IsNullOrEmpty(selectedTable))
+        {
+            JS.InvokeVoidAsync("alert", "Select a table first.");
+        }
+        else
+        {
+            JS.InvokeVoidAsync("alert", $"Open schema editor for {selectedTable}");
+        }
+    }
+
+    private void OnAlterTable()
+    {
+        if (string.IsNullOrEmpty(selectedTable))
+        {
+            JS.InvokeVoidAsync("alert", "Select a table first.");
+        }
+        else
+        {
+            JS.InvokeVoidAsync("alert", $"Open ALTER TABLE for {selectedTable}");
+        }
+    }
+
+    private string GetRecordValue(DatabaseRecord record, string column)
+    {
+        if (record.Data.TryGetValue(column, out var value))
+        {
+            return value?.ToString() ?? "";
+        }
+        return "";
+    }
+
+    private string GetTableSize()
+    {
+        var table = availableTables.FirstOrDefault(t => t.TableName == selectedTable);
+        return table?.Size ?? "";
+    }
+
+    private string GetErrorTypeLabel(int errorType)
+    {
+        return errorType switch
+        {
+            200 => "200 OK",
+            400 => "400 Client",
+            500 => "500 Server",
+            _ => errorType.ToString()
+        };
+    }
+
+    private string GetErrorTypeClass(int errorType)
+    {
+        return errorType switch
+        {
+            200 => "green",
+            400 => "amber",
+            500 => "red",
+            _ => "blue"
+        };
+    }
+}
+
+<script>
+    window.openModal = function (selector) {
+        const modal = document.querySelector(selector);
+        if (modal) {
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    window.closeModal = function (selector) {
+        const modal = document.querySelector(selector);
+        if (modal) {
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        }
+    };
+
+    window.downloadFile = function (content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+</script>

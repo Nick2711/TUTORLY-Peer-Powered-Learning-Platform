@@ -1,0 +1,418 @@
+﻿@page "/modules"
+<PageTitle>Modules | StudyHub</PageTitle>
+
+@inject ModuleService ModuleService
+@inject TopicService TopicService
+@inject NavigationManager Nav
+
+<div id="page-modules" class="modules-page">
+    <!-- ===== NAVBAR (copied from Dashboard, Modules link active) ===== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+
+                <a class="db-brand" href="/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="mainNav">
+                <a class="db-nav__link" href="/dashboard" data-tab="home">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+                    <span>Home</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" href="/modules" data-tab="modules">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" /></svg>
+                    <span>Modules</span>
+                </a>
+                <a class="db-nav__link" href="/messages" data-tab="messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/forum" data-tab="forum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/calendar/overview" data-tab="meetings">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg>
+                    <span>Meetings</span>
+                </a>
+            </nav>
+
+            <div class="db-actions" id="actionsBar">
+                <div class="search-wrap" id="searchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="searchInput" type="text" placeholder="Search…">
+                </div>
+
+                <div style="position:relative">
+                    <button class="db-iconbtn" aria-haspopup="true" aria-expanded="false" id="btnNotif">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                    </button>
+                    <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                        <div class="pop__head">Notifications</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">🎓</div><div><div class="pop__title">New badge unlocked</div><div class="pop__text">You earned “Active Learner”.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">💬</div><div><div class="pop__title">Reply from Anouk</div><div class="pop__text">She commented on your code review thread.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">📅</div><div><div class="pop__title">Session reminder</div><div class="pop__text">Project review tomorrow 1:00 PM.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=3" alt="Profile" />
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#modalPhoto">
+                                <div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalSettings">
+                                <div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalBadges">
+                                <div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div>
+                            </li>
+                            <!-- Logout (same behavior as Dashboard) -->
+                            <li class="pop__item clickable" data-action="logout">
+                                <div class="pop__row">
+                                    <div class="pop__icon">🚪</div>
+                                    <div>
+                                        <div class="pop__title">Logout</div>
+                                        <div class="pop__text">Sign out of your account.</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== CONTENT ===== -->
+    <div class="mod-page">
+        <h1 class="mod-h1">Browse Topics</h1>
+        <p class="mod-sub">Follow your module to get personalized updates and resources.</p>
+
+        <div class="mod-toolbar">
+            <div class="mod-searchbox">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                <input placeholder="Search topics..." @bind="SearchText" @bind:event="oninput" />
+            </div>
+
+            <!-- Department dropdown -->
+            <div class="mod-dd" tabindex="0">
+                <button class="mod-dd-btn" type="button">
+                    <small>Department</small> @DeptLabel
+                    <span class="carat">▾</span>
+                </button>
+                <div class="mod-dd-menu">
+                    <button class="mod-dd-item @(string.IsNullOrEmpty(deptFilter) ? "is-active" : null)"
+                            @onclick="@(() => SetDept(string.Empty))">
+                        All Departments
+                    </button>
+                    @foreach (var d in Departments)
+                    {
+                        <button class="mod-dd-item @(deptFilter == d ? "is-active" : null)"
+                                @onclick="@(() => SetDept(d))">
+                            @d
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Year dropdown -->
+            <div class="mod-dd" tabindex="0">
+                <button class="mod-dd-btn" type="button">
+                    <small>Year</small> @YearLabel
+                    <span class="carat">▾</span>
+                </button>
+                <div class="mod-dd-menu">
+                    <button class="mod-dd-item @(string.IsNullOrEmpty(yearFilter) ? "is-active" : null)"
+                            @onclick="@(() => SetYear(string.Empty))">
+                        All Years
+                    </button>
+                    @foreach (var y in Years)
+                    {
+                        <button class="mod-dd-item @(yearFilter == y ? "is-active" : null)"
+                                @onclick="@(() => SetYear(y))">
+                            @y
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="mod-grid">
+            @foreach (var m in PageSlice)
+            {
+                <article class="mod-card mod-module-card"
+                         tabindex="0"
+                         role="button"
+                         title="Open @m.ModuleCode details"
+                         @onclick="() => OpenModule(m)"
+                         @onkeydown="(e => OnCardKey(e, m))">
+                    <div class="mod-head">
+                        <div class="mod-badge">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="mod-code">@m.ModuleCode</div>
+                            <div class="mod-name">@m.ModuleName</div>
+                        </div>
+                    </div>
+                    <div class="mod-desc">@m.ModuleDescription</div>
+                    <div class="mod-tags" style="margin-top:8px">
+                        @if (m.Tutors is { Count: > 0 })
+                        {
+                            <span class="mod-tag" style="background:#eef">Tutors:</span>
+                            @foreach (var t in m.Tutors)
+                            {
+                                <span class="mod-tag">@t.Full_Name</span>
+                            }
+                        }
+                    </div>
+                    <div class="mod-tags">
+                        @foreach (var t in m.Tags)
+                        {
+                            <span class="mod-tag">@t</span>
+                        }
+                    </div>
+                    <div class="mod-foot">
+                        <div>@(m.Tutors?.Count ?? 0) tutors available</div>
+                        <div>
+                            <button type="button"
+                                    class="mod-follow-btn @(m.IsFollowing ? "is-on" : null)"
+                                    @onclick="() => ToggleFollow(m)"
+                                    @onclick:stopPropagation="true">
+                                @(m.IsFollowing ? "Following" : "Follow")
+                            </button>
+                            <a class="mod-link"
+                               href="/modules/detail?code=@Uri.EscapeDataString(m.ModuleCode)"
+                               @onclick:stopPropagation="true">Resources</a>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+
+        <div class="mod-pagerbar">
+            <div class="mod-muted">
+                Showing @((StartIndex + 1)) to @(Math.Min(StartIndex + PageSize, Filtered.Count)) of @Filtered.Count results
+            </div>
+            <div class="mod-pager">
+                <button @onclick="Prev" disabled="@(CurrentPage == 1)">‹</button>
+                @for (int i = 1; i <= TotalPages; i++)
+                {
+                    var p = i;
+                    <button class="@(p == CurrentPage ? "is-active" : null)" @onclick="(() => Go(p))">@p</button>
+                }
+                <button @onclick="Next" disabled="@(CurrentPage == TotalPages)">›</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Modals (same as Dashboard) ===== -->
+    <div class="modal" id="modalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+            <div class="modal__head"><span id="modalPhotoTitle">Change Photo</span><button class="btn btn--ghost" data-close="modalPhoto">✕</button></div>
+            <div class="modal__body">
+                <div class="photo-row">
+                    <img id="photoPreview" src="https://i.pravatar.cc/80?img=3" alt="Preview">
+                    <div>
+                        <input type="file" id="photoInput" accept="image/*">
+                        <div class="mod-muted" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="modalPhoto">Cancel</button>
+                <button class="btn btn--primary" id="savePhotoBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle">
+            <div class="modal__head"><span id="modalSettingsTitle">Profile Settings</span><button class="btn btn--ghost" data-close="modalSettings">✕</button></div>
+            <div class="modal__body">
+                <div class="field"><label for="firstName">First name</label><input id="firstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label for="lastName">Last name</label><input id="lastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label for="degree">Degree</label>
+                    <select id="degree">
+                        <option value="">Select…</option>
+                        <option>BComp</option>
+                        <option>BIT</option>
+                        <option>DIT</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="mod-muted">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="modalSettings">Cancel</button>
+                <button class="btn btn--primary" id="saveSettingsBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalBadgesTitle">
+            <div class="modal__head"><span id="modalBadgesTitle">Your Achievements</span><button class="btn btn--ghost" data-close="modalBadges">✕</button></div>
+            <div class="modal__body">
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>Active Learner</strong> — asked 10+ questions this week</li>
+                    <li><strong>Helper</strong> — answered 3 peer questions</li>
+                    <li><strong>On Track</strong> — met your weekly goal</li>
+                </ul>
+            </div>
+            <div class="modal__foot"><button class="btn btn--primary" data-close="modalBadges">Nice!</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function initTheme(){try{const saved=localStorage.getItem('theme');if(saved==='dark'){document.documentElement.classList.add('theme-dark');}}catch(_){}})();
+    function toggleTheme(){const el=document.documentElement;const isDark=el.classList.toggle('theme-dark');try{localStorage.setItem('theme',isDark?'dark':'light')}catch(_){}}
+
+    (function wireNav(){
+      const nav=document.getElementById('mainNav'); if(!nav) return;
+      nav.addEventListener('click',(e)=>{
+        const a=e.target.closest('a'); if(!a) return;
+        const href=(a.getAttribute('href')||'').trim();
+        [...nav.querySelectorAll('a')].forEach(x=>x.classList.remove('db-nav__link--active'));
+        a.classList.add('db-nav__link--active');
+        if(href===''||href==='#'){ e.preventDefault(); }
+      },{passive:false});
+    })();
+
+    (function wireActions(){
+      const searchWrap=document.getElementById('searchWrap');
+      const searchBtn=document.getElementById('btnSearch');
+      const searchInput=document.getElementById('searchInput');
+      const btnNotif=document.getElementById('btnNotif');
+      const popNotif=document.getElementById('popNotif');
+      const btnProfile=document.getElementById('btnProfile');
+      const popProfile=document.getElementById('popProfile');
+      function closeAll(){ searchWrap.classList.remove('open'); popNotif.classList.remove('show'); btnNotif.setAttribute('aria-expanded','false'); popProfile.classList.remove('show'); btnProfile.setAttribute('aria-expanded','false'); }
+      searchBtn.addEventListener('click',(e)=>{ e.preventDefault(); const open=searchWrap.classList.toggle('open'); if(open){ searchInput.focus(); } popNotif.classList.remove('show'); popProfile.classList.remove('show'); });
+      btnNotif.addEventListener('click',(e)=>{ e.preventDefault(); const showing=popNotif.classList.toggle('show'); btnNotif.setAttribute('aria-expanded',showing?'true':'false'); popProfile.classList.remove('show'); searchWrap.classList.remove('open'); });
+      btnProfile.addEventListener('click',(e)=>{ e.preventDefault(); const showing=popProfile.classList.toggle('show'); btnProfile.setAttribute('aria-expanded',showing?'true':'false'); popNotif.classList.remove('show'); searchWrap.classList.remove('open'); });
+      document.addEventListener('click',(e)=>{ const within=e.target.closest('#actionsBar'); const inLeft=e.target.closest('.db-topbar__left'); if(!(within||inLeft)) closeAll(); });
+    })();
+
+    (function profileUX(){
+      const avatarImg=document.getElementById('avatarImg');
+      const popProfile=document.getElementById('popProfile');
+
+      document.querySelectorAll('#popProfile .clickable[data-target]').forEach(li=>{
+        li.addEventListener('click',()=>{ const target=li.getAttribute('data-target'); if(target){ document.querySelector(target)?.classList.add('show'); }});
+      });
+
+      const logoutItem = popProfile.querySelector('[data-action="logout"]');
+      if (logoutItem){
+        logoutItem.addEventListener('click', ()=>{
+          try{
+            localStorage.removeItem('profile.photo');
+            localStorage.removeItem('profile.first');
+            localStorage.removeItem('profile.last');
+            localStorage.removeItem('profile.degree');
+            localStorage.removeItem('messages.openChat');
+            localStorage.removeItem('mymodules.selected');
+          }catch(_){}
+          window.location.href = '/login';
+        });
+      }
+
+      document.querySelectorAll('.modal').forEach(m=>{ m.addEventListener('click',(e)=>{ if(e.target===m) m.classList.remove('show'); }); });
+      document.querySelectorAll('[data-close]').forEach(btn=>{ btn.addEventListener('click',()=>{ document.getElementById(btn.getAttribute('data-close'))?.classList.remove('show'); }); });
+      document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'){ document.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show')); }});
+
+      const photoInput=document.getElementById('photoInput'); const photoPreview=document.getElementById('photoPreview'); const savePhotoBtn=document.getElementById('savePhotoBtn');
+      photoInput.addEventListener('change',()=>{ const f=photoInput.files?.[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ photoPreview.src=r.result; }; r.readAsDataURL(f); });
+      savePhotoBtn.addEventListener('click',()=>{ try{ localStorage.setItem('profile.photo',photoPreview.src); avatarImg.src=photoPreview.src; }catch(_){ } document.getElementById('modalPhoto').classList.remove('show'); });
+
+      const firstName=document.getElementById('firstName'); const lastName=document.getElementById('lastName'); const degree=document.getElementById('degree');
+      document.getElementById('saveSettingsBtn').addEventListener('click',()=>{ try{ localStorage.setItem('profile.first', firstName.value.trim()); localStorage.setItem('profile.last', lastName.value.trim()); localStorage.setItem('profile.degree', degree.value);}catch(_){ } document.getElementById('modalSettings').classList.remove('show'); });
+      (function load(){ try{ const p=localStorage.getItem('profile.photo'); if(p){ avatarImg.src=p; const prev=document.getElementById('photoPreview'); if(prev) prev.src=p; } firstName.value=localStorage.getItem('profile.first')||''; lastName.value=localStorage.getItem('profile.last')||''; degree.value=localStorage.getItem('profile.degree')||''; }catch(_){ }})();
+    })();
+</script>
+
+@code {
+@using Tutorly.Shared;
+
+    List<Module> All = new();
+
+protected override async Task OnInitializedAsync()
+{
+    All = await ModuleService.GetAllModules() ?? new List<Module>();
+    foreach (var mod in All)
+    {
+        mod.Tutors = await ModuleService.GetTutorsByModuleId(mod.ModuleId);
+        Console.WriteLine($"Module {mod.ModuleCode}: {mod.Tutors?.Count ?? 0} tutors loaded");
+    }
+}
+
+IEnumerable<string> Departments => All.Select(m => m.ModuleDepartment).Distinct().OrderBy(x => x);
+IEnumerable<string> Years => All.Select(m => m.Year).Distinct().Where(y => y != "Other").OrderBy(x => x);
+
+private string _searchText = "";
+string SearchText { get => _searchText; set { _searchText = value; CurrentPage = 1; } }
+
+string deptFilter = "";
+string yearFilter = "";
+
+string DeptLabel => string.IsNullOrEmpty(deptFilter) ? "All Departments" : deptFilter;
+string YearLabel => string.IsNullOrEmpty(yearFilter) ? "All Years" : yearFilter;
+
+const int PageSize = 6;
+int CurrentPage = 1;
+int StartIndex => (CurrentPage - 1) * PageSize;
+
+List<Module> Filtered =>
+    All.Where(m =>
+        (string.IsNullOrWhiteSpace(SearchText)
+            || m.ModuleCode.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+            || m.ModuleName.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+        && (string.IsNullOrEmpty(deptFilter) || m.ModuleDepartment == deptFilter)
+        && (string.IsNullOrEmpty(yearFilter) || m.Year == yearFilter)
+    ).ToList();
+
+int TotalPages => Math.Max(1, (int)Math.Ceiling(Filtered.Count / (double)PageSize));
+IEnumerable<Module> PageSlice => Filtered.Skip(StartIndex).Take(PageSize);
+
+void Go(int p) { CurrentPage = Math.Clamp(p, 1, TotalPages); StateHasChanged(); }
+void Prev() { if (CurrentPage > 1) CurrentPage--; }
+void Next() { if (CurrentPage < TotalPages) CurrentPage++; }
+
+void SetDept(string v) { deptFilter = v; CurrentPage = 1; }
+void SetYear(string v) { yearFilter = v; CurrentPage = 1; }
+
+private CurrentUserDto CurrentStudent { get; set; } = new();
+async Task ToggleFollow(Module m)
+{
+    if (CurrentStudent == null) return;
+    m.IsFollowing = !m.IsFollowing;
+    StateHasChanged();
+    await TopicService.SubscribeToTopicByModuleId(CurrentStudent.UserId, m.ModuleId);
+}
+
+void OpenModule(Module m) => Nav.NavigateTo($"/modules/detail?code={Uri.EscapeDataString(m.ModuleCode)}");
+void OnCardKey(KeyboardEventArgs e, Module m) { if (e.Key == "Enter" || e.Key == " ") OpenModule(m); }
+}

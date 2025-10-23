@@ -1,0 +1,145 @@
+﻿/* topics-detail.css */
+body, .font-sans {
+    font-family: 'Inter', sans-serif;
+}
+
+.notification-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+}
+
+/* Buttons & tags reused across pages */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    background: #2563eb;
+    color: #fff;
+    font-size: 0.875rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    background: #fff;
+    color: #374151;
+    font-size: 0.875rem;
+    border: 1px solid #d1d5db;
+}
+
+    .btn-secondary:hover {
+        background: #f9fafb;
+    }
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.375rem;
+    color: #6b7280; /* gray-500 */
+}
+
+    .btn-icon:hover {
+        background: #f3f4f6; /* gray-100 */
+    }
+
+.tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    background: #eef2ff;
+    color: #4338ca; /* indigo-50 / indigo-700 */
+}
+
+/* Posts */
+.post-card {
+    background: #fff;
+}
+
+    .post-card pre {
+        background: #0b1020;
+        color: #e5e7eb; /* near-night + gray-200 */
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        overflow: auto;
+    }
+
+    .post-card code {
+        background: transparent;
+        color: #111827;
+    }
+
+    .post-card pre code {
+        color: #e5e7eb;
+    }
+
+/* Upvote button */
+.vote-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+}
+
+    .vote-btn:hover {
+        background: #f9fafb;
+    }
+
+    .vote-btn.active {
+        background: #dbeafe;
+        border-color: #bfdbfe;
+        color: #1d4ed8;
+    }
+/* blue shades */
+
+/* Accepted Answer */
+.accepted-card {
+    border: 1px solid #bbf7d0; /* green-200 */
+    background: #ecfdf5; /* green-50 */
+    border-radius: 0.75rem;
+    padding: 1rem;
+}
+
+.accepted-header {
+    display: flex;
+    align-items: center;
+    color: #047857;
+}
+/* green-700 */
+
+/* Show more */
+#show-more-replies {
+    width: 100%;
+}
+
+/* Reply editor */
+#reply-input {
+    resize: vertical;
+}
+
+/* Accessibility helpers */
+.hidden {
+    display: none;
+}

@@ -1,0 +1,143 @@
+﻿@page "/auth/forgot"
+@inject IJSRuntime JS
+@inject HttpClient Http
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+
+<PageTitle>Forgot Password | Belgium Campus Learning Portal</PageTitle>
+
+<div class="forgot-page">
+    <!-- Same compact theme button as login/register -->
+    <div class="fixed top-4 right-4 z-50">
+        <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme"></button>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center p-4"
+         style="font-family:'Inter',sans-serif; background-color: var(--page-bg);">
+        <div class="max-w-md w-full space-y-8">
+            <div class="text-center">
+                <div class="flex justify-center">
+                    <div class="gradient-bg p-3 rounded-lg shadow-lg inline-flex">
+                        <i data-feather="refresh-ccw" class="text-white w-8 h-8"></i>
+                    </div>
+                </div>
+                <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Reset your password</h2>
+                <p class="mt-2 text-sm text-gray-600">Enter your Belgium Campus email and we’ll send you a reset link.</p>
+            </div>
+
+            <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+                <EditForm class="mb-0 space-y-6" Model="@model" OnValidSubmit="SubmitAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div>
+                        <div class="mt-1 flex items-center gap-3">
+                            <i data-feather="mail" class="h-5 w-5 text-gray-400"></i>
+                            <div class="neo-field w-full">
+                                <InputText id="email" name="email" type="email" autocomplete="email" required
+                                           class="neo-input"
+                                           @bind-Value="model.Email"
+                                           placeholder="you@belgiumcampus.ac.za" />
+                                <label for="email" class="neo-label">Email address</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-3d btn-3d--tiny btn-3d--fixed" disabled="@isBusy">
+                            @(isBusy ? "Sending…" : "Send reset link")
+                        </button>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(error))
+                    {
+                        <div class="mt-4 bg-red-50 border-l-4 border-red-400 p-3 rounded">
+                            <p class="text-sm text-red-700">@error</p>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(success))
+                    {
+                        <div class="mt-4 bg-green-50 border-l-4 border-green-400 p-3 rounded">
+                            <p class="text-sm text-green-700">@success</p>
+                        </div>
+                    }
+                </EditForm>
+            </div>
+
+            <div class="form-actions">
+                <a href="/login" class="btn-3d btn-3d--tiny btn-3d--fixed">Back to sign in</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private Model model = new();
+    private bool isBusy;
+    private string? error;
+    private string? success;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try { await JS.InvokeVoidAsync("eval", "if (typeof feather !== 'undefined') feather.replace();"); } catch { }
+            try { await JS.InvokeVoidAsync("ui.enforceCampusEmail", "form", "#email", ".belgiumcampus.ac.za"); } catch { }
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        error = success = null;
+        isBusy = true;
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Post, "api/auth/forgot")
+                { Content = JsonContent.Create(new { Email = model.Email }) };
+            req.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+            var resp = await Http.SendAsync(req);
+            if (resp.IsSuccessStatusCode) success = "Check your email for a password reset link.";
+            else error = await resp.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex) { error = ex.Message; }
+        finally { isBusy = false; StateHasChanged(); }
+    }
+
+    private class Model { [Required, EmailAddress] public string Email { get; set; } = string.Empty; }
+}
+
+<script>
+    // Same tiny script as register; scoped to this page's button
+    (function () {
+        const KEY = 'theme';
+        const btn = document.getElementById('theme-toggle');
+        const root = document.documentElement;
+
+        function apply(mode) {
+            if (mode === 'dark') { root.setAttribute('data-theme', 'dark'); btn?.classList.add('is-dark'); }
+            else { root.removeAttribute('data-theme'); btn?.classList.remove('is-dark'); }
+        }
+
+        let saved = null;
+        try { saved = localStorage.getItem(KEY); } catch (_) { }
+        if (!saved) { saved = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+        apply(saved);
+
+        btn?.addEventListener('click', () => {
+            const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            apply(next);
+            try { localStorage.setItem(KEY, next); } catch (_) { }
+        });
+
+        try {
+            const mq = matchMedia('(prefers-color-scheme: dark)');
+            mq.addEventListener?.('change', e => {
+                const userSet = localStorage.getItem(KEY);
+                if (!userSet) apply(e.matches ? 'dark' : 'light');
+            });
+        } catch (_) { }
+    })();
+</script>

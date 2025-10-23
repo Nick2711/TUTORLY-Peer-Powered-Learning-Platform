@@ -1,0 +1,113 @@
+﻿@page "/auth/status"
+@attribute [Authorize]
+@inject IJSRuntime JS
+@inject HttpClient Http
+
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+
+<PageTitle>Application Status | Belgium Campus Learning Portal</PageTitle>
+
+<div class="fixed top-4 right-4 z-50">
+    <label class="theme-switch" title="Toggle theme">
+        <input id="theme-toggle" type="checkbox" class="theme-switch__checkbox">
+        <div class="theme-switch__container">
+            <div class="theme-switch__clouds"></div>
+            <div class="theme-switch__stars-container">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none"><path fill="currentColor" d="M135.831 3.00688..."></path></svg>
+            </div>
+            <div class="theme-switch__circle-container">
+                <div class="theme-switch__sun-moon-container"><div class="theme-switch__moon"><div class="theme-switch__spot"></div><div class="theme-switch__spot"></div><div class="theme-switch__spot"></div></div></div>
+            </div>
+        </div>
+    </label>
+</div>
+
+<div class="min-h-screen flex items-center justify-center p-4" style="font-family:'Inter',sans-serif; background-color: var(--page-bg);">
+    <div class="max-w-lg w-full space-y-8">
+        <div class="text-center">
+            <div class="flex justify-center">
+                <div class="gradient-bg p-3 rounded-lg shadow-lg inline-flex">
+                    <i data-feather="check-circle" class="text-white w-8 h-8"></i>
+                </div>
+            </div>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Tutor Application Status</h2>
+            <p class="mt-2 text-sm text-gray-600">Track your approval status below.</p>
+        </div>
+
+        <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+            @if (loading)
+            {
+                <p>Loading…</p>
+            }
+            else if (status is not null)
+            {
+                <div class="flex items-center gap-3">
+                    @if (status!.state == "approved")
+                    {
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Approved</span>
+                    }
+                    else if (status!.state == "rejected")
+                    {
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">Rejected</span>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                    }
+                    <span class="text-sm text-gray-500">Last updated: @status!.updatedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(status!.note))
+                {
+                    <div class="mt-4 bg-blue-50 border-l-4 border-blue-400 p-3 rounded"><p class="text-sm text-blue-700">@status!.note</p></div>
+                }
+            }
+            else
+            {
+                <p>Could not load status.</p>
+            }
+
+            <div class="form-actions mt-6">
+                <button class="btn-3d btn-3d--tiny btn-3d--fixed" @onclick="LoadAsync">Refresh</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private bool loading;
+    private TutorStatus? status;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("ui.initFeather");
+            await JS.InvokeVoidAsync("ui.wireThemeToggle", "#theme-toggle");
+            await LoadAsync();
+        }
+    }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, "api/tutor/status");
+            req.SetBrowserRequestCredentials(Microsoft.AspNetCore.Components.WebAssembly.Http.BrowserRequestCredentials.Include);
+            var resp = await Http.SendAsync(req);
+            if (resp.IsSuccessStatusCode)
+                status = await resp.Content.ReadFromJsonAsync<TutorStatus>();
+            else status = new TutorStatus { state = "pending" };
+        }
+        finally { loading = false; StateHasChanged(); }
+    }
+
+    private class TutorStatus
+    {
+        public string state { get; set; } = "pending"; // pending | approved | rejected
+        public string? note { get; set; }
+        public DateTimeOffset? updatedAt { get; set; }
+    }
+}

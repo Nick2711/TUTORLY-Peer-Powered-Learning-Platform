@@ -1,0 +1,170 @@
+﻿@page "/auth/reset"
+@inject IJSRuntime JS
+@inject HttpClient Http
+@inject NavigationManager Nav
+@inject ServerAuthStateProvider Auth
+
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+
+<PageTitle>Set New Password | Belgium Campus Learning Portal</PageTitle>
+
+<div class="fixed top-4 right-4 z-50">
+  <label class="theme-switch" title="Toggle theme">
+    <input id="theme-toggle" type="checkbox" class="theme-switch__checkbox">
+    <div class="theme-switch__container">
+      <div class="theme-switch__clouds"></div>
+      <div class="theme-switch__stars-container">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
+          <path fill="currentColor" d="M135.831 3.00688..."></path>
+        </svg>
+      </div>
+      <div class="theme-switch__circle-container">
+        <div class="theme-switch__sun-moon-container"><div class="theme-switch__moon"><div class="theme-switch__spot"></div><div class="theme-switch__spot"></div><div class="theme-switch__spot"></div></div></div>
+      </div>
+    </div>
+  </label>
+</div>
+
+<div class="min-h-screen flex items-center justify-center p-4" style="font-family:'Inter',sans-serif; background-color: var(--page-bg);">
+  <div class="max-w-md w-full space-y-8">
+    <div class="text-center">
+      <div class="flex justify-center">
+        <div class="gradient-bg p-3 rounded-lg shadow-lg inline-flex">
+          <i data-feather="key" class="text-white w-8 h-8"></i>
+        </div>
+      </div>
+      <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Set a new password</h2>
+      <p class="mt-2 text-sm text-gray-600">Choose a strong new password for your account.</p>
+    </div>
+
+    <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
+      @if (!attached)
+      {
+        <p>Finalizing your session…</p>
+      }
+      else
+      {
+        <EditForm class="mb-0 space-y-6" Model="@model" OnValidSubmit="SubmitAsync">
+          <DataAnnotationsValidator />
+          <ValidationSummary />
+
+          <div class="mt-1 flex items-center gap-3">
+            <i data-feather="lock" class="h-5 w-5 text-gray-400"></i>
+            <div class="neo-field w-full">
+              <InputText id="password" type="password" class="neo-input" @bind-Value="model.Password" placeholder="••••••••" />
+              <label for="password" class="neo-label">New Password</label>
+            </div>
+          </div>
+
+          <div class="mt-1 flex items-center gap-3">
+            <i data-feather="lock" class="h-5 w-5 text-gray-400"></i>
+            <div class="neo-field w-full">
+              <InputText id="confirm" type="password" class="neo-input" @bind-Value="model.Confirm" placeholder="••••••••" />
+              <label for="confirm" class="neo-label">Confirm Password</label>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-3d btn-3d--tiny btn-3d--fixed" disabled="@isBusy">
+              @(isBusy ? "Saving…" : "Save new password")
+            </button>
+          </div>
+
+          @if (!string.IsNullOrWhiteSpace(error))
+          {
+            <div class="mt-4 bg-red-50 border-l-4 border-red-400 p-3 rounded"><p class="text-sm text-red-700">@error</p></div>
+          }
+          @if (!string.IsNullOrWhiteSpace(success))
+          {
+            <div class="mt-4 bg-green-50 border-l-4 border-green-400 p-3 rounded"><p class="text-sm text-green-700">@success</p></div>
+          }
+        </EditForm>
+      }
+    </div>
+    <div class="text-center"><a href="/login" class="text-indigo-600 hover:text-indigo-500 text-sm">Back to sign in</a></div>
+  </div>
+</div>
+
+@code {
+  private bool attached;
+  private bool isBusy;
+  private string? error;
+  private string? success;
+  private Model model = new();
+
+  protected override async Task OnInitializedAsync()
+  {
+    // 1) Attach session from fragment or query to cookies via /api/auth/attach
+    var uri = new Uri(Nav.Uri);
+    string? at = null, rt = null;
+
+    if (!string.IsNullOrEmpty(uri.Fragment) && uri.Fragment.StartsWith("#"))
+    {
+      var q = System.Web.HttpUtility.ParseQueryString(uri.Fragment[1..]);
+      at = q["access_token"]; rt = q["refresh_token"];
+    }
+    else
+    {
+      var q = System.Web.HttpUtility.ParseQueryString(uri.Query);
+      at = q["access_token"]; rt = q["refresh_token"];
+    }
+
+    if (!string.IsNullOrEmpty(at) && !string.IsNullOrEmpty(rt))
+    {
+      var req = new HttpRequestMessage(HttpMethod.Post, "api/auth/attach")
+      { Content = JsonContent.Create(new { AccessToken = at, RefreshToken = rt }) };
+      req.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+      var resp = await Http.SendAsync(req);
+      attached = resp.IsSuccessStatusCode;
+      if (attached && Auth is not null) await Auth.RefreshAsync();
+    }
+    else
+    {
+      // Already attached by server redirect or previous step
+      attached = true;
+    }
+  }
+
+  protected override async Task OnAfterRenderAsync(bool firstRender)
+  {
+    if (firstRender)
+    {
+      await JS.InvokeVoidAsync("ui.initFeather");
+      await JS.InvokeVoidAsync("ui.enforcePasswordMatch", "form", "#password", "#confirm", "Passwords do not match");
+      await JS.InvokeVoidAsync("ui.wireThemeToggle", "#theme-toggle");
+    }
+  }
+
+  private async Task SubmitAsync()
+  {
+    error = success = null;
+    if (!string.Equals(model.Password, model.Confirm, StringComparison.Ordinal)) { error = "Passwords do not match."; return; }
+
+    isBusy = true;
+    try
+    {
+      var req = new HttpRequestMessage(HttpMethod.Post, "api/auth/reset-password")
+      { Content = JsonContent.Create(new { NewPassword = model.Password }) };
+      req.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);
+
+      var resp = await Http.SendAsync(req);
+      if (resp.IsSuccessStatusCode)
+      {
+        success = "Password updated. You can now sign in.";
+        // Optionally redirect after short delay:
+        // await Task.Delay(1200); Nav.NavigateTo("/login", true);
+      }
+      else error = await resp.Content.ReadAsStringAsync();
+    }
+    catch (Exception ex) { error = ex.Message; }
+    finally { isBusy = false; StateHasChanged(); }
+  }
+
+  private class Model
+  {
+    [Required, MinLength(6)] public string Password { get; set; } = string.Empty;
+    [Required] public string Confirm { get; set; } = string.Empty;
+  }
+}

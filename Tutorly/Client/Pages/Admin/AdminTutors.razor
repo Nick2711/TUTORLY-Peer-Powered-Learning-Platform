@@ -1,0 +1,461 @@
+﻿@page "/admin/tutors"
+@inject IJSRuntime JS
+@inject TutorApplicationService TutorAppService
+@inject NavigationManager Navigation
+@using Tutorly.Client.Services
+@using Tutorly.Shared
+
+<PageTitle>Admin • Tutor Applications</PageTitle>
+
+<HeadContent>
+    <link rel="stylesheet" href="css/AdminTutors.css" />
+</HeadContent>
+
+<div id="admin-tutors-app" class="ta-v1">
+    <!-- Top bar -->
+    <header class="ad-topbar">
+        <div class="brand">Tutorly<span>Admin</span></div>
+
+        <button class="nav-toggle" id="taNavToggle" aria-controls="taTopnav" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav id="taTopnav" class="ad-topnav" aria-label="Primary">
+            <NavLink class="nav-item" href="/admin/dashboard">Dashboard</NavLink>
+            <NavLink class="nav-item" href="/admin/user-management">User Management</NavLink>
+            <NavLink class="nav-item" href="/admin/forum-moderation">Forum Moderation</NavLink>
+            <NavLink class="nav-item" href="/admin/module-management">Module Management</NavLink>
+            <NavLink class="nav-item" href="/admin/tutors" Match="NavLinkMatch.All">Tutors</NavLink>
+            <NavLink class="nav-item" href="/admin/analytics">Analytics</NavLink>
+            <NavLink class="nav-item" href="/admin/database">Database</NavLink>
+            <NavLink class="nav-item" href="/admin/faqs">FAQs</NavLink>
+        </nav>
+
+        <div class="top-actions">
+            <button id="taNotifyBtn" class="icon-btn" title="Notifications"
+                    aria-haspopup="menu" aria-controls="taNotifyMenu" aria-expanded="false">
+                <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" /></svg>
+            </button>
+
+            <button id="taProfileBtn" class="user-mini" aria-haspopup="menu"
+                    aria-controls="taProfileMenu" aria-expanded="false">
+                <img id="taAvatar" src="https://i.pravatar.cc/40?img=8" alt="Admin avatar" />
+                <div><div class="name">Admin User</div><div class="muted">Super Admin</div></div>
+                <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" /></svg>
+            </button>
+        </div>
+
+        <!-- popups (hidden by default) -->
+        <div id="taNotifyMenu" class="aa-pop aa-notify" role="menu" tabindex="-1" hidden>
+            <div class="aa-pop-title">Notifications</div>
+            <ul>
+                <li class="note"><span class="ico">🎓</span><div><div class="t">New badge unlocked</div><div class="s">You earned "Active Learner".</div></div></li>
+                <li class="note"><span class="ico">💬</span><div><div class="t">Reply from Anouk</div><div class="s">She commented on your code review thread.</div></div></li>
+                <li class="note"><span class="ico">📅</span><div><div class="t">Session reminder</div><div class="s">Query Review starts tomorrow at 1:00 PM.</div></div></li>
+            </ul>
+        </div>
+
+        <div id="taProfileMenu" class="aa-pop aa-profile" role="menu" tabindex="-1" hidden>
+            <div class="aa-pop-title">My Profile</div>
+            <button id="taChangePhotoOpen" class="row"><span class="ico">🖼️</span><div><div class="t">Change Photo</div><div class="s">Upload a new profile picture.</div></div></button>
+            <a class="row" href="/settings"><span class="ico">⚙️</span><div><div class="t">Settings</div><div class="s">Manage account and preferences.</div></div></a>
+            <button id="taLogoutBtn" class="row danger"><span class="ico">🚪</span><div><div class="t">Logout</div><div class="s">Sign out of your account.</div></div></button>
+        </div>
+    </header>
+
+    <!-- Page -->
+    <main id="page-tutor-apps" class="ad-main">
+        <div class="ta-header">
+            <h1>Tutor Applications</h1>
+
+            <!-- RIGHT-ALIGNED SEARCH (stays in header) -->
+            <div class="ta-search" id="taSearchWrap">
+                <svg class="ta-search-ico" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10.5 3a7.5 7.5 0 015.94 12.18l3.69 3.69-1.41 1.41-3.69-3.69A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" />
+                </svg>
+                <input id="taSearch" class="ta-search-input" type="search"
+                       placeholder="Search applicants (name, email, programme, status)…" 
+                       @bind="searchQuery" @bind:event="oninput" />
+            </div>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading tutor applications...</p>
+            </div>
+        }
+        else if (errorMessage != null)
+        {
+            <div class="error-state">
+                <p>@errorMessage</p>
+                <button @onclick="LoadApplications" class="btn primary">Retry</button>
+            </div>
+        }
+        else
+        {
+        <div class="table-card">
+            <table class="ta-table">
+                <thead>
+                    <tr>
+                        <th>APPLICANT</th>
+                            <th>PROGRAMME</th>
+                            <th>YEAR</th>
+                        <th>APPLICATION</th>
+                        <th>APPLIED</th>
+                            <th>STATUS</th>
+                        <th class="ta-right">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="taBody">
+                        @if (applications?.Any() == true)
+                        {
+                            @foreach (var app in filteredApplications)
+                            {
+                                <tr data-id="@app.ApplicationId" data-name="@app.FullName" data-programme="@app.Programme" data-status="@app.Status">
+                        <td>
+                            <div class="applicant">
+                                            <img src="https://i.pravatar.cc/64?img=@(app.ApplicationId % 20)" alt="@app.FullName">
+                                            <div><div class="name">@app.FullName</div><div class="muted">@app.Email</div></div>
+                            </div>
+                        </td>
+                                    <td><span class="badge badge-sky">@app.Programme</span></td>
+                                    <td>Year @app.YearOfStudy</td>
+                                    <td><button class="link-btn view-app" type="button" @onclick="() => ViewApplication(app)">View application</button></td>
+                                    <td>@FormatDate(app.CreatedAt)</td>
+                                    <td>
+                                        @if (app.Status == "Approved")
+                                        {
+                                            <span class="pill ok">Approved</span>
+                                        }
+                                        else if (app.Status == "Rejected")
+                                        {
+                                            <span class="pill no">Rejected</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="pill pending">Pending</span>
+                                        }
+                                    </td>
+                                    <td class="ta-right">
+                                        @if (app.Status == "Pending")
+                                        {
+                                            <button class="btn-approve" @onclick="() => ApproveApplication(app.ApplicationId)">Approve</button>
+                                            <button class="btn-reject" @onclick="() => RejectApplication(app.ApplicationId)">Reject</button>
+                                        }
+                                        else
+                                        {
+                                            <span class="pill @(app.Status == "Approved" ? "ok" : "no")">@app.Status</span>
+                                        }
+                        </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr class="no-rows">
+                                <td colspan="7">No tutor applications found</td>
+                    </tr>
+                        }
+                </tbody>
+            </table>
+        </div>
+        }
+    </main>
+
+    <!-- Change Photo modal -->
+    <div id="taPhotoModal" class="aa-modal" aria-hidden="true" aria-labelledby="taPhotoTitle" role="dialog">
+        <div class="scrim" data-ta-close></div>
+        <div class="dialog" role="document">
+            <header class="m-head">
+                <h3 id="taPhotoTitle">Change Photo</h3>
+                <button class="x" data-ta-close aria-label="Close">✕</button>
+            </header>
+            <div class="m-body">
+                <div class="preview-wrap"><img id="taPreview" src="https://i.pravatar.cc/64?img=8" alt="Preview"></div>
+                <div class="file-wrap">
+                    <input id="taFile" type="file" accept="image/png,image/jpeg" />
+                    <div class="help">PNG/JPG up to ~2MB works best.</div>
+                    <div id="taFileError" class="err" hidden></div>
+                </div>
+            </div>
+            <footer class="m-foot">
+                <button class="btn ghost" data-ta-close>Cancel</button>
+                <button id="taSavePhoto" class="btn primary">Save</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- View Application modal -->
+    <div id="taAppModal" class="aa-modal app-modal" aria-hidden="true" aria-labelledby="taAppTitle" role="dialog">
+        <div class="scrim" data-ta-close></div>
+        <div class="dialog" role="document">
+            <header class="m-head brand">
+                <div class="title">
+                    <span class="pill-subject" id="taAppSubject">@selectedApplication?.Programme</span>
+                    <h3 id="taAppTitle">@selectedApplication?.FullName</h3>
+                </div>
+                <div class="head-actions">
+                    @if (!string.IsNullOrEmpty(selectedApplication?.TranscriptUrl))
+                    {
+                        <a id="taOpenTranscript" href="@selectedApplication.TranscriptUrl" target="_blank" rel="noopener" class="btn open-tab">Open in new tab ↗</a>
+                    }
+                    <button class="x" data-ta-close aria-label="Close">✕</button>
+                </div>
+            </header>
+
+            <div class="m-body app-grid">
+                <section class="app-col">
+                    <div class="kv"><div class="k">Email</div><div class="v" id="taAppEmail">@selectedApplication?.Email</div></div>
+                    <div class="kv"><div class="k">Name</div><div class="v" id="taAppName">@selectedApplication?.FullName</div></div>
+                    <div class="kv"><div class="k">Programme</div><div class="v" id="taAppProgramme">@selectedApplication?.Programme</div></div>
+                    <div class="kv"><div class="k">Year of Study</div><div class="v" id="taAppYear">@selectedApplication?.YearOfStudy</div></div>
+                    <div class="kv"><div class="k">Application Date</div><div class="v" id="taAppDate">@FormatDate(selectedApplication?.CreatedAt)</div></div>
+                    <div class="kv"><div class="k">Status</div><div class="v" id="taAppStatus">@selectedApplication?.Status</div></div>
+                    @if (!string.IsNullOrEmpty(selectedApplication?.AdminNotes))
+                    {
+                        <div class="kv"><div class="k">Admin Notes</div><div class="v" id="taAppNotes">@selectedApplication.AdminNotes</div></div>
+                    }
+                </section>
+
+                <section class="transcript-col">
+                    <h4 class="section-title">Transcript</h4>
+                    @if (!string.IsNullOrEmpty(selectedApplication?.TranscriptUrl))
+                    {
+                        <iframe id="taAppTranscript" src="@selectedApplication.TranscriptUrl" title="Transcript" loading="lazy"></iframe>
+                    }
+                    else
+                    {
+                        <p class="no-transcript">No transcript uploaded</p>
+                    }
+                </section>
+            </div>
+
+            <footer class="m-foot">
+                <button class="btn ghost" data-ta-close>Close</button>
+            </footer>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<TutorApplicationDto>? applications;
+    private List<TutorApplicationDto> filteredApplications = new();
+    private TutorApplicationDto? selectedApplication;
+    private bool isLoading = true;
+    private string? errorMessage;
+    private string searchQuery = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadApplications();
+        await JS.InvokeVoidAsync("initializeAdminTutors");
+    }
+
+    private async Task LoadApplications()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+            StateHasChanged();
+
+            var response = await TutorAppService.GetApplicationsAsync();
+            
+            if (response.Success && response.Data != null)
+            {
+                applications = response.Data;
+                ApplySearchFilter();
+            }
+            else
+            {
+                errorMessage = response.Message ?? "Failed to load applications";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading applications: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplySearchFilter()
+    {
+        if (applications == null)
+        {
+            filteredApplications.Clear();
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filteredApplications = applications.ToList();
+        }
+        else
+        {
+            var query = searchQuery.ToLowerInvariant();
+            filteredApplications = applications.Where(app =>
+                app.FullName.ToLowerInvariant().Contains(query) ||
+                app.Email.ToLowerInvariant().Contains(query) ||
+                app.Programme.ToLowerInvariant().Contains(query) ||
+                app.Status.ToLowerInvariant().Contains(query)
+            ).ToList();
+        }
+    }
+
+    private async Task ViewApplication(TutorApplicationDto application)
+    {
+        selectedApplication = application;
+        await JS.InvokeVoidAsync("openAppModal");
+    }
+
+    private async Task ApproveApplication(int applicationId)
+    {
+        try
+        {
+            var response = await TutorAppService.ApproveApplicationAsync(applicationId);
+            if (response.Success)
+            {
+                await LoadApplications(); // Refresh the list
+                await JS.InvokeVoidAsync("showToast", "Application approved successfully");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("showToast", $"Error: {response.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("showToast", $"Error: {ex.Message}");
+        }
+    }
+
+    private async Task RejectApplication(int applicationId)
+    {
+        try
+        {
+            var response = await TutorAppService.RejectApplicationAsync(applicationId);
+            if (response.Success)
+            {
+                await LoadApplications(); // Refresh the list
+                await JS.InvokeVoidAsync("showToast", "Application rejected");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("showToast", $"Error: {response.Message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("showToast", $"Error: {ex.Message}");
+        }
+    }
+
+    private string FormatDate(DateTime? date)
+    {
+        if (!date.HasValue) return "N/A";
+        
+        var timeSpan = DateTime.Now - date.Value;
+        if (timeSpan.TotalDays < 1)
+            return "Today";
+        else if (timeSpan.TotalDays < 2)
+            return "Yesterday";
+        else if (timeSpan.TotalDays < 7)
+            return $"{(int)timeSpan.TotalDays} days ago";
+        else if (timeSpan.TotalDays < 30)
+            return $"{(int)(timeSpan.TotalDays / 7)} weeks ago";
+        else
+            return date.Value.ToString("MMM dd, yyyy");
+    }
+
+    // Handle search input changes
+    private void OnSearchInputChanged()
+    {
+        ApplySearchFilter();
+        StateHasChanged();
+    }
+}
+
+<script>
+    window.initializeAdminTutors = function() {
+        const root = document.getElementById('admin-tutors-app');
+        if (!root) return;
+        
+        const qs = (s, sc = root) => sc.querySelector(s);
+        const qsa = (s, sc = root) => Array.from(sc.querySelectorAll(s));
+        const outside = (el, e) => el && !el.contains(e.target);
+
+        // Navigation
+        const navBtn = qs('#taNavToggle'), nav = qs('#taTopnav');
+        navBtn?.addEventListener('click', () => {
+            const open = nav.classList.toggle('is-open');
+            navBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+
+        function toggleMenu(menu, btn) {
+            const opening = menu.hasAttribute('hidden');
+            if (opening) menu.removeAttribute('hidden'); else menu.setAttribute('hidden', '');
+            btn?.setAttribute('aria-expanded', opening ? 'true' : 'false');
+            if (opening) menu.focus();
+        }
+
+        const nBtn = qs('#taNotifyBtn'), nMenu = qs('#taNotifyMenu');
+        const pBtn = qs('#taProfileBtn'), pMenu = qs('#taProfileMenu');
+
+        nBtn?.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(nMenu, nBtn); });
+        pBtn?.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(pMenu, pBtn); });
+
+        document.addEventListener('click', (e) => {
+            if (nMenu && outside(nMenu, e) && outside(nBtn, e)) nMenu.setAttribute('hidden', '');
+            if (pMenu && outside(pMenu, e) && outside(pBtn, e)) pMenu.setAttribute('hidden', '');
+        });
+
+        // Modal functions
+        window.openAppModal = function() {
+            const appModal = qs('#taAppModal');
+            if (appModal) {
+                appModal.classList.add('open');
+                appModal.setAttribute('aria-hidden', 'false');
+            }
+        };
+
+        window.closeAppModal = function() {
+            const appModal = qs('#taAppModal');
+            if (appModal) {
+                appModal.classList.remove('open');
+                appModal.setAttribute('aria-hidden', 'true');
+            }
+        };
+
+        // Toast function
+        window.showToast = function(msg) {
+            const t = document.createElement('div');
+            t.className = 'ta-toast'; 
+            t.textContent = msg; 
+            document.body.appendChild(t);
+            requestAnimationFrame(() => t.classList.add('show'));
+            setTimeout(() => { 
+                t.classList.remove('show'); 
+                setTimeout(() => t.remove(), 180); 
+            }, 1600);
+        };
+
+        // Close modal handlers
+        qsa('[data-ta-close]').forEach(b => b.addEventListener('click', () => { 
+            window.closeAppModal(); 
+        }));
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { 
+                nMenu?.setAttribute('hidden', ''); 
+                pMenu?.setAttribute('hidden', ''); 
+                window.closeAppModal(); 
+            }
+        });
+    };
+</script>

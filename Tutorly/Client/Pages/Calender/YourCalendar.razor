@@ -1,0 +1,663 @@
+﻿@page "/calendar/overview"
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using System.Globalization
+@using Tutorly.Shared
+@using System.Net.Http.Json
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Meetings | Tutorly</PageTitle>
+
+<div id="page-calendar" class="pg-calendar">
+    <!-- ===== NAVBAR ===== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+
+                <a class="db-brand" href="/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="mainNav">
+                <a class="db-nav__link" href="/dashboard"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg><span>Home</span></a>
+                <a class="db-nav__link" href="/modules"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" /></svg><span>Modules</span></a>
+                <a class="db-nav__link" href="/messages"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg><span>Messages</span></a>
+                <a class="db-nav__link" href="/forum"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg><span>Forum</span></a>
+                <a class="db-nav__link db-nav__link--active" href="/calendar/overview" aria-current="page"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg><span>Meetings</span></a>
+            </nav>
+
+            <div class="db-actions" id="actionsBar">
+                <div class="search-wrap" id="searchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="searchInput" type="text" placeholder="Search…">
+                </div>
+
+                <div style="position:relative">
+                    <button class="db-iconbtn" aria-haspopup="true" aria-expanded="false" id="btnNotif">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                    </button>
+                    <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                        <div class="pop__head">Notifications</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">🎓</div><div><div class="pop__title">New badge unlocked</div><div class="pop__text">You earned “Active Learner”.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">💬</div><div><div class="pop__title">Reply from Anouk</div><div class="pop__text">She commented on your code review thread.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">📅</div><div><div class="pop__title">Session reminder</div><div class="pop__text">Project review tomorrow 1:00 PM.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=3" alt="Profile" />
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#modalPhoto"><div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div></li>
+                            <li class="pop__item clickable" data-target="#modalSettings"><div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div></li>
+                            <li class="pop__item clickable" data-target="#modalBadges"><div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div></li>
+                            <!-- NEW: Logout -->
+                            <li class="pop__item clickable" id="logoutItem">
+                                <div class="pop__row">
+                                    <div class="pop__icon">🚪</div>
+                                    <div><div class="pop__title">Log out</div><div class="pop__text">Sign out of Tutorly.</div></div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="page">
+        <!-- Header hero with controls + Book -->
+        <div class="cal-hero">
+            <div>
+                <h3 class="cal-hero__title">Calendar</h3>
+                <p class="cal-hero__sub">Manage your sessions, office hours, and bookings</p>
+            </div>
+
+            <div class="cal-controls">
+                <button type="button" class="cal-pill @(View == ViewMode.Month ? "cal-on" : null)" @onclick="(() => SetView(ViewMode.Month))">Month</button>
+                <button type="button" class="cal-pill @(View == ViewMode.Week ? "cal-on" : null)" @onclick="(() => SetView(ViewMode.Week))">Week</button>
+                <button type="button" class="cal-pill @(View == ViewMode.Day ? "cal-on" : null)" @onclick="(() => SetView(ViewMode.Day))">Day</button>
+                <button type="button" class="cal-pill @(View == ViewMode.Agenda ? "cal-on" : null)" @onclick="(() => SetView(ViewMode.Agenda))">Agenda</button>
+
+                <button type="button" class="cal-pillGhost" @onclick="Prev">‹ Prev</button>
+                <button type="button" class="cal-pill cal-on" @onclick="Today">Today</button>
+                <button type="button" class="cal-pillGhost" @onclick="Next">Next ›</button>
+
+                <button type="button" class="cal-book" @onclick="BookSession">+ Book Session</button>
+            </div>
+        </div>
+
+        <div class="month-h">@CurrentMonthText</div>
+
+        @if (View == ViewMode.Month)
+        {
+            <section class="cal-surface">
+                <div class="cal-weekdays">
+                    @foreach (var d in WeekdayNames)
+                    {
+                        <div>@d</div>
+                    }
+                </div>
+                <div class="cal-month">
+                    @foreach (var cell in MonthCells)
+                    {
+                        var cls = $"cal-day {(cell.OtherMonth ? "other" : "")} {(cell.IsToday ? "today" : "")}";
+                        <div class="@cls">
+                            <div class="num">@cell.Date.Day</div>
+                            @if (cell.EventTitle is not null)
+                            {
+                                <span class="ev" title="@cell.EventTitle">@cell.EventTitle</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+        else if (View == ViewMode.Week)
+        {
+            <section class="panel">
+                <div class="week-grid">
+                    @foreach (var day in CurrentWeek)
+                    {
+                        <div class="week-col">
+                            <div style="font-weight:800">@day.ToString("ddd dd")</div>
+                            @foreach (var ev in EventsFor(day))
+                            {
+                                <div class="item" style="margin-top:6px">@ev</div>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+        else if (View == ViewMode.Day)
+        {
+            <section class="panel day-list">
+                <div style="font-weight:900;margin-bottom:8px">@Selected.ToString("dddd, dd MMMM yyyy")</div>
+                @foreach (var ev in EventsFor(Selected))
+                {
+                    <div class="item">@ev</div>
+                }
+                @if (!EventsFor(Selected).Any())
+                {
+                    <div class="item" style="opacity:.7">No events today.</div>
+                }
+            </section>
+        }
+        else
+        {
+            <section class="panel agenda">
+                <div style="font-weight:900;margin-bottom:8px">Agenda</div>
+                @foreach (var a in AgendaItems)
+                {
+                    <div class="item"><strong>@a.date.ToString("ddd dd MMM")</strong> — @a.title</div>
+                }
+            </section>
+        }
+
+        <!-- ===== Upcoming Sessions ===== -->
+        <h3 class="section-h">Upcoming Sessions</h3>
+
+        <section class="upcoming" aria-label="Upcoming Sessions">
+            @if (isLoadingSessions)
+            {
+                <div class="up-cards">
+                    <article class="card">
+                        <div class="card-h"><div>Loading sessions...</div></div>
+                    </article>
+                </div>
+            }
+            else if (!upcomingSessions.Any())
+            {
+                <div class="up-cards">
+                    <article class="card">
+                        <div class="card-h"><div>No upcoming sessions</div></div>
+                        <div class="card-b">You don't have any sessions scheduled</div>
+                    </article>
+                </div>
+            }
+            else
+            {
+                <div class="up-cards">
+                    @foreach (var session in upcomingSessions)
+                    {
+                        <article class="card @GetStatusClass(session.StatusColor)">
+                            <div class="card-h">
+                                <div>@session.ModuleName</div>
+                                <span class="badge badge-@session.StatusColor">@session.Status</span>
+                            </div>
+                            <div class="card-b">@session.DateDisplay • @session.TimeDisplay</div>
+                            <div class="card-f">
+                                @if (session.CanJoin)
+                                {
+                                    <button class="btn btn--primary" @onclick="() => JoinSessionAsync(session)">Join Meeting</button>
+                                }
+                                else if (session.CanReschedule)
+                                {
+                                    <button class="btn btn--secondary" @onclick="() => RescheduleSession(session.SessionId)">Reschedule</button>
+                                }
+                                @if (session.CanCancel)
+                                {
+                                    <button class="btn btn--danger" @onclick="() => CancelSession(session.SessionId)">Cancel</button>
+                                }
+                                <span class="muted">with @session.ParticipantName</span>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+
+    <!-- ===== Profile Pack Modals ===== -->
+    <div class="modal" id="modalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+            <div class="modal__head"><span id="modalPhotoTitle">Change Photo</span><button class="btn btn--ghost" data-close="modalPhoto">✕</button></div>
+            <div class="modal__body">
+                <div class="photo-row">
+                    <img id="photoPreview" src="https://i.pravatar.cc/80?img=3" alt="Preview">
+                    <div><input type="file" id="photoInput" accept="image/*"><div class="pop__text" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div></div>
+                </div>
+            </div>
+            <div class="modal__foot"><button class="btn" data-close="modalPhoto">Cancel</button><button class="btn btn--primary" id="savePhotoBtn">Save</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle">
+            <div class="modal__head"><span id="modalSettingsTitle">Profile Settings</span><button class="btn btn--ghost" data-close="modalSettings">✕</button></div>
+            <div class="modal__body">
+                <div class="field"><label for="firstName">First name</label><input id="firstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label for="lastName">Last name</label><input id="lastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label for="degree">Degree</label>
+                    <select id="degree"><option value="">Select…</option><option>BComp</option><option>BIT</option><option>DIT</option><option>Other</option></select>
+                </div>
+                <div class="pop__text">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot"><button class="btn" data-close="modalSettings">Cancel</button><button class="btn btn--primary" id="saveSettingsBtn">Save</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalBadgesTitle">
+            <div class="modal__head"><span id="modalBadgesTitle">Your Achievements</span><button class="btn btn--ghost" data-close="modalBadges">✕</button></div>
+            <div class="modal__body"><ul style="margin:0;padding-left:18px"><li><strong>Active Learner</strong> — asked 10+ questions this week</li><li><strong>Helper</strong> — answered 3 peer questions</li><li><strong>On Track</strong> — met your weekly goal</li></ul></div>
+            <div class="modal__foot"><button class="btn btn--primary" data-close="modalBadges">Nice!</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function initTheme() { try { const s = localStorage.getItem('theme'); if (s === 'dark') { document.documentElement.classList.add('theme-dark'); } } catch (_) { } })();
+    function toggleTheme() { const el = document.documentElement; const d = el.classList.toggle('theme-dark'); try { localStorage.setItem('theme', d ? 'dark' : 'light') } catch (_) { } }
+
+    (function wireNav() {
+        const nav = document.getElementById('mainNav'); if (!nav) return;
+        nav.addEventListener('click', (e) => { const a = e.target.closest('a'); if (!a) return; const href = (a.getAttribute('href') || '').trim();[...nav.querySelectorAll('a')].forEach(x => x.classList.remove('db-nav__link--active')); a.classList.add('db-nav__link--active'); if (href === '' || href === '#') { e.preventDefault(); } }, { passive: false });
+    })();
+
+    (function wireActions() {
+        const sw = document.getElementById('searchWrap'), sb = document.getElementById('btnSearch'), si = document.getElementById('searchInput');
+        const bn = document.getElementById('btnNotif'), pn = document.getElementById('popNotif');
+        const bp = document.getElementById('btnProfile'), pp = document.getElementById('popProfile');
+        function closeAll() { sw?.classList.remove('open'); pn?.classList.remove('show'); bn?.setAttribute('aria-expanded', 'false'); pp?.classList.remove('show'); bp?.setAttribute('aria-expanded', 'false'); }
+        sb?.addEventListener('click', (e) => { e.preventDefault(); const o = sw.classList.toggle('open'); if (o) si?.focus(); pn?.classList.remove('show'); pp?.classList.remove('show'); });
+        bn?.addEventListener('click', (e) => { e.preventDefault(); const s = pn.classList.toggle('show'); bn.setAttribute('aria-expanded', s ? 'true' : 'false'); pp?.classList.remove('show'); sw?.classList.remove('open'); });
+        bp?.addEventListener('click', (e) => { e.preventDefault(); const s = pp.classList.toggle('show'); bp.setAttribute('aria-expanded', s ? 'true' : 'false'); pn?.classList.remove('show'); sw?.classList.remove('open'); });
+        document.addEventListener('click', (e) => { const within = e.target.closest('#actionsBar') || e.target.closest('.db-topbar__left'); if (!(within)) closeAll(); });
+
+        // NEW: logout action
+        document.getElementById('logoutItem')?.addEventListener('click', () => {
+            try {
+                localStorage.removeItem('profile.photo');
+                localStorage.removeItem('profile.first');
+                localStorage.removeItem('profile.last');
+                localStorage.removeItem('profile.degree');
+                localStorage.removeItem('messages.openChat');
+                localStorage.removeItem('mymodules.selected');
+            } catch (_) { }
+            window.location.href = '/login';
+        });
+    })();
+
+    (function profileModals() {
+        const open = (sel) => { if (!sel) return; document.querySelector(sel)?.classList.add('show'); };
+        const close = (id) => document.getElementById(id)?.classList.remove('show');
+
+        // only open when a data-target exists (so logout doesn't try)
+        document.querySelectorAll('#page-calendar #popProfile .clickable').forEach(li => li.addEventListener('click', () => {
+            const t = li.getAttribute('data-target'); if (t) open(t);
+        }));
+
+        document.querySelectorAll('#page-calendar .modal').forEach(m => m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('show'); }));
+        document.querySelectorAll('#page-calendar [data-close]').forEach(btn => btn.addEventListener('click', () => close(btn.getAttribute('data-close'))));
+
+        const photoInput = document.getElementById('photoInput'), photoPreview = document.getElementById('photoPreview'), save = document.getElementById('savePhotoBtn'), avatar = document.getElementById('avatarImg');
+        photoInput?.addEventListener('change', () => { const f = photoInput.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { photoPreview.src = r.result; }; r.readAsDataURL(f); });
+        save?.addEventListener('click', () => { try { localStorage.setItem('profile.photo', photoPreview.src); avatar.src = photoPreview.src; } catch (_) { }; close('modalPhoto'); });
+        (function load() { try { const p = localStorage.getItem('profile.photo'); if (p) { avatar.src = p; photoPreview.src = p; } } catch (_) { } })();
+
+        const saveSettings = document.getElementById('saveSettingsBtn'), fn = document.getElementById('firstName'), ln = document.getElementById('lastName'), dg = document.getElementById('degree');
+        saveSettings?.addEventListener('click', () => { try { localStorage.setItem('profile.first', fn?.value || ''); localStorage.setItem('profile.last', ln?.value || ''); localStorage.setItem('profile.degree', dg?.value || ''); } catch (_) { } });
+
+        (function loadSettings() { try { const f = localStorage.getItem('profile.first'); const l = localStorage.getItem('profile.last'); const d = localStorage.getItem('profile.degree'); if (f && fn) fn.value = f; if (l && ln) ln.value = l; if (d && dg) dg.value = d; } catch (_) { } })();
+    })();
+</script>
+
+@code {
+    enum ViewMode { Month, Week, Day, Agenda }
+    ViewMode View = ViewMode.Month;
+
+    DateTime Selected = DateTime.Today;
+    DateTime AnchorMonth => new DateTime(Selected.Year, Selected.Month, 1);
+
+    string CurrentMonthText => Selected.ToString("MMMM yyyy", CultureInfo.InvariantCulture);
+    IReadOnlyList<string> WeekdayNames => CultureInfo.InvariantCulture.DateTimeFormat.AbbreviatedDayNames.ToArray();
+
+    private List<CalendarEventDto> calendarEvents = new();
+    private List<UpcomingSessionDto> upcomingSessions = new();
+    private int currentUserId = 1; // Will be set from auth context
+    private bool isLoading = true;
+    private bool isLoadingSessions = true;
+
+    IEnumerable<string> EventsFor(DateTime day) =>
+        calendarEvents.Where(e => e.Start.Date == day.Date).Select(e => e.Title);
+
+    IEnumerable<(DateTime date, string title)> AgendaItems =>
+        calendarEvents.OrderBy(e => e.Start).Select(e => (e.Start, e.Title));
+
+    record Cell(DateTime Date, bool OtherMonth, bool IsToday, string? EventTitle);
+
+    IEnumerable<Cell> MonthCells
+    {
+        get
+        {
+            var first = AnchorMonth;
+            int dow = (int)first.DayOfWeek;
+            var gridStart = first.AddDays(-dow);
+            for (int i = 0; i < 42; i++)
+            {
+                var d = gridStart.AddDays(i);
+                var eventTitle = calendarEvents.FirstOrDefault(e => e.Start.Date == d.Date)?.Title;
+                yield return new Cell(d, d.Month != Selected.Month, d.Date == DateTime.Today.Date, eventTitle);
+            }
+        }
+    }
+
+    IEnumerable<DateTime> CurrentWeek
+    {
+        get
+        {
+            var start = Selected.AddDays(-(int)Selected.DayOfWeek);
+            for (int i = 0; i < 7; i++) yield return start.AddDays(i);
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Get user profile to extract user ID (student or tutor)
+            var profile = await Http.GetFromJsonAsync<UnifiedSessionDto>("/api/profile/me");
+            if (profile?.Profile?.StudentId != null)
+            {
+                currentUserId = profile.Profile.StudentId.Value;
+                Console.WriteLine($"DEBUG: YourCalendar - Using StudentId: {currentUserId}");
+            }
+            else if (profile?.Profile?.TutorId != null)
+            {
+                currentUserId = profile.Profile.TutorId.Value;
+                Console.WriteLine($"DEBUG: YourCalendar - Using TutorId: {currentUserId}");
+            }
+            else
+            {
+                Console.WriteLine("DEBUG: YourCalendar - No valid user ID found in profile");
+            }
+
+            await LoadCalendarEvents();
+            await LoadUpcomingSessions();
+
+            // Listen for calendar refresh events
+            await JS.InvokeVoidAsync("addCalendarRefreshListener", DotNetObjectReference.Create(this));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading user profile: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadCalendarEvents()
+    {
+        try
+        {
+            Console.WriteLine($"DEBUG: YourCalendar - Loading calendar events for user {currentUserId}");
+            var startDate = DateTime.Today.AddDays(-30);
+            var endDate = DateTime.Today.AddDays(60);
+
+            var response = await Http.GetFromJsonAsync<List<CalendarEventDto>>(
+                $"/api/booking/calendar/{currentUserId}?startDate={startDate:O}&endDate={endDate:O}");
+
+            if (response != null)
+            {
+                calendarEvents = response;
+                Console.WriteLine($"DEBUG: YourCalendar - Loaded {calendarEvents.Count} calendar events");
+            }
+            else
+            {
+                Console.WriteLine("DEBUG: YourCalendar - No calendar events received");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle error - could show a toast notification
+            Console.WriteLine($"Error loading calendar events: {ex.Message}");
+        }
+    }
+
+    private async Task LoadUpcomingSessions()
+    {
+        try
+        {
+            Console.WriteLine($"DEBUG: YourCalendar - Loading upcoming sessions for user {currentUserId}");
+            isLoadingSessions = true;
+
+            // Get upcoming sessions from the API
+            var response = await Http.GetFromJsonAsync<List<UpcomingSessionDto>>(
+                $"/api/booking/upcoming-sessions/{currentUserId}?limit=3"
+            );
+
+            if (response != null)
+            {
+                upcomingSessions = response;
+                Console.WriteLine($"DEBUG: YourCalendar - Loaded {upcomingSessions.Count} upcoming sessions");
+            }
+            else
+            {
+                upcomingSessions = new List<UpcomingSessionDto>();
+                Console.WriteLine("DEBUG: YourCalendar - No upcoming sessions received");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading upcoming sessions: {ex.Message}");
+            upcomingSessions = new List<UpcomingSessionDto>();
+        }
+        finally
+        {
+            isLoadingSessions = false;
+        }
+    }
+
+    [JSInvokable]
+    public async Task RefreshCalendarData()
+    {
+        Console.WriteLine("DEBUG: YourCalendar - Calendar refresh triggered");
+        await LoadCalendarEvents();
+        await LoadUpcomingSessions();
+        StateHasChanged();
+        Console.WriteLine("DEBUG: YourCalendar - Calendar refresh completed");
+    }
+
+    void SetView(ViewMode v) => View = v;
+    void Today() => Selected = DateTime.Today;
+    void Prev() => Selected = View switch
+    {
+        ViewMode.Month => Selected.AddMonths(-1),
+        ViewMode.Week => Selected.AddDays(-7),
+        ViewMode.Day => Selected.AddDays(-1),
+        _ => Selected.AddDays(-7),
+    };
+    void Next() => Selected = View switch
+    {
+        ViewMode.Month => Selected.AddMonths(1),
+        ViewMode.Week => Selected.AddDays(7),
+        ViewMode.Day => Selected.AddDays(1),
+        _ => Selected.AddDays(7),
+    };
+
+    void BookSession() => Nav.NavigateTo("/calendar/book");
+
+    private string GetStatusClass(string statusColor)
+    {
+        return statusColor switch
+        {
+            "success" => "card--success",
+            "warning" => "card--warning",
+            "danger" => "card--danger",
+            "info" => "card--info",
+            _ => ""
+        };
+    }
+
+    private async Task RescheduleSession(Guid sessionId)
+    {
+        // TODO: Implement reschedule functionality
+        await JS.InvokeVoidAsync("alert", "Reschedule functionality coming soon!");
+    }
+
+    private async Task CancelSession(Guid sessionId)
+    {
+        // TODO: Implement cancel functionality
+        await JS.InvokeVoidAsync("alert", "Cancel functionality coming soon!");
+    }
+
+    private async Task JoinSessionAsync(UpcomingSessionDto session)
+    {
+        try
+        {
+            // Ensure we have a session id
+            if (session.SessionId == Guid.Empty)
+            {
+                return;
+            }
+
+            // Ask backend to create or return the study room for this session
+            var resp = await Http.PostAsync($"/api/booking/sessions/{session.SessionId}/start-room", null);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                var result = await resp.Content.ReadFromJsonAsync<object>();
+                var roomId = result?.GetType().GetProperty("RoomId")?.GetValue(result)?.ToString();
+
+                if (!string.IsNullOrEmpty(roomId) && Guid.TryParse(roomId, out var roomGuid))
+                {
+                    // Navigate to the study room
+                    Nav.NavigateTo($"/calendar/session/{roomGuid}");
+                }
+                else
+                {
+                    Console.WriteLine("Failed to get room ID from response");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"Failed to start room: {resp.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error joining session: {ex.Message}");
+        }
+    }
+}
+
+<!-- keep only the pill safety overrides inline -->
+<style>
+    #page-calendar .cal-controls .cal-pill,
+    #page-calendar .cal-controls .cal-pillGhost,
+    #page-calendar .cal-controls .cal-book {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 32px !important;
+        padding: 0 12px !important;
+        border-radius: 999px !important;
+        font-weight: 800 !important;
+        font-size: 13px !important;
+        cursor: pointer !important;
+        line-height: 32px !important;
+        border-width: 1px !important;
+        border-style: solid !important;
+    }
+
+    #page-calendar .cal-controls .cal-pill {
+        border-color: rgba(255,255,255,.35) !important;
+        background: rgba(255,255,255,.15) !important;
+        color: #fff !important;
+    }
+
+        #page-calendar .cal-controls .cal-pill.cal-on {
+            background: #fff !important;
+            color: #0f2f36 !important;
+        }
+
+    #page-calendar .cal-controls .cal-pillGhost {
+        border-color: rgba(255,255,255,.35) !important;
+        background: transparent !important;
+        color: #fff !important;
+        padding: 0 10px !important;
+    }
+
+    #page-calendar .cal-controls .cal-book {
+        border: 0 !important;
+        background: #22c1b4 !important;
+        color: #0b1220 !important;
+        height: 36px !important;
+    }
+
+        #page-calendar .cal-controls .cal-pill::before,
+        #page-calendar .cal-controls .cal-pillGhost::before,
+        #page-calendar .cal-controls .cal-book::before {
+            content: none !important;
+        }
+
+    /* --- UPCOMING: hard-lock to a 3-column centered grid --- */
+    #page-calendar .upcoming {
+        display: flex !important;
+        justify-content: center !important;
+    }
+
+    #page-calendar .up-cards {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(260px,1fr)) !important;
+        gap: 16px !important;
+        width: 100% !important;
+        max-width: 900px !important;
+        margin: 12px auto 0 !important;
+        align-items: stretch !important;
+    }
+
+        #page-calendar .up-cards > .card {
+            width: auto !important;
+            min-width: 0 !important;
+            height: 100% !important;
+        }
+
+    /* Responsive breakpoints (optional) */
+    @@media (max-width: 980px) {
+        #page-calendar .up-cards {
+            grid-template-columns: repeat(2, minmax(260px,1fr)) !important;
+            max-width: 600px !important;
+        }
+    }
+
+    @@media (max-width: 640px) {
+        #page-calendar .up-cards {
+            grid-template-columns: 1fr !important;
+            max-width: 520px !important;
+        }
+    }
+</style>
+
+<script>
+    // Add calendar refresh listener
+    window.addCalendarRefreshListener = function (component) {
+        console.log("DEBUG: YourCalendar - Adding calendar refresh listener");
+        window.addEventListener('calendarRefresh', function () {
+            console.log("DEBUG: YourCalendar - calendarRefresh event received");
+            component.invokeMethodAsync('RefreshCalendarData');
+        });
+    };
+</script>

@@ -1,0 +1,37 @@
+﻿.notification-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+}
+
+.active-tab {
+    border-bottom: 3px solid #3b82f6;
+    color: #3b82f6;
+}
+
+.progress-ring__circle {
+    transition: stroke-dashoffset .35s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+/* .NET 7 NavLink adds .active */
+.nav-tab.active {
+    border-color: #3b82f6;
+    color: #2563eb;
+}
+
+.mobile-link.active {
+    background: #eff6ff;
+    border-left-color: #3b82f6;
+    color: #1d4ed8;
+}
+
+.notification-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+}

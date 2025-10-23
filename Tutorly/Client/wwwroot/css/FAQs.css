@@ -1,0 +1,750 @@
+﻿/* ============================================================
+   Admin • FAQs (scoped to #faq-app.faq-v1)
+   ============================================================ */
+#faq-app.faq-v1 {
+    --bg: #f7f8fb;
+    --card: #fff;
+    --text: #0f172a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --brand: #10b981;
+    --accent: #4f46e5;
+    /* tutors/analytics nav palette */
+    --pill-bg: #eef;
+    --pill-fg: #3433aa;
+    --shadow-1: 0 8px 24px rgba(2,8,20,.08);
+    --shadow-2: 0 18px 48px rgba(2,8,20,.18);
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    min-height: 100vh;
+}
+
+    #faq-app.faq-v1 * {
+        box-sizing: border-box
+    }
+
+    /* ---------- Topbar (consistent with other pages) ---------- */
+    #faq-app.faq-v1 .ad-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 1rem;
+        align-items: center;
+        min-height: 64px;
+        padding: .6rem 1rem;
+        overflow: visible; /* allow popovers */
+    }
+
+    #faq-app.faq-v1 .brand {
+        font-weight: 900;
+        font-size: 1.35rem
+    }
+
+        #faq-app.faq-v1 .brand span {
+            color: var(--brand)
+        }
+
+    /* Nav — no desktop scrollbar, purple active pill, green hover text */
+    #faq-app.faq-v1 .ad-topnav {
+        display: flex;
+        gap: .6rem;
+        align-items: center;
+        overflow: visible;
+        white-space: normal;
+        min-width: 0
+    }
+
+    #faq-app.faq-v1 .nav-item {
+        padding: .5rem .7rem;
+        border-radius: .6rem;
+        text-decoration: none;
+        color: #111827;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+        #faq-app.faq-v1 .nav-item.active {
+            background: var(--pill-bg);
+            color: var(--pill-fg)
+        }
+
+        #faq-app.faq-v1 .nav-item:hover {
+            background: transparent;
+            color: var(--brand)
+        }
+
+    #faq-app.faq-v1 .nav-toggle {
+        display: none;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: .6rem;
+        width: 40px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        gap: 3px
+    }
+
+        #faq-app.faq-v1 .nav-toggle span {
+            width: 20px;
+            height: 2px;
+            background: #475569;
+            display: block
+        }
+
+    /* Right side actions + popover anchor */
+    #faq-app.faq-v1 .top-actions {
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+        position: relative
+    }
+
+    #faq-app.faq-v1 .icon-btn {
+        inline-size: 36px;
+        block-size: 36px;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: .7rem;
+        display: grid;
+        place-items: center;
+        cursor: pointer
+    }
+
+        #faq-app.faq-v1 .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: #64748b
+        }
+
+    #faq-app.faq-v1 .user-mini {
+        display: flex;
+        gap: .6rem;
+        align-items: center;
+        padding: .25rem .4rem;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: .7rem;
+        cursor: pointer
+    }
+
+        #faq-app.faq-v1 .user-mini img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover
+        }
+
+        #faq-app.faq-v1 .user-mini .name {
+            font-weight: 800
+        }
+
+        #faq-app.faq-v1 .user-mini .chev {
+            width: 16px;
+            height: 16px;
+            fill: #475569
+        }
+
+    #faq-app.faq-v1 .muted {
+        color: var(--muted)
+    }
+
+    /* ---------- Dropdown menus (aligned to avatar) ---------- */
+    #faq-app.faq-v1 .aa-pop.menu {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 10px);
+        min-width: 320px;
+        max-width: min(380px,96vw);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        box-shadow: var(--shadow-2);
+        padding: .35rem .9rem;
+        z-index: 3000;
+        transform-origin: 90% 0%;
+        animation: faq-pop .12s ease-out;
+    }
+
+        #faq-app.faq-v1 .aa-pop.menu[hidden] {
+            display: none !important
+        }
+
+@keyframes faq-pop {
+    from {
+        opacity: 0;
+        transform: scale(.98)
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1)
+    }
+}
+
+#faq-app.faq-v1 .aa-pop .menu-head {
+    display: flex;
+    gap: .65rem;
+    align-items: center;
+    padding: .6rem 0 .55rem;
+    margin: 0 .1rem;
+    border-bottom: 1px solid var(--border)
+}
+
+    #faq-app.faq-v1 .aa-pop .menu-head img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover
+    }
+
+    #faq-app.faq-v1 .aa-pop .menu-head .bell {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        background: #f8fafc
+    }
+
+    #faq-app.faq-v1 .aa-pop .menu-head .t {
+        font-weight: 900
+    }
+
+    #faq-app.faq-v1 .aa-pop .menu-head .s {
+        color: var(--muted);
+        font-size: .88rem
+    }
+
+#faq-app.faq-v1 .aa-pop .menu-list {
+    padding: .25rem 0
+}
+
+#faq-app.faq-v1 .aa-pop .row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    column-gap: .75rem;
+    align-items: start;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    padding: .6rem 0;
+    border-radius: .6rem;
+    cursor: pointer
+}
+
+    #faq-app.faq-v1 .aa-pop .row:hover {
+        background: #f5f7fa
+    }
+
+    #faq-app.faq-v1 .aa-pop .row.danger .t {
+        color: #b91c1c
+    }
+
+    #faq-app.faq-v1 .aa-pop .row .ico {
+        width: 28px;
+        display: grid;
+        place-items: center
+    }
+
+        #faq-app.faq-v1 .aa-pop .row .ico svg {
+            width: 18px;
+            height: 18px;
+            fill: #334155
+        }
+
+    #faq-app.faq-v1 .aa-pop .row .t {
+        font-weight: 800
+    }
+
+    #faq-app.faq-v1 .aa-pop .row .s {
+        font-size: .86rem;
+        color: var(--muted)
+    }
+
+#faq-app.faq-v1 .aa-notify .notes {
+    list-style: none;
+    margin: 0;
+    padding: .15rem 0
+}
+
+#faq-app.faq-v1 .aa-notify .note {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: .6rem;
+    padding: .55rem 0;
+    border-radius: .6rem
+}
+
+    #faq-app.faq-v1 .aa-notify .note:hover {
+        background: #f5f7fa
+    }
+
+#faq-app.faq-v1 .aa-notify .ico {
+    font-size: 18px;
+    line-height: 1
+}
+
+#faq-app.faq-v1 .aa-notify .t {
+    font-weight: 800
+}
+
+#faq-app.faq-v1 .aa-notify .s {
+    color: var(--muted);
+    font-size: .86rem
+}
+
+/* ---------- Page shell ---------- */
+#faq-app.faq-v1 .ad-main {
+    padding: 1rem 1.25rem 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto
+}
+
+#faq-app.faq-v1 h1 {
+    all: unset;
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 900;
+    line-height: 1.2;
+    margin: .25rem 0;
+    color: #0f172a
+}
+
+#faq-app.faq-v1 .faq-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    margin: .25rem 0 .85rem
+}
+
+#faq-app.faq-v1 .header-actions {
+    display: flex;
+    gap: .6rem;
+    align-items: center
+}
+
+#faq-app.faq-v1 .search {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .75rem;
+    padding: .45rem .75rem;
+    min-width: 280px
+}
+
+    #faq-app.faq-v1 .search svg {
+        width: 18px;
+        height: 18px;
+        fill: #64748b
+    }
+
+    #faq-app.faq-v1 .search input {
+        border: 0;
+        outline: 0;
+        width: 100%;
+        background: transparent
+    }
+
+/* Buttons */
+#faq-app.faq-v1 .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    border: 1px solid transparent;
+    border-radius: .75rem;
+    padding: .6rem .9rem;
+    font-weight: 900;
+    cursor: pointer
+}
+
+    #faq-app.faq-v1 .btn.primary {
+        background: linear-gradient(180deg,#6366f1,#4f46e5);
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(79,70,229,.25)
+    }
+
+        #faq-app.faq-v1 .btn.primary svg {
+            width: 18px;
+            height: 18px;
+            fill: #fff
+        }
+
+/* ---------- FAQ list ---------- */
+#faq-app.faq-v1 .faq-list {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: 0 1px 0 rgba(16,24,40,.02)
+}
+
+#faq-app.faq-v1 .faq-item + .faq-item {
+    border-top: 1px solid var(--border)
+}
+
+#faq-app.faq-v1 .faq-head {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: .5rem;
+    padding: .2rem .2rem
+}
+
+#faq-app.faq-v1 .faq-q {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    padding: 1rem 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    cursor: pointer
+}
+
+    #faq-app.faq-v1 .faq-q span {
+        font-weight: 800
+    }
+
+    #faq-app.faq-v1 .faq-q svg {
+        width: 18px;
+        height: 18px;
+        fill: #334155;
+        transition: transform .15s
+    }
+
+#faq-app.faq-v1 .faq-item.open .faq-q svg {
+    transform: rotate(180deg)
+}
+
+#faq-app.faq-v1 .faq-actions {
+    display: flex;
+    gap: .4rem;
+    padding-right: .8rem
+}
+
+    #faq-app.faq-v1 .faq-actions .act {
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: .6rem;
+        padding: .38rem .6rem;
+        font-weight: 800;
+        cursor: pointer
+    }
+
+        #faq-app.faq-v1 .faq-actions .act:hover {
+            background: #f3f4f6
+        }
+
+        #faq-app.faq-v1 .faq-actions .act.danger {
+            color: #b91c1c
+        }
+
+#faq-app.faq-v1 .faq-a {
+    display: none;
+    padding: 0 1.1rem 1rem;
+    color: var(--muted)
+}
+
+#faq-app.faq-v1 .faq-item.open .faq-a {
+    display: block
+}
+
+#faq-app.faq-v1 .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 1rem
+}
+
+/* ---------- Modals (CRUD + Photo) ---------- */
+#faq-app.faq-v1 .aa-modal {
+    position: fixed;
+    inset: 0;
+    display: none
+}
+
+    #faq-app.faq-v1 .aa-modal.open {
+        display: block;
+        z-index: 1000
+    }
+
+    #faq-app.faq-v1 .aa-modal .scrim {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,.45)
+    }
+
+    #faq-app.faq-v1 .aa-modal .dialog {
+        position: relative;
+        z-index: 1;
+        width: min(820px,96vw);
+        margin: 7vh auto;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-2);
+        display: flex;
+        flex-direction: column
+    }
+
+    #faq-app.faq-v1 .aa-modal .m-head {
+        padding: 1rem 1rem .9rem;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(180deg,var(--brand),#0fb28a);
+        color: #fff;
+        border-top-left-radius: 16px;
+        border-top-right-radius: 16px;
+        position: relative
+    }
+
+        #faq-app.faq-v1 .aa-modal .m-head h3 {
+            margin: 0;
+            font-size: 1.15rem;
+            font-weight: 900
+        }
+
+        #faq-app.faq-v1 .aa-modal .m-head .x {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            border: 0;
+            background: rgba(255,255,255,.22);
+            color: #fff;
+            border-radius: .65rem;
+            padding: .35rem .6rem;
+            cursor: pointer
+        }
+
+    #faq-app.faq-v1 .aa-modal .m-body {
+        padding: 1.1rem;
+        display: grid;
+        grid-template-columns: repeat(12,1fr);
+        gap: 1rem 1.1rem
+    }
+
+    #faq-app.faq-v1 .aa-modal .field {
+        grid-column: span 6;
+        min-width: 0
+    }
+
+        #faq-app.faq-v1 .aa-modal .field.full {
+            grid-column: 1 / -1
+        }
+
+        #faq-app.faq-v1 .aa-modal .field label {
+            display: inline-flex;
+            align-items: baseline;
+            gap: .35rem;
+            font-weight: 900;
+            margin-bottom: .35rem
+        }
+
+    #faq-app.faq-v1 .aa-modal .req {
+        color: #ef4444;
+        font-weight: 900
+    }
+
+    #faq-app.faq-v1 .aa-modal .field input, #faq-app.faq-v1 .aa-modal .field textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: .7rem;
+        padding: .62rem .75rem;
+        font: inherit;
+        background: #fff
+    }
+
+    #faq-app.faq-v1 .aa-modal .field textarea {
+        min-height: 150px;
+        resize: vertical
+    }
+
+    #faq-app.faq-v1 .aa-modal .hint {
+        color: var(--muted);
+        font-weight: 700;
+        font-size: .88rem
+    }
+
+    #faq-app.faq-v1 .aa-modal .m-foot {
+        display: flex;
+        justify-content: flex-end;
+        gap: .65rem;
+        padding: .8rem 1.1rem 1.1rem
+    }
+
+    #faq-app.faq-v1 .aa-modal .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid transparent;
+        border-radius: .75rem;
+        padding: .6rem .95rem;
+        font-weight: 900;
+        cursor: pointer
+    }
+
+        #faq-app.faq-v1 .aa-modal .btn.ghost {
+            background: #f3f4f6;
+            color: #111827
+        }
+
+        #faq-app.faq-v1 .aa-modal .btn.primary {
+            background: linear-gradient(180deg,var(--accent),#4f46e5);
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(79,70,229,.25)
+        }
+
+    /* ----- Change Photo modal: same “card” look as other pages ----- */
+    #faq-app.faq-v1 .aa-modal.photo .dialog {
+        width: min(760px,96vw)
+    }
+    /* white header (no green), like DB page) */
+    #faq-app.faq-v1 .aa-modal.photo .m-head {
+        background: #fff;
+        color: var(--text);
+        border-bottom: 1px solid var(--border)
+    }
+
+        #faq-app.faq-v1 .aa-modal.photo .m-head h3 {
+            font-size: 1.25rem;
+            font-weight: 900;
+            margin: 0
+        }
+
+        #faq-app.faq-v1 .aa-modal.photo .m-head .x {
+            background: #f3f4f6;
+            color: #111827;
+            border: 0;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 12px;
+            display: grid;
+            place-items: center
+        }
+
+            #faq-app.faq-v1 .aa-modal.photo .m-head .x:hover {
+                background: #e5e7eb
+            }
+
+    /* compact two-column body with ROUND avatar */
+    #faq-app.faq-v1 .aa-modal.photo .m-body {
+        grid-template-columns: 110px 1fr;
+        align-items: center;
+        gap: 1.2rem
+    }
+
+#faq-app.faq-v1 .photo-preview {
+    width: 110px;
+    height: 110px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: #f8fafc;
+    display: grid;
+    place-items: center
+}
+
+    #faq-app.faq-v1 .photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover
+    }
+
+#faq-app.faq-v1 .file-wrap input[type="file"] {
+    display: block;
+    width: 100%;
+    margin-bottom: .45rem
+}
+
+#faq-app.faq-v1 .file-wrap .help {
+    margin-top: .2rem;
+    color: var(--muted);
+    font-weight: 700
+}
+
+#faq-app.faq-v1 .file-wrap .err {
+    margin-top: .45rem;
+    color: #b91c1c;
+    font-weight: 900
+}
+
+/* ---------- Toast ---------- */
+#faq-app.faq-v1 .toast {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%) translateY(12px);
+    background: #111827;
+    color: #fff;
+    border-radius: .7rem;
+    padding: .55rem .9rem;
+    font-weight: 800;
+    opacity: 0;
+    transition: transform .18s ease,opacity .18s ease;
+    z-index: 9999
+}
+
+    #faq-app.faq-v1 .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0)
+    }
+
+/* ---------- Responsive ---------- */
+@media (max-width:980px) {
+    #faq-app.faq-v1 .ad-topbar {
+        grid-template-columns: auto auto auto
+    }
+
+    #faq-app.faq-v1 .nav-toggle {
+        display: inline-flex
+    }
+
+    #faq-app.faq-v1 .ad-topnav {
+        display: none
+    }
+
+        #faq-app.faq-v1 .ad-topnav.is-open {
+            display: flex;
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 58px;
+            z-index: 1500;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: .5rem .75rem;
+            gap: .25rem;
+            flex-wrap: wrap;
+            white-space: normal
+        }
+}
+
+@media (max-width:740px) {
+    #faq-app.faq-v1 .aa-modal .m-body {
+        grid-template-columns: 1fr
+    }
+
+    #faq-app.faq-v1 .aa-modal .field {
+        grid-column: 1 / -1
+    }
+
+    #faq-app.faq-v1 .aa-modal.photo .m-body {
+        grid-template-columns: 1fr
+    }
+
+    #faq-app.faq-v1 .photo-preview {
+        width: 100%;
+        height: 240px;
+        border-radius: 16px
+    }
+}

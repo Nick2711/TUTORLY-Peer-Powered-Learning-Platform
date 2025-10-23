@@ -1,0 +1,50 @@
+﻿@page "/Redirect"
+@inject HttpClient Http
+@inject NavigationManager Nav
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
+
+<!-- tiny unobtrusive progress shimmer -->
+<div class="route-progress"></div>
+
+@code {
+    private bool _navigated;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || _navigated) return;
+
+        await Task.Delay(50); // give cookies a tick to commit
+
+        try
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, "api/profile/me");
+            req.SetBrowserRequestCredentials(BrowserRequestCredentials.Include); // send cookies
+            var res = await Http.SendAsync(req);
+
+            if (!res.IsSuccessStatusCode)
+                throw new HttpRequestException($"me failed: {(int)res.StatusCode}");
+
+            var me = await res.Content.ReadFromJsonAsync<UserMe>();
+            var role = (me?.Role ?? "student").ToLowerInvariant();
+
+            var dest = role switch
+            {
+                "admin" => "/admin/dashboard",
+                "tutor" => "/tutor/dashboard",
+                _ => "/dashboard"
+            };
+
+            _navigated = true;
+            Nav.NavigateTo(dest, replace: true); // SPA nav (no reload)
+        }
+        catch
+        {
+            var current = Nav.ToBaseRelativePath(Nav.Uri);
+            var ret = Uri.EscapeDataString("/" + current);
+            _navigated = true;
+            Nav.NavigateTo($"/auth/login?returnUrl={ret}", replace: true); // SPA nav
+        }
+    }
+
+    private sealed record UserMe(string Email, string Role);
+}

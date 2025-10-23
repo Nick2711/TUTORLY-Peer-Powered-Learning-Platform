@@ -1,0 +1,1178 @@
+﻿/* ================== THEME TOKENS — SCOPED ================== */
+#page-forum {
+    --db-bg: #f3f5f7;
+    --db-surface: #ffffff;
+    --db-text: #1f2937;
+    --db-muted: #6b7280;
+    --db-border: #e5e7eb;
+    --db-hero: #1f8f9f;
+    --db-accent: #7ac043;
+    --db-accent-600: #66a838;
+    --db-link: #2563eb;
+    --db-primary: #0f766e;
+    --db-progress: #10b3bf;
+    --db-shadow: 0 1px 2px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+    --badge-rose: #ffd1d1;
+    --badge-lime: #e7fbb3;
+    --badge-sky: #cfe6ff;
+    --badge-stroke: #0b1220;
+    --tag-blue: #eef6ff;
+    --tag-blue-t: #0e3a66;
+    --tag-amber: #fff4e6;
+    --tag-amber-t: #8a5500;
+    --tag-green: #eafff3;
+    --tag-green-t: #0b5a3b;
+    background: var(--db-bg);
+    color: var(--db-text);
+    font: 15px/1.45 system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+.theme-dark #page-forum {
+    --db-bg: #0f1317;
+    --db-surface: #2f353c;
+    --db-text: #e9eaed;
+    --db-muted: #c5cad3;
+    --db-border: #444b54;
+    --db-hero: #76d0df;
+    --db-accent: #7ac043;
+    --db-accent-600: #7ac043;
+    --db-link: #9ec3ff;
+    --db-primary: #22c1b4;
+    --db-progress: #7c74ff;
+    --db-shadow: 0 2px 10px rgba(0,0,0,.45);
+    --badge-rose: #f6a9a9;
+    --badge-lime: #d4f58a;
+    --badge-sky: #a9d0ff;
+    --badge-stroke: #0b1220;
+    --tag-blue: #1f2c3b;
+    --tag-blue-t: #bfe1ff;
+    --tag-amber: #3b2a1a;
+    --tag-amber-t: #ffd9aa;
+    --tag-green: #112a22;
+    --tag-green-t: #9ef4c8;
+}
+
+#page-forum * {
+    box-sizing: border-box;
+}
+
+/* ================== NAVBAR (scoped copy) ================== */
+#page-forum .db-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--db-surface);
+    border-bottom: 1px solid var(--db-border);
+    box-shadow: var(--db-shadow)
+}
+
+#page-forum .db-topbar__inner {
+    width: 100%;
+    padding: 16px 22px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px
+}
+
+#page-forum .db-topbar__left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-self: start
+}
+
+#page-forum .db-toggle, #page-forum .db-iconbtn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--db-border);
+    background: transparent;
+    color: var(--db-muted);
+    display: grid;
+    place-items: center;
+    cursor: pointer
+}
+
+    #page-forum .db-toggle svg, #page-forum .db-iconbtn svg {
+        width: 18px;
+        height: 18px
+    }
+
+.theme-dark #page-forum .icon-sun {
+    display: none
+}
+
+#page-forum .icon-moon {
+    display: none
+}
+
+.theme-dark #page-forum .icon-moon {
+    display: block
+}
+
+#page-forum .db-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit
+}
+
+#page-forum .db-brand__logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #e6f3f4;
+    display: grid;
+    place-items: center
+}
+
+.theme-dark #page-forum .db-brand__logo {
+    background: #20343a
+}
+
+#page-forum .db-logo {
+    width: 18px;
+    height: 18px;
+    fill: #12a6b2
+}
+
+#page-forum .db-brand__text {
+    font-weight: 900;
+    font-size: 18px
+}
+
+#page-forum .db-nav {
+    display: flex;
+    gap: 22px;
+    justify-content: center;
+    justify-self: center
+}
+
+#page-forum .db-nav__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 2px 10px;
+    text-decoration: none;
+    color: var(--db-muted);
+    font-weight: 800;
+    font-size: 15px
+}
+
+#page-forum .db-nav__icon {
+    width: 17px;
+    height: 17px;
+    opacity: .85
+}
+
+#page-forum .db-nav__link--active {
+    color: var(--db-text)
+}
+
+    #page-forum .db-nav__link--active::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -2px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--db-accent)
+    }
+
+#page-forum .db-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    align-items: center;
+    position: relative;
+    justify-self: end
+}
+
+#page-forum .db-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #e5f2f2;
+    background: transparent
+}
+
+    #page-forum .db-avatar img {
+        width: 100%;
+        height: 100%;
+        display: block
+    }
+
+#page-forum .search-wrap {
+    position: relative
+}
+
+    #page-forum .search-wrap input {
+        position: absolute;
+        right: 46px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 38px;
+        width: 0;
+        border: 1px solid var(--db-border);
+        outline: 0;
+        background: var(--db-surface);
+        color: var(--db-text);
+        border-radius: 10px;
+        padding: 0 10px;
+        opacity: 0;
+        transition: width .25s,opacity .2s;
+        box-shadow: var(--db-shadow)
+    }
+
+    #page-forum .search-wrap.open input {
+        width: 220px;
+        opacity: 1
+    }
+
+#page-forum .pop {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    width: 320px;
+    background: var(--db-surface);
+    border: 1px solid var(--db-border);
+    border-radius: 12px;
+    box-shadow: var(--db-shadow);
+    display: none;
+    z-index: 1000
+}
+
+    #page-forum .pop.show {
+        display: block
+    }
+
+#page-forum .pop__head {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--db-border);
+    font-weight: 800
+}
+
+#page-forum .pop__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 380px;
+    overflow: auto
+}
+
+#page-forum .pop__item {
+    padding: 10px 12px;
+    border-top: 1px solid var(--db-border)
+}
+
+    #page-forum .pop__item:first-child {
+        border-top: none
+    }
+
+#page-forum .pop__row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start
+}
+
+#page-forum .pop__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #e6f3f4;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto
+}
+
+#page-forum .pop__title {
+    font-weight: 800
+}
+
+#page-forum .pop__text {
+    font-size: 12px;
+    color: var(--db-muted)
+}
+
+/* ================== FORUM ================== */
+#page-forum .forum-wrap {
+    max-width: 1100px;
+    margin: 18px auto 40px;
+    padding: 0 22px
+}
+
+#page-forum .forum-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 6px 0 14px
+}
+
+#page-forum .forum-title {
+    margin: 0;
+    font-weight: 900;
+    font-size: 22px
+}
+
+#page-forum .forum-actions {
+    display: flex;
+    gap: 8px
+}
+
+#page-forum .btn-blue {
+    background: var(--db-link);
+    color: #fff !important;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-weight: 900;
+    box-shadow: var(--db-shadow)
+}
+
+#page-forum .btn-ghost {
+    border: 1px solid var(--db-border);
+    background: transparent;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-weight: 800;
+    color: var(--db-text)
+}
+
+#page-forum .metrics {
+    display: grid;
+    grid-template-columns: repeat(4,1fr);
+    gap: 12px;
+    margin: 10px 0 16px
+}
+
+#page-forum .met {
+    background: var(--db-surface);
+    border: 1px solid var(--db-border);
+    border-radius: 14px;
+    box-shadow: var(--db-shadow);
+    padding: 12px
+}
+
+    #page-forum .met .lab {
+        color: var(--db-muted);
+        font-size: 12px
+    }
+
+    #page-forum .met .num {
+        font-size: 20px;
+        font-weight: 900;
+        margin-top: 2px
+    }
+
+    #page-forum .met .delta {
+        color: #10b981;
+        font-weight: 800;
+        font-size: 11px;
+        margin-top: 2px
+    }
+
+#page-forum .forum-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px
+}
+
+#page-forum .panel {
+    background: var(--db-surface);
+    border: 1px solid var(--db-border);
+    border-radius: 14px;
+    box-shadow: var(--db-shadow);
+    overflow: hidden
+}
+
+#page-forum .panel__head {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--db-border);
+    display: flex;
+    align-items: center;
+    gap: 10px
+}
+
+#page-forum .tabs {
+    display: flex;
+    gap: 6px;
+    margin-left: auto
+}
+
+#page-forum .tab {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--db-border);
+    background: transparent;
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--db-text)
+}
+
+    #page-forum .tab.is-on {
+        background: rgba(0,0,0,.05)
+    }
+
+.theme-dark #page-forum .tab.is-on {
+    background: rgba(255,255,255,.06)
+}
+
+#page-forum .posts {
+    list-style: none;
+    margin: 0;
+    padding: 0
+}
+
+#page-forum .post {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: start;
+    padding: 14px;
+    border-top: 1px solid var(--db-border)
+}
+
+    #page-forum .post:first-child {
+        border-top: none
+    }
+
+#page-forum .vote {
+    width: 42px;
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    color: var(--db-muted)
+}
+
+    #page-forum .vote .count {
+        font-weight: 900
+    }
+
+    #page-forum .vote button {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        border: 1px solid var(--db-border);
+        background: transparent;
+        color: inherit;
+        display: grid;
+        place-items: center;
+        cursor: pointer
+    }
+
+    #page-forum .vote .on {
+        color: #10b981;
+        border-color: #10b981
+    }
+
+#page-forum .post-title {
+    font-weight: 900;
+    margin: 0
+}
+
+#page-forum .post-sum {
+    color: var(--db-muted);
+    font-size: 13px;
+    margin: 6px 0 0
+}
+
+#page-forum .post-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    color: var(--db-muted);
+    font-size: 12px;
+    margin-top: 8px
+}
+
+#page-forum .tag {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 11px
+}
+
+    #page-forum .tag.question {
+        background: var(--tag-blue);
+        color: var(--tag-blue-t)
+    }
+
+    #page-forum .tag.discussion {
+        background: var(--tag-amber);
+        color: var(--tag-amber-t)
+    }
+
+    #page-forum .tag.resource {
+        background: var(--tag-green);
+        color: var(--tag-green-t)
+    }
+
+#page-forum .post-actions {
+    color: var(--db-muted);
+    font-size: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center
+}
+
+/* Sidebar lists */
+#page-forum .side-head {
+    padding: 12px 14px;
+    font-weight: 900;
+    border-bottom: 1px solid var(--db-border)
+}
+
+#page-forum .trend {
+    list-style: none;
+    margin: 0;
+    padding: 0
+}
+
+    #page-forum .trend li {
+        padding: 12px 14px;
+        border-top: 1px solid var(--db-border)
+    }
+
+        #page-forum .trend li:first-child {
+            border-top: none
+        }
+
+    #page-forum .trend .trow {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: start
+    }
+
+#page-forum .rank {
+    font-weight: 900;
+    color: var(--db-muted)
+}
+
+#page-forum .tbadge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.06)
+}
+
+.theme-dark #page-forum .tbadge {
+    background: rgba(255,255,255,.08)
+}
+
+/* Quick Actions — small, tidy, scoped */
+#page-forum .qa-block {
+    display: grid;
+    gap: 10px;
+    padding: 12px 14px
+}
+
+#page-forum .qa {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 800;
+    border: 1px solid var(--db-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,.03);
+    color: var(--db-text)
+}
+
+.theme-dark #page-forum .qa {
+    background: rgba(255,255,255,.04)
+}
+
+/* Guidelines */
+#page-forum .guides {
+    padding: 12px 14px;
+    font-size: 14px
+}
+
+    #page-forum .guides ul {
+        margin: 0;
+        padding-left: 18px
+    }
+
+#page-forum .muted {
+    color: var(--db-muted)
+}
+
+/* Communities */
+#page-forum .section-h {
+    margin: 22px 0 12px;
+    font-weight: 900
+}
+
+#page-forum .comms {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 14px
+}
+
+#page-forum .comm {
+    background: var(--db-surface);
+    border: 1px solid var(--db-border);
+    border-radius: 12px;
+    box-shadow: var(--db-shadow);
+    overflow: hidden
+}
+
+#page-forum .comm-h {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--db-border)
+}
+
+#page-forum .pill {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.06);
+    color: var(--db-text)
+}
+
+.theme-dark #page-forum .pill {
+    background: rgba(255,255,255,.08)
+}
+
+#page-forum .comm-b {
+    padding: 12px;
+    color: var(--db-muted);
+    font-size: 14px
+}
+
+#page-forum .comm-f {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border-top: 1px solid var(--db-border);
+    background: rgba(0,0,0,.02)
+}
+
+#page-forum .join {
+    border: 1px solid var(--db-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-weight: 800;
+    background: var(--db-link);
+    color: #fff;
+    cursor: pointer
+}
+
+    #page-forum .join.ghost {
+        background: transparent;
+        color: var(--db-text)
+    }
+
+/* ===== MODALS (shared look, but scoped) ===== */
+#page-forum .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000
+}
+
+    #page-forum .modal.show {
+        display: flex
+    }
+
+#page-forum .modal__card {
+    width: min(520px,92vw);
+    background: var(--db-surface);
+    color: var(--db-text);
+    border: 1px solid var(--db-border);
+    border-radius: 14px;
+    box-shadow: var(--db-shadow);
+    overflow: hidden
+}
+
+#page-forum .modal__head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--db-border);
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
+#page-forum .modal__body {
+    padding: 14px 16px
+}
+
+#page-forum .modal__foot {
+    padding: 12px 16px;
+    border-top: 1px solid var(--db-border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background: rgba(0,0,0,.02)
+}
+
+#page-forum .btn {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: 800;
+    border: 1px solid var(--db-border);
+    background: #fff;
+    color: var(--db-text) !important;
+    cursor: pointer
+}
+
+#page-forum .btn--primary {
+    background: var(--db-accent);
+    border-color: var(--db-accent);
+    color: #073b0a !important
+}
+
+#page-forum .btn--ghost {
+    background: transparent
+}
+
+#page-forum .field {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px
+}
+
+    #page-forum .field label {
+        font-weight: 800;
+        font-size: 13px
+    }
+
+    #page-forum .field input, #page-forum .field select, #page-forum .field textarea {
+        height: 38px;
+        border: 1px solid var(--db-border);
+        border-radius: 10px;
+        padding: 0 10px;
+        background: var(--db-surface);
+        color: var(--db-text)
+    }
+
+    #page-forum .field textarea {
+        height: 140px;
+        padding: 10px;
+        resize: vertical
+    }
+
+#page-forum .photo-row {
+    display: flex;
+    align-items: center;
+    gap: 14px
+}
+
+    #page-forum .photo-row img {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 2px solid #e5f2f2;
+        object-fit: cover
+    }
+
+#page-forum .clickable {
+    cursor: pointer
+}
+
+/* NEW POST helpers */
+#page-forum .np-card {
+    width: min(720px,94vw)
+}
+
+#page-forum .seg {
+    display: flex;
+    gap: 8px;
+    margin: 6px 0 10px
+}
+
+    #page-forum .seg .chip {
+        border: 1px solid var(--db-border);
+        background: transparent;
+        border-radius: 12px;
+        padding: 8px 12px;
+        font-weight: 800;
+        cursor: pointer;
+        color: var(--db-text)
+    }
+
+        #page-forum .seg .chip.on.question {
+            background: var(--tag-blue);
+            color: var(--tag-blue-t);
+            border-color: currentColor
+        }
+
+        #page-forum .seg .chip.on.discussion {
+            background: var(--tag-amber);
+            color: var(--tag-amber-t);
+            border-color: currentColor
+        }
+
+        #page-forum .seg .chip.on.resource {
+            background: var(--tag-green);
+            color: var(--tag-green-t);
+            border-color: currentColor
+        }
+
+#page-forum .np-identity {
+    margin-top: 8px;
+    border: 1px solid var(--db-border);
+    border-radius: 12px;
+    background: rgba(0,0,0,.02);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
+#page-forum .np-id-left {
+    display: flex;
+    gap: 10px;
+    align-items: center
+}
+
+#page-forum .np-id-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #e6f3f4;
+    display: grid;
+    place-items: center
+}
+
+#page-forum .np-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
+#page-forum .btn-post {
+    background: #2563eb;
+    color: #fff !important;
+    border: 0
+}
+
+    #page-forum .btn-post[disabled] {
+        opacity: .5;
+        cursor: not-allowed
+    }
+
+/* ================== Responsive ================== */
+@media (max-width:1024px) {
+    #page-forum .forum-grid {
+        grid-template-columns: 1fr
+    }
+
+    #page-forum .metrics {
+        grid-template-columns: repeat(2,1fr)
+    }
+
+    #page-forum .comms {
+        grid-template-columns: repeat(2,1fr)
+    }
+}
+
+@media (max-width:720px) {
+    #page-forum .db-nav {
+        display: none
+    }
+
+    #page-forum .metrics {
+        grid-template-columns: 1fr
+    }
+
+    #page-forum .comms {
+        grid-template-columns: 1fr
+    }
+}
+
+/* --- Trending upvote button (clickable) --- */
+#page-forum .tr-up {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--db-border);
+    background: transparent;
+    border-radius: 999px;
+    padding: 4px 8px;
+    font-weight: 800;
+    cursor: pointer;
+    color: var(--db-muted)
+}
+
+    #page-forum .tr-up.on {
+        border-color: #10b981;
+        color: #10b981
+    }
+
+    #page-forum .tr-up .caret {
+        font-size: 12px
+    }
+
+/* --- Quick Actions (page-unique) --- */
+#page-forum .qa-block {
+    display: grid;
+    gap: 10px;
+    padding: 12px 14px
+}
+
+#page-forum .qa-forum {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 800;
+    border: 1px solid var(--db-border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,.03);
+    color: var(--db-text);
+    font-size: 14px;
+    line-height: 1.1;
+}
+
+    #page-forum .qa-forum:hover {
+        background: rgba(0,0,0,.05)
+    }
+
+.theme-dark #page-forum .qa-forum {
+    background: rgba(255,255,255,.04)
+}
+
+    .theme-dark #page-forum .qa-forum:hover {
+        background: rgba(255,255,255,.07)
+    }
+/* Community type badge — fix sizing & keep it local to the Forum page */
+#page-forum .comm-h .pill {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: auto !important;
+    height: auto !important;
+    padding: 4px 10px !important;
+    border-radius: 999px !important;
+    border: 1px solid var(--db-border) !important;
+    background: rgba(0,0,0,.06) !important;
+    color: var(--db-text) !important;
+    font-weight: 800;
+    font-size: 12px;
+    line-height: 1;
+    white-space: nowrap; /* “Study Group” etc. won’t wrap */
+}
+
+.theme-dark #page-forum .comm-h .pill {
+    background: rgba(255,255,255,.08) !important;
+}
+/* ================== Additions: Report button + Resource upload ================== */
+
+/* extra tokens */
+#page-forum {
+    --flag-red: #ef4444;
+    --flag-red-700: #b91c1c;
+    --file-bg: rgba(0,0,0,.03);
+    --file-bg-dark: rgba(255,255,255,.04);
+}
+
+    /* --- Report button (in post actions) --- */
+    #page-forum .btn-report {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 800;
+        font-size: 12px;
+        border: 1px solid var(--db-border);
+        background: transparent;
+        color: var(--flag-red);
+        box-shadow: none;
+        cursor: pointer;
+        transition: background .15s ease, border-color .15s ease, transform .06s ease;
+    }
+
+        #page-forum .btn-report:hover {
+            background: rgba(239,68,68,.08); /* red-500 @ ~8% */
+            border-color: rgba(239,68,68,.45);
+        }
+
+        #page-forum .btn-report:active {
+            transform: translateY(1px);
+        }
+
+        #page-forum .btn-report:focus-visible {
+            outline: 2px solid rgba(239,68,68,.45);
+            outline-offset: 2px;
+            border-color: rgba(239,68,68,.6);
+        }
+
+.theme-dark #page-forum .btn-report {
+    border-color: var(--db-border);
+    background: transparent;
+    color: var(--flag-red);
+}
+
+    .theme-dark #page-forum .btn-report:hover {
+        background: rgba(239,68,68,.12);
+        border-color: rgba(239,68,68,.55);
+    }
+
+/* --- Report Modal tweaks --- */
+#page-forum #modalReport .modal__card {
+    width: min(560px, 94vw);
+}
+
+#page-forum #modalReport .modal__head {
+    position: relative;
+    padding-right: 54px; /* space for close */
+}
+
+#page-forum #modalReport .field select,
+#page-forum #modalReport .field textarea {
+    border-left: 3px solid rgba(239,68,68,.35);
+}
+
+#page-forum #modalReport .btn--primary {
+    background: var(--flag-red);
+    border-color: var(--flag-red);
+    color: #fff !important;
+}
+
+    #page-forum #modalReport .btn--primary:hover {
+        background: var(--flag-red-700);
+        border-color: var(--flag-red-700);
+    }
+
+/* --- Resource upload: nicer file input (New Post modal) --- */
+#page-forum .field input[type="file"]#npFiles {
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 56px;
+    padding: 10px;
+    border-radius: 12px;
+    border-style: dashed;
+    border-width: 2px;
+    border-color: var(--db-border);
+    background: var(--file-bg);
+    color: var(--db-text);
+    cursor: pointer;
+}
+
+.theme-dark #page-forum .field input[type="file"]#npFiles {
+    background: var(--file-bg-dark);
+}
+
+#page-forum .field input[type="file"]#npFiles:hover {
+    border-color: var(--db-link);
+    background: rgba(0,0,0,.04);
+}
+
+.theme-dark #page-forum .field input[type="file"]#npFiles:hover {
+    background: rgba(255,255,255,.06);
+}
+
+/* Style the native file button */
+#page-forum .field input[type="file"]#npFiles::file-selector-button {
+    margin-right: 12px;
+    padding: 8px 12px;
+    border: 1px solid var(--db-border);
+    border-radius: 10px;
+    background: var(--db-link);
+    color: #fff;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .06s ease, opacity .15s ease;
+}
+
+#page-forum .field input[type="file"]#npFiles:hover::file-selector-button {
+    opacity: .95;
+}
+
+#page-forum .field input[type="file"]#npFiles:active::file-selector-button {
+    transform: translateY(1px);
+}
+
+/* small hint under file input (already using .muted in markup) */
+#page-forum .field input[type="file"]#npFiles + .muted {
+    margin-top: 6px;
+    font-size: .9rem;
+}
+
+/* --- New Post footer pill reflects resource type color (already works);
+   add subtle outline to the type pill area for visual grouping */
+#page-forum .np-foot > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#page-forum .np-foot #npTypePill {
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+}
+
+.theme-dark #page-forum .np-foot #npTypePill {
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+/* --- Post actions spacing consistency with new button --- */
+#page-forum .post-actions {
+    gap: 10px;
+}
+
+    #page-forum .post-actions > span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+/* --- Focus ring for key interactive bits (accessibility) --- */
+#page-forum .btn,
+#page-forum .join,
+#page-forum .db-iconbtn,
+#page-forum .db-toggle,
+#page-forum .vote button,
+#page-forum .seg .chip,
+#page-forum .tab,
+#page-forum .tr-up,
+#page-forum .btn-report {
+    outline: none;
+}
+
+    #page-forum .btn:focus-visible,
+    #page-forum .join:focus-visible,
+    #page-forum .db-iconbtn:focus-visible,
+    #page-forum .db-toggle:focus-visible,
+    #page-forum .vote button:focus-visible,
+    #page-forum .seg .chip:focus-visible,
+    #page-forum .tab:focus-visible,
+    #page-forum .tr-up:focus-visible,
+    #page-forum .btn-report:focus-visible {
+        outline: 2px solid var(--db-link);
+        outline-offset: 2px;
+    }
+
+/* --- Responsive touch-ups for report button text wrapping --- */
+@media (max-width:720px) {
+    #page-forum .btn-report {
+        padding: 6px 9px;
+        font-size: 12px;
+        white-space: nowrap;
+    }
+}
+
+#page-forum #modalReport #rpCount {
+    font-size: 12px;
+    text-align: right;
+}

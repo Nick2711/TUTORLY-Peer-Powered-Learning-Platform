@@ -1,0 +1,864 @@
+﻿@page "/forum/thread/{Id:int?}"
+@page "/forum/thread/{Id:int?}/{QuestionId:int?}"
+
+<PageTitle>Forum Communities | Tutorly</PageTitle>
+
+<div id="page-thread" class="pg-thread" data-page="thread">
+    <!-- ===== NAVBAR ===== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="mainNav">
+                <a class="db-nav__link" href="/dashboard" data-tab="home">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg><span>Home</span>
+                </a>
+                <a class="db-nav__link" href="/modules" data-tab="modules">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" /></svg><span>Modules</span>
+                </a>
+                <a class="db-nav__link" href="/messages" data-tab="messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg><span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/forum" data-tab="forum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg><span>Forum</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" href="/forum/thread" data-tab="forum-communities" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18" /></svg><span>Forum Communities</span>
+                </a>
+                <a class="db-nav__link" href="/calendar/overview" data-tab="meetings">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg><span>Meetings</span>
+                </a>
+            </nav>
+
+            <div class="db-actions" id="actionsBar">
+                <div class="search-wrap" id="searchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="searchInput" type="text" placeholder="Search…">
+                </div>
+
+                <div style="position:relative">
+                    <button class="db-iconbtn" id="btnNotif" aria-haspopup="true" aria-expanded="false">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                    </button>
+                    <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                        <div class="pop__head">Notifications</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">🎓</div><div><div class="pop__title">New badge unlocked</div><div class="pop__text">You earned “Active Learner”.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">💬</div><div><div class="pop__title">Reply from Anouk</div><div class="pop__text">She replied in Web Dev Club.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">📅</div><div><div class="pop__title">Session reminder</div><div class="pop__text">Project review tomorrow 1:00 PM.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="position:relative">
+                    <button class="db-avatar" id="btnProfile" aria-haspopup="true" aria-expanded="false">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=3" alt="Profile">
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#modalPhoto">
+                                <div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalSettings">
+                                <div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalBadges">
+                                <div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div>
+                            </li>
+                            <!-- Logout (kept) -->
+                            <li class="pop__item clickable" id="logoutItem">
+                                <div class="pop__row"><div class="pop__icon">🚪</div><div><div class="pop__title">Log out</div><div class="pop__text">Sign out of Tutorly.</div></div></div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="wrap">
+        @if (SelectedCommunity is null)
+        {
+            <!-- ===== Communities index ===== -->
+            <div class="headbar">
+                <h2 class="title">Forum Communities</h2>
+                <div class="toolbar">
+                    <input class="in" style="width:240px" placeholder="Search communities…" @bind="query">
+                    <select class="in" style="width:160px" @bind="sortBy">
+                        <option value="activity">Sort: Activity</option>
+                        <option value="az">Sort: A → Z</option>
+                        <option value="members">Sort: Members</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel__h">All Modules (@AllCommunities.Count)</div>
+                <div class="panel__b scroll">
+                    <div class="grid mod-grid">
+                        @foreach (var c in FilteredCommunities)
+                        {
+                            <article class="mod-card">
+                                <div class="card-h">
+                                    <div class="mod-title">@c.Name</div>
+                                    <span class="mod-pill">@c.Type</span>
+                                </div>
+                                <div class="card-b">@c.Description</div>
+                                <div class="card-f">
+                                    <div class="muted">👥 @c.Members • 💬 @c.Posts</div>
+
+                                    <div class="card-actions">
+                                        <button class="join @(c.Joined ? "" : "ghost")"
+                                                aria-pressed="@c.Joined"
+                                                @onclick="() => ToggleJoin(c)">
+                                            @(c.Joined ? "Joined" : "Join")
+                                        </button>
+
+                                        <a class="btn btn-blue" href="/forum/thread/@c.Id">Open</a>
+                                    </div>
+                                </div>
+                            </article>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else if (SelectedQuestion is null)
+        {
+            <!-- ===== Community thread ===== -->
+            <a class="back" href="/forum/thread">‹ Back to Communities</a>
+            <div class="thread">
+                <section class="panel">
+                    <div class="panel__h">@SelectedCommunity!.Name — Threads</div>
+                    <div class="panel__b composer">
+                        <label style="font-weight:800">Ask a question</label>
+                        <textarea @bind="composeTitle" placeholder="Title (e.g., 'How do I prove Lemma 3?')" style="min-height:44px"></textarea>
+                        <textarea @bind="composeBody" placeholder="Details (what have you tried?)"></textarea>
+                        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+                            <button class="btn btn-ghost" @onclick="ClearComposer">Clear</button>
+                            <button class="btn btn-blue" @onclick="PostQuestion" disabled="@string.IsNullOrWhiteSpace(composeTitle)">Post</button>
+                        </div>
+                    </div>
+
+                    @foreach (var q in CommunityQuestions)
+                    {
+                        <div class="q">
+                            <div class="vote">
+                                <button @onclick="() => Upvote(q)">▲</button>
+                                <div>@q.Votes</div>
+                                <button @onclick="() => Downvote(q)">▼</button>
+                            </div>
+                            <div>
+                                <div class="tag">@q.Tag</div>
+                                <h4><a href="/forum/thread/@SelectedCommunity!.Id/@q.Id" style="text-decoration:none;color:inherit">@q.Title</a></h4>
+                                <div class="qmeta">by <strong>@q.Author</strong> • @q.Time • 💬 @q.Replies.Count</div>
+                            </div>
+                            <div class="muted">Saved @q.Saves</div>
+                        </div>
+                    }
+                </section>
+
+                <aside class="panel">
+                    <div class="panel__h">About this community</div>
+                    <div class="panel__b">
+                        <div class="chip" style="margin-bottom:8px">Module</div>
+                        <div class="muted" style="margin-bottom:8px">@SelectedCommunity!.Description</div>
+                        <div>👥 <strong>@SelectedCommunity!.Members</strong> members</div>
+                        <div>💬 <strong>@SelectedCommunity!.Posts</strong> posts</div>
+                    </div>
+                </aside>
+            </div>
+        }
+        else
+        {
+            <!-- ===== Question detail ===== -->
+            <a class="back" href="/forum/thread/@SelectedCommunity!.Id">‹ Back to @SelectedCommunity!.Name</a>
+            <div class="qd">
+                <section class="panel">
+                    <div class="panel__h">@SelectedQuestion!.Title</div>
+                    <div class="panel__b">
+                        <div class="qmeta">Asked by <strong>@SelectedQuestion!.Author</strong> • @SelectedQuestion!.Time</div>
+                        <p style="margin-top:8px">@SelectedQuestion!.Body</p>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <span class="chip">💬 @SelectedQuestion!.Replies.Count Replies</span>
+                            <span class="chip">⬆️ @SelectedQuestion!.Votes</span>
+                        </div>
+                    </div>
+
+                    <div class="panel__h">Replies</div>
+
+                    @foreach (var r in SortedReplies(SelectedQuestion!))
+                    {
+                        <div class="reply @(r.IsTutor ? "tutor" : null)">
+                            <div class="rmeta">
+                                <strong>@r.Author</strong>
+                                @if (r.IsTutor)
+                                {
+                                    <span class="badge" title="Verified tutor">Verified Tutor</span>
+                                }
+                                • @r.Time
+
+                                <!-- NEW: report reply button -->
+                                <button class="report-btn" title="Report this reply"
+                                        @onclick="() => OpenReportForReply(r.Id)">
+                                    Report
+                                </button>
+                            </div>
+                            <div>@r.Body</div>
+                        </div>
+                    }
+
+
+                    <div class="panel__b composer">
+                        <label style="font-weight:800">Add a reply</label>
+                        <textarea @bind="composeReply" placeholder="Share what helped you, or ask for clarification…"></textarea>
+                        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+                            <button class="btn btn-ghost" @onclick="() => composeReply = string.Empty">Cancel</button>
+                            <button class="btn btn-blue" @onclick="PostReply" disabled="@string.IsNullOrWhiteSpace(composeReply)">Reply</button>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="panel">
+                    <div class="panel__h">Thread Actions</div>
+                    <div class="panel__b">
+                        <div class="chip" style="margin-bottom:8px">Tag: @SelectedQuestion!.Tag</div>
+                        <div class="muted">Upvote helpful answers; tutor replies are pinned automatically.</div>
+                    </div>
+                </aside>
+            </div>
+        }
+    </div>
+
+    <!-- ===== Modals ===== -->
+    <div class="modal" id="modalPhoto" aria-hidden="true" data-thread-modal>
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+            <div class="modal__head" style="display:flex !important;align-items:center !important;justify-content:space-between !important;padding:12px 14px !important;border-bottom:1px solid var(--db-border) !important;font-weight:900 !important;">
+                <span id="modalPhotoTitle">Change Photo</span>
+                <button class="btn btn--ghost" data-close="modalPhoto" style="width:36px !important;height:36px !important;display:grid !important;place-items:center !important;">✕</button>
+            </div>
+            <div class="modal__body" style="padding:14px !important">
+                <div class="photo-row">
+                    <img id="photoPreview" src="https://i.pravatar.cc/80?img=3" alt="Preview">
+                    <div>
+                        <input type="file" id="photoInput" accept="image/*">
+                        <div class="muted" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__foot" style="display:flex !important;gap:8px !important;justify-content:flex-end !important;padding:10px 14px !important;border-top:1px solid var(--db-border) !important;">
+                <button class="btn" data-close="modalPhoto">Cancel</button>
+                <button class="btn btn--primary" id="savePhotoBtn"
+                        style="background:var(--db-accent) !important;border-color:var(--db-accent) !important;color:#fff !important;font-weight:900 !important;">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalSettings" aria-hidden="true" data-thread-modal>
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle">
+            <div class="modal__head" style="display:flex !important;align-items:center !important;justify-content:space-between !important;padding:12px 14px !important;border-bottom:1px solid var(--db-border) !important;font-weight:900 !important;">
+                <span id="modalSettingsTitle">Profile Settings</span>
+                <button class="btn btn--ghost" data-close="modalSettings" style="width:36px !important;height:36px !important;display:grid !important;place-items:center !important;">✕</button>
+            </div>
+            <div class="modal__body" style="padding:14px !important">
+                <div class="field"><label>First name</label><input class="in" id="firstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label>Last name</label><input class="in" id="lastName" type="text" placeholder="Doe"></div>
+                <div class="field"><label>Degree</label><select class="in" id="degree"><option value="">Select…</option><option>BComp</option><option>BIT</option><option>DIT</option><option>Other</option></select></div>
+                <div class="muted">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot" style="display:flex !important;gap:8px !important;justify-content:flex-end !important;padding:10px 14px !important;border-top:1px solid var(--db-border) !important;">
+                <button class="btn" data-close="modalSettings">Cancel</button>
+                <button class="btn btn--primary" id="saveSettingsBtn"
+                        style="background:var(--db-accent) !important;border-color:var(--db-accent) !important;color:#fff !important;font-weight:900 !important;">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalBadges" aria-hidden="true" data-thread-modal>
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalBadgesTitle">
+            <div class="modal__head" style="display:flex !important;align-items:center !important;justify-content:space-between !important;padding:12px 14px !important;border-bottom:1px solid var(--db-border) !important;font-weight:900 !important;">
+                <span id="modalBadgesTitle">Your Achievements</span>
+                <button class="btn btn--ghost" data-close="modalBadges" style="width:36px !important;height:36px !important;display:grid !important;place-items:center !important;">✕</button>
+            </div>
+            <div class="modal__body" style="padding:14px !important">
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>Active Learner</strong> — asked 10+ questions this week</li>
+                    <li><strong>Helper</strong> — answered 3 peer questions</li>
+                    <li><strong>On Track</strong> — met your weekly goal</li>
+                </ul>
+            </div>
+            <div class="modal__foot" style="display:flex !important;gap:8px !important;justify-content:flex-end !important;padding:10px 14px !important;border-top:1px solid var(--db-border) !important;">
+                <button class="btn btn--primary" data-close="modalBadges"
+                        style="background:var(--db-accent) !important;border-color:var(--db-accent) !important;color:#fff !important;font-weight:900 !important;">
+                    Nice!
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Report Reply modal -->
+<div class="modal" id="modalReport" aria-hidden="true" data-thread-modal>
+    <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalReportTitle">
+        <div class="modal__head">
+            <span id="modalReportTitle">Report Reply</span>
+            <button class="btn btn--ghost" data-close="modalReport" style="width:36px;height:36px;display:grid;place-items:center">✕</button>
+        </div>
+
+        <div class="modal__body">
+            <div class="field">
+                <label>Tell us what’s wrong</label>
+                <textarea class="in" style="min-height:120px"
+                          @bind="reportText"
+                          placeholder="Why are you reporting this reply? (spam, abuse, off-topic, etc.)"></textarea>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(reportError))
+            {
+                <div style="color:#b91c1c;font-weight:700">@reportError</div>
+            }
+        </div>
+
+        <div class="modal__foot">
+            <button class="btn" data-close="modalReport">Cancel</button>
+            <button class="btn btn--primary"
+                    @onclick="SubmitReplyReport"
+                    disabled="@(!reportResponseId.HasValue || string.IsNullOrWhiteSpace(reportText) || reportSending)">
+                @(reportSending ? "Sending…" : "Submit Report")
+            </button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    (function initTheme() { try { const s = localStorage.getItem('theme'); if (s === 'dark') { document.documentElement.classList.add('theme-dark'); } } catch (_) { } })();
+    function toggleTheme() { const el = document.documentElement; const d = el.classList.toggle('theme-dark'); try { localStorage.setItem('theme', d ? 'dark' : 'light') } catch (_) { } }
+
+    (function wireNav() {
+        const nav = document.getElementById('mainNav');
+        nav?.addEventListener('click', (e) => { const a = e.target.closest('a'); if (!a) return; const href = (a.getAttribute('href') || '').trim();[...nav.querySelectorAll('a')].forEach(x => x.classList.remove('db-nav__link--active')); a.classList.add('db-nav__link--active'); if (href === '' || href === '#') { e.preventDefault(); } }, { passive: false });
+
+        const sw = document.getElementById('searchWrap'), sb = document.getElementById('btnSearch'), si = document.getElementById('searchInput');
+        const bn = document.getElementById('btnNotif'), pn = document.getElementById('popNotif');
+        const bp = document.getElementById('btnProfile'), pp = document.getElementById('popProfile');
+        function closeAll() { sw?.classList.remove('open'); pn?.classList.remove('show'); bn?.setAttribute('aria-expanded', 'false'); pp?.classList.remove('show'); bp?.setAttribute('aria-expanded', 'false'); }
+        sb?.addEventListener('click', (e) => { e.preventDefault(); const o = sw.classList.toggle('open'); if (o) { si?.focus(); } pn?.classList.remove('show'); pp?.classList.remove('show'); });
+        bn?.addEventListener('click', (e) => { e.preventDefault(); const s = pn.classList.toggle('show'); bn.setAttribute('aria-expanded', s ? 'true' : 'false'); pp?.classList.remove('show'); sw?.classList.remove('open'); });
+        bp?.addEventListener('click', (e) => { e.preventDefault(); const s = pp.classList.toggle('show'); bp.setAttribute('aria-expanded', s ? 'true' : 'false'); pn?.classList.remove('show'); sw?.classList.remove('open'); });
+        document.addEventListener('click', (e) => { const within = e.target.closest('#actionsBar') || e.target.closest('.db-topbar__left'); if (!within) closeAll(); });
+
+        if (!window.__threadProfileInit) {
+            window.__threadProfileInit = true;
+            const $ = s => document.querySelector(s); const $$ = s => Array.from(document.querySelectorAll(s));
+            const avatarImg = $('#avatarImg');
+
+            $$('#popProfile .clickable[data-target]').forEach(li => {
+                li.addEventListener('click', () => { const t = li.getAttribute('data-target'); if (t) { document.querySelector(t)?.classList.add('show'); } $('#popProfile')?.classList.remove('show'); });
+            });
+
+            document.getElementById('logoutItem')?.addEventListener('click', () => {
+                try { localStorage.clear(); sessionStorage && sessionStorage.clear(); } catch (_) { }
+                window.location.href = '/login';
+            });
+
+            $$('.modal').forEach(m => m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('show'); }));
+            $$('[data-close]').forEach(btn => btn.addEventListener('click', () => { const id = btn.getAttribute('data-close'); if (id) document.getElementById(id)?.classList.remove('show'); }));
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $$('.modal.show').forEach(m => m.classList.remove('show')); } });
+
+            const photoInput = $('#photoInput'), photoPreview = $('#photoPreview');
+            $('#savePhotoBtn')?.addEventListener('click', () => { try { if (photoPreview?.src) { localStorage.setItem('profile.photo', photoPreview.src); if (avatarImg) avatarImg.src = photoPreview.src; } } catch (_) { } document.getElementById('modalPhoto')?.classList.remove('show'); });
+            photoInput?.addEventListener('change', () => { const f = photoInput.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { if (photoPreview) photoPreview.src = r.result; }; r.readAsDataURL(f); });
+
+            const fn = $('#firstName'), ln = $('#lastName'), dg = $('#degree');
+            $('#saveSettingsBtn')?.addEventListener('click', () => { try { localStorage.setItem('profile.first', fn?.value.trim() || ''); localStorage.setItem('profile.last', ln?.value.trim() || ''); localStorage.setItem('profile.degree', dg?.value || ''); } catch (_) { } document.getElementById('modalSettings')?.classList.remove('show'); });
+            (function load() { try { const p = localStorage.getItem('profile.photo'); if (p) { if (avatarImg) avatarImg.src = p; const prev = $('#photoPreview'); if (prev) prev.src = p; } if (fn) fn.value = localStorage.getItem('profile.first') || ''; if (ln) ln.value = localStorage.getItem('profile.last') || ''; if (dg) dg.value = localStorage.getItem('profile.degree') || ''; } catch (_) { } })();
+        }
+    })();
+</script>
+
+<!-- FINAL, PAGE-LOCAL OVERRIDES (loads last) -->
+<style>
+    /* Load-after overrides to ensure modals match dashboard everywhere */
+    #page-thread[data-page="thread"] .modal.show {
+        display: grid !important
+    }
+
+    #page-thread[data-page="thread"] .modal__card {
+        width: min(820px,96vw) !important;
+        background: var(--db-surface) !important;
+        color: var(--db-text) !important;
+        border: 1px solid var(--db-border) !important;
+        border-radius: 14px !important;
+        box-shadow: var(--db-shadow) !important;
+    }
+
+    #page-thread[data-page="thread"] .modal__head {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 12px 14px !important;
+        border-bottom: 1px solid var(--db-border) !important;
+        font-weight: 900 !important;
+    }
+
+    #page-thread[data-page="thread"] .modal__body {
+        padding: 14px !important
+    }
+
+    #page-thread[data-page="thread"] .modal__foot {
+        padding: 10px 14px !important;
+        border-top: 1px solid var(--db-border) !important;
+        display: flex !important;
+        gap: 8px !important;
+        justify-content: flex-end !important;
+    }
+
+    #page-thread[data-page="thread"] .modal .btn {
+        opacity: 1 !important;
+        visibility: visible !important;
+        border-radius: 10px !important;
+        padding: 9px 12px !important;
+        border: 1px solid var(--db-border) !important;
+        background: var(--db-surface) !important;
+        color: var(--db-text) !important;
+        font-weight: 900 !important;
+    }
+
+        #page-thread[data-page="thread"] .modal .btn.btn--primary {
+            background: var(--db-accent) !important;
+            border-color: var(--db-accent) !important;
+            color: #fff !important;
+        }
+
+    #page-thread[data-page="thread"] .modal .btn--ghost {
+        background: transparent !important;
+        color: var(--db-text) !important;
+        border: 1px solid var(--db-border) !important;
+    }
+
+    /* Verified tutor reply styling */
+    .reply.tutor {
+        background: #ECFDF5; /* green-50 */
+        border: 1px solid #10B981; /* emerald-500 */
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 10px;
+    }
+
+    .reply .badge {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 6px;
+        border-radius: 9999px;
+        background: #D1FAE5; /* green-100 */
+        color: #065F46; /* green-800 */
+        font-size: 12px;
+        font-weight: 700;
+    }
+</style>
+
+@using Tutorly.Shared
+@using Tutorly.Client.Services
+@inject JwtHttpClient Http
+@inject IJSRuntime JSRuntime
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Parameter] public int? QuestionId { get; set; }
+
+    public record Community(
+    int Id,
+    string Name,
+    string Type,
+    string Description,
+    int Members,
+    int Posts,
+    bool Joined
+    );
+
+    public record Reply(int Id, string Author, string Body, string Time, bool IsTutor);
+    public record Question(int Id, string Title, string Body, string Tag, string Author, string Time, int Votes, int Saves, List<Reply> Replies);
+
+    List<Community> AllCommunities = new();
+    Dictionary<int, List<Question>> QuestionsByCommunity = new();
+
+    Community? SelectedCommunity => Id.HasValue ? AllCommunities.FirstOrDefault(c => c.Id == Id.Value) : null;
+    Question? SelectedQuestion => (SelectedCommunity is null || !QuestionId.HasValue) ? null
+        : QuestionsByCommunity.TryGetValue(SelectedCommunity.Id, out var list)
+            ? list.FirstOrDefault(q => q.Id == QuestionId.Value)
+            : null;
+
+    string query = string.Empty;
+    string sortBy = "activity";
+    string composeTitle = string.Empty;
+    string composeBody = string.Empty;
+    string composeReply = string.Empty;
+
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+    IEnumerable<Community> FilteredCommunities => ApplySort(
+        AllCommunities.Where(c =>
+            string.IsNullOrWhiteSpace(query) ||
+            c.Name.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            c.Description.Contains(query, StringComparison.OrdinalIgnoreCase)));
+
+    IEnumerable<Question> CommunityQuestions =>
+        (SelectedCommunity is null) ? Enumerable.Empty<Question>()
+        : QuestionsByCommunity.TryGetValue(SelectedCommunity.Id, out var list) ? list.OrderByDescending(q => q.Votes) : Enumerable.Empty<Question>();
+
+    IEnumerable<Reply> SortedReplies(Question q)
+        => q.Replies
+            .OrderByDescending(r => r.IsTutor) // Pin tutor replies to the top
+            .ThenBy(r => r.Time); // Keep original order within groups
+
+    private DotNetObjectReference<Thread>? _dotNetRef;
+
+    protected override async Task OnInitializedAsync() => await LoadCommunities();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("eval", "window.blazorThreadVoteHandler = null;");
+            await JSRuntime.InvokeVoidAsync("setBlazorThreadVoteHandler", _dotNetRef);
+            await JSRuntime.InvokeVoidAsync("eval", @"
+                if (!window.threadVoteListenerSetup) {
+                    window.threadVoteListenerSetup = true;
+                    window.addEventListener('postVoteUpdate', async (event) => {
+                        if (window.blazorThreadVoteHandler) {
+                            try { await window.blazorThreadVoteHandler.invokeMethodAsync('UpdatePostVote', event.detail.postId, event.detail.voteCount); }
+                            catch (err) { console.error('Error calling UpdatePostVote:', err); }
+                        }
+                    });
+                }");
+        }
+    }
+
+    [JSInvokable]
+    public void UpdatePostVote(int postId, int voteCount)
+    {
+        foreach (var communityId in QuestionsByCommunity.Keys)
+        {
+            var questions = QuestionsByCommunity[communityId];
+            var idx = questions.FindIndex(q => q.Id == postId);
+            if (idx >= 0) { var q = questions[idx]; questions[idx] = q with { Votes = voteCount }; StateHasChanged(); break; }
+        }
+    }
+
+    public void Dispose() => _dotNetRef?.Dispose();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Id.HasValue && SelectedCommunity != null) await LoadThreads(Id.Value);
+        if (QuestionId.HasValue && SelectedQuestion != null) await LoadReplies(QuestionId.Value);
+    }
+
+    private async Task LoadCommunities()
+    {
+        try
+        {
+            isLoading = true; errorMessage = string.Empty;
+            var response = await Http.GetFromJsonAsync<ApiResponse<List<CommunityDto>>>("api/forum/communities?PageSize=50");
+            if (response?.Success == true && response.Data != null)
+            {
+                AllCommunities = response.Data.Select(c => new Community(
+    c.CommunityId,
+    c.CommunityName,
+    c.CommunityType ?? "Course",
+    c.CommunityDescription ?? "",
+    c.Members,
+    c.Posts,
+    c.Joined                         // NEW
+    )).ToList();
+
+            }
+        }
+        catch (Exception ex) { errorMessage = "Failed to load communities. Please try again."; Console.WriteLine($"Error loading communities: {ex.Message}"); }
+        finally { isLoading = false; }
+    }
+
+    private async Task LoadReplies(int postId)
+    {
+        try
+        {
+            var responsesResponse = await Http.GetFromJsonAsync<ApiResponse<List<ResponseDto>>>($"api/forum/posts/{postId}/responses");
+            if (responsesResponse?.Success == true && responsesResponse.Data != null && SelectedQuestion != null)
+            {
+                SelectedQuestion.Replies.Clear();
+                foreach (var r in responsesResponse.Data)
+                    SelectedQuestion.Replies.Add(new Reply(r.ForumResponsesId, r.AuthorName, r.Content, r.TimeAgo, r.IsTutorVerified));
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex) { Console.WriteLine($"Error loading replies: {ex.Message}"); }
+    }
+
+    private async Task LoadThreads(int communityId)
+    {
+        try
+        {
+            isLoading = true; errorMessage = string.Empty;
+            var threadsResponse = await Http.GetFromJsonAsync<ApiResponse<List<ThreadDto>>>($"api/forum/communities/{communityId}/threads");
+            if (threadsResponse?.Success == true && threadsResponse.Data != null && threadsResponse.Data.Any())
+            {
+                var all = new List<Question>();
+                foreach (var t in threadsResponse.Data)
+                {
+                    var postsResponse = await Http.GetFromJsonAsync<ApiResponse<List<PostDto>>>($"api/forum/threads/{t.ThreadId}/posts?PageSize=100");
+                    if (postsResponse?.Success == true && postsResponse.Data != null)
+                    {
+                        foreach (var p in postsResponse.Data)
+                            all.Add(new Question(p.ForumPostsId, p.Title, p.Content, p.Tag ?? "general", p.AuthorName, p.TimeAgo, p.Votes, p.Saves, new List<Reply>()));
+                    }
+                }
+                QuestionsByCommunity[communityId] = all;
+            }
+            else { QuestionsByCommunity[communityId] = new List<Question>(); }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Failed to load threads. Please try again.";
+            Console.WriteLine($"Error loading threads: {ex.Message}");
+            QuestionsByCommunity[communityId] = new List<Question>();
+        }
+        finally { isLoading = false; }
+    }
+
+    IEnumerable<Community> ApplySort(IEnumerable<Community> src) => sortBy switch
+    {
+        "az" => src.OrderBy(c => c.Name),
+        "members" => src.OrderByDescending(c => c.Members),
+        _ => src.OrderByDescending(c => c.Posts)
+    };
+
+    void ClearComposer() { composeTitle = composeBody = string.Empty; }
+
+    async Task PostQuestion()
+    {
+        if (SelectedCommunity is null || string.IsNullOrWhiteSpace(composeTitle)) return;
+
+        try
+        {
+            var threadsResponse = await Http.GetFromJsonAsync<ApiResponse<List<ThreadDto>>>($"api/forum/communities/{SelectedCommunity.Id}/threads");
+            int threadId;
+            if (threadsResponse?.Success == true && threadsResponse.Data != null && threadsResponse.Data.Any())
+            {
+                threadId = threadsResponse.Data.First().ThreadId;
+            }
+            else
+            {
+                var createThreadDto = new CreateThreadDto { ThreadName = $"{SelectedCommunity.Name} - General Discussion", ThreadDescription = "General discussion thread for this community" };
+                var threadResponse = await Http.PostAsJsonAsync($"api/forum/communities/{SelectedCommunity.Id}/threads", createThreadDto);
+                if (!threadResponse.IsSuccessStatusCode) return;
+                var threadResult = await threadResponse.Content.ReadFromJsonAsync<ApiResponse<ThreadDto>>();
+                if (threadResult?.Success != true || threadResult.Data == null) return;
+                threadId = threadResult.Data.ThreadId;
+            }
+
+            var createPostDto = new CreatePostDto
+                {
+                    Title = composeTitle.Trim(),
+                    Content = string.IsNullOrWhiteSpace(composeBody) ? "No details provided." : composeBody.Trim(),
+                    PostType = "question",
+                    Tag = "question"
+                };
+
+            // Add retry logic for network errors
+            HttpResponseMessage? response = null;
+            int maxRetries = 3;
+            for (int attempt = 1; attempt <= maxRetries; attempt++)
+            {
+                try
+                {
+                    response = await Http.PostAsJsonAsync($"api/forum/threads/{threadId}/posts", createPostDto);
+                    if (response.IsSuccessStatusCode || attempt == maxRetries)
+                        break;
+                    
+                    Console.WriteLine($"Post creation attempt {attempt} failed, retrying...");
+                    await Task.Delay(1000 * attempt); // Exponential backoff
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Post creation attempt {attempt} failed with exception: {ex.Message}");
+                    if (attempt == maxRetries)
+                        throw;
+                    await Task.Delay(1000 * attempt);
+                }
+            }
+
+            if (response != null && response.IsSuccessStatusCode) 
+            { 
+                ClearComposer(); 
+                await LoadThreads(SelectedCommunity.Id); 
+                StateHasChanged(); 
+            }
+            else if (response != null)
+            {
+                string errorMessage = "Failed to create post";
+                try
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(errorContent))
+                    {
+                        errorMessage = errorContent;
+                    }
+                }
+                catch
+                {
+                    errorMessage = $"Network error occurred. Status: {response.StatusCode}";
+                }
+                Console.WriteLine($"Post creation failed: {errorMessage}");
+            }
+        }
+        catch (Exception ex) { Console.WriteLine($"Error in PostQuestion: {ex}"); }
+    }
+
+    async Task Upvote(Question q)
+    {
+        try
+        {
+            var createVoteDto = new CreateVoteDto { VoteType = 1 };
+            var response = await Http.PostAsJsonAsync($"api/forum/posts/{q.Id}/vote", createVoteDto);
+            if (!response.IsSuccessStatusCode) Console.WriteLine($"Failed to upvote: {await response.Content.ReadAsStringAsync()}");
+        }
+        catch (Exception ex) { Console.WriteLine($"Error upvoting: {ex.Message}"); }
+    }
+
+    async Task Downvote(Question q)
+    {
+        try
+        {
+            var createVoteDto = new CreateVoteDto { VoteType = -1 };
+            var response = await Http.PostAsJsonAsync($"api/forum/posts/{q.Id}/vote", createVoteDto);
+            if (!response.IsSuccessStatusCode) Console.WriteLine($"Failed to downvote: {await response.Content.ReadAsStringAsync()}");
+        }
+        catch (Exception ex) { Console.WriteLine($"Error downvoting: {ex.Message}"); }
+    }
+
+    async Task PostReply()
+    {
+        if (SelectedQuestion is null || string.IsNullOrWhiteSpace(composeReply)) return;
+        try
+        {
+            var createResponseDto = new CreateResponseDto { Content = composeReply.Trim() };
+            var response = await Http.PostAsJsonAsync($"api/forum/posts/{SelectedQuestion.Id}/responses", createResponseDto);
+            if (response.IsSuccessStatusCode) { composeReply = string.Empty; await LoadReplies(SelectedQuestion.Id); }
+        }
+        catch (Exception ex) { Console.WriteLine($"Error in PostReply: {ex}"); }
+    }
+    async Task ToggleJoin(Community c)
+    {
+        try
+        {
+            if (c.Joined)
+            {
+                var resp = await Http.PostAsJsonAsync($"api/forum/communities/{c.Id}/leave", new { });
+                if (resp.IsSuccessStatusCode) UpdateJoined(c.Id, false);
+                else await JSRuntime.InvokeVoidAsync("alert", "Failed to leave community.");
+            }
+            else
+            {
+                var resp = await Http.PostAsJsonAsync($"api/forum/communities/{c.Id}/join", new { });
+                if (resp.IsSuccessStatusCode) UpdateJoined(c.Id, true);
+                else await JSRuntime.InvokeVoidAsync("alert", "Failed to join community.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
+    void UpdateJoined(int id, bool joined)
+    {
+        var idx = AllCommunities.FindIndex(x => x.Id == id);
+        if (idx >= 0)
+        {
+            var cc = AllCommunities[idx];
+            AllCommunities[idx] = cc with
+                {
+                    Joined = joined,
+                    Members = joined ? cc.Members + 1 : Math.Max(0, cc.Members - 1)
+                };
+            StateHasChanged();
+        }
+    }
+    // --- Report reply state ---
+    int? reportResponseId;
+    string reportText = string.Empty;
+    bool reportSending = false;
+    string reportError = string.Empty;
+
+    void OpenReportForReply(int responseId)
+    {
+        reportResponseId = responseId;
+        reportText = string.Empty;
+        reportError = string.Empty;
+        // open modal
+        _ = JSRuntime.InvokeVoidAsync("eval", "document.getElementById('modalReport')?.classList.add('show')");
+    }
+
+    async Task SubmitReplyReport()
+    {
+        if (!reportResponseId.HasValue || string.IsNullOrWhiteSpace(reportText)) return;
+
+        try
+        {
+            reportSending = true;
+            reportError = string.Empty;
+
+            var payload = new CreateReportDto 
+            { 
+                ReportType = "response",
+                ReportedItemId = reportResponseId.Value,
+                Reason = reportText.Trim(),
+                Details = null,
+                Severity = "mild" // Default severity, could be made configurable
+            };
+            var resp = await Http.PostAsJsonAsync($"api/forum/responses/{reportResponseId}/report", payload);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                // close modal
+                await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('modalReport')?.classList.remove('show')");
+                reportResponseId = null;
+                reportText = string.Empty;
+            }
+            else
+            {
+                reportError = "Could not submit the report. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            reportError = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            reportSending = false;
+            StateHasChanged();
+        }
+    }
+
+
+}

@@ -1,0 +1,639 @@
+﻿@page "/admin/user-management"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using System.Text.Json
+@using Tutorly.Shared
+
+<PageTitle>User Management | Tutorly</PageTitle>
+
+<HeadContent>
+    <link rel="stylesheet" href="css/UserManagement.css" />
+</HeadContent>
+
+<div id="um-app" class="um-v2">
+    <!-- Top bar -->
+    <header class="ad-topbar">
+        <div class="brand">Tutorly<span>Admin</span></div>
+
+        <button class="nav-toggle" id="umNavToggle" aria-controls="umTopnav" aria-expanded="false" @onclick="ToggleNav">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav id="umTopnav" class="ad-topnav @(navOpen ? "is-open" : "")" aria-label="Primary">
+            <NavLink class="nav-item" href="/admin/dashboard">Dashboard</NavLink>
+            <NavLink class="nav-item" href="/admin/user-management" Match="NavLinkMatch.All">User Management</NavLink>
+            <NavLink class="nav-item" href="/admin/forum-moderation">Forum Moderation</NavLink>
+            <NavLink class="nav-item" href="/admin/module-management">Module Management</NavLink>
+            <NavLink class="nav-item" href="/admin/tutors">Tutors</NavLink>
+            <NavLink class="nav-item" href="/admin/analytics">Analytics</NavLink>
+            <NavLink class="nav-item" href="/admin/database">Database</NavLink>
+            <NavLink class="nav-item" href="/admin/faqs">FAQs</NavLink>
+        </nav>
+
+        <div class="top-actions">
+            <button class="icon-btn" title="Notifications" @onclick="ToggleNotifications">
+                <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" /></svg>
+            </button>
+
+            <button class="user-mini" @onclick="ToggleProfile">
+                <img src="https://i.pravatar.cc/40?img=8" alt="Admin avatar" />
+                <div><div class="name">Admin User</div><div class="muted">Super Admin</div></div>
+                <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" /></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page content -->
+    <main id="page-user-management" class="ad-main">
+        <header class="um-topbar">
+            <h1>User Management</h1>
+            <div class="um-actions">
+                <div class="um-search">
+                    <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 015.94 12.18l3.69 3.69-1.41 1.41-3.69-3.69A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" /></svg>
+                    <input type="search" placeholder="Search users..." @oninput="OnSearchInput" value="@searchQuery" />
+                </div>
+                <button class="btn btn-primary" @onclick="ShowAddUserModal">
+                    <svg class="i" viewBox="0 0 24 24"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" /></svg>
+                    Add User
+                </button>
+            </div>
+        </header>
+
+        <nav class="um-filter">
+            <button class="pill @(activeFilter == "all" ? "is-active" : "")" @onclick='() => ApplyFilter("all")'>All Users</button>
+            <button class="pill @(activeFilter == "role:Student" ? "is-active" : "")" @onclick='() => ApplyFilter("role:Student")'>Students</button>
+            <button class="pill @(activeFilter == "role:Tutor" ? "is-active" : "")" @onclick='() => ApplyFilter("role:Tutor")'>Tutors</button>
+            <button class="pill @(activeFilter == "role:Admin" ? "is-active" : "")" @onclick='() => ApplyFilter("role:Admin")'>Admins</button>
+            <button class="pill @(activeFilter == "status:Banned" ? "is-active" : "")" @onclick='() => ApplyFilter("status:Banned")'>Banned</button>
+            <button class="pill @(activeFilter == "status:Suspended" ? "is-active" : "")" @onclick='() => ApplyFilter("status:Suspended")'>Suspended</button>
+        </nav>
+
+        <div class="um-table-wrap">
+            <table class="um-table">
+                <thead>
+                    <tr>
+                        <th>USER</th>
+                        <th>ROLE</th>
+                        <th>STATUS</th>
+                        <th>JOINED</th>
+                        <th class="ta-right">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading)
+                    {
+                        <tr><td colspan="5" class="text-center">Loading users...</td></tr>
+                    }
+                    else if (!filteredUsers.Any())
+                    {
+                        <tr><td colspan="5" class="text-center">No users found</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var user in filteredUsers)
+                        {
+                            <tr data-role="@user.Role" data-status="@user.Status">
+                                <td>
+                                    <div class="user">
+                                        <img src="@(user.AvatarUrl ?? $"https://i.pravatar.cc/64?u={user.Email}")" alt="">
+                                        <div>
+                                            <div class="name">@user.FullName</div>
+                                            <div class="muted">@user.Email</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge @GetRoleBadgeClass(user.Role)">@user.Role</span></td>
+                                <td><span class="badge @GetStatusBadgeClass(user.Status)">@user.Status</span></td>
+                                <td>@user.JoinedDate.ToString("MMM dd, yyyy")</td>
+                                <td class="ta-right">
+                                    @if (user.Role != "Admin")
+                                    {
+                                        <button class="icon-btn warn" @onclick="() => ShowWarnModal(user)" title="Warn">
+                                            <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v2h2v-2zm0-6h-2v4h2v-4z" /></svg>
+                                        </button>
+                                        @if (user.Status == "Suspended")
+                                        {
+                                            <button class="icon-btn success" @onclick="() => ActivateUser(user)" title="Activate">
+                                                <svg viewBox="0 0 24 24"><path d="M9 16.17l-3.88-3.88L3.71 14.7 9 20l12-12-1.41-1.41z" /></svg>
+                                            </button>
+                                        }
+                                        @if (user.Status != "Banned")
+                                        {
+                                            <button class="icon-btn danger" @onclick="() => BanUser(user)" title="Ban">
+                                                <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1010 10A10.011 10.011 0 0012 2zm0 2a8 8 0 015.291 13.709L6.291 6.709A7.963 7.963 0 0112 4zm0 16a8 8 0 01-5.291-13.709l11 11A7.963 7.963 0 0112 20z" /></svg>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button class="icon-btn success" @onclick="() => UnbanUser(user)" title="Unban">
+                                                <svg viewBox="0 0 24 24"><path d="M9 16.17l-3.88-3.88L3.71 14.7 9 20l12-12-1.41-1.41z" /></svg>
+                                            </button>
+                                        }
+                                        <button class="icon-btn danger" @onclick="() => DeleteUser(user)" title="Delete User">
+                                            <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" /></svg>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Warning Modal -->
+    @if (selectedUserForWarning != null)
+    {
+        <div class="aa-modal open">
+            <div class="scrim" @onclick="() => selectedUserForWarning = null"></div>
+            <div class="dialog">
+                <header class="m-head">
+                    <h3>Warn @selectedUserForWarning.FullName</h3>
+                    <button class="x" @onclick="() => selectedUserForWarning = null">✕</button>
+                </header>
+                <div class="m-body">
+                    <div class="field">
+                        <label>Warning Message</label>
+                        <textarea @bind="warningMessage" rows="4" placeholder="Enter warning message..."></textarea>
+                    </div>
+                </div>
+                <footer class="m-foot">
+                    <button class="btn ghost" @onclick="() => selectedUserForWarning = null">Cancel</button>
+                    <button class="btn primary" @onclick="SendWarning">Send Warning</button>
+                </footer>
+            </div>
+        </div>
+    }
+
+    <!-- Add User Modal -->
+    @if (showAddUserModal)
+    {
+        <div class="aa-modal open">
+            <div class="scrim" @onclick="CloseAddUserModal"></div>
+            <div class="dialog">
+                <header class="m-head">
+                    <h3>Add New User</h3>
+                    <button class="x" @onclick="CloseAddUserModal">✕</button>
+                </header>
+                <div class="m-body">
+                    <div class="field">
+                        <label>Email Address *</label>
+                        <input type="email" @bind="newUserEmail" placeholder="user@example.com" />
+                        @if (!string.IsNullOrEmpty(addUserErrors.Email))
+                        {
+                            <div class="error-message">@addUserErrors.Email</div>
+                        }
+                    </div>
+                    <div class="field">
+                        <label>Password *</label>
+                        <input type="password" @bind="newUserPassword" placeholder="Minimum 6 characters" />
+                        @if (!string.IsNullOrEmpty(addUserErrors.Password))
+                        {
+                            <div class="error-message">@addUserErrors.Password</div>
+                        }
+                    </div>
+                    <div class="field">
+                        <label>Full Name *</label>
+                        <input type="text" @bind="newUserFullName" placeholder="John Doe" />
+                        @if (!string.IsNullOrEmpty(addUserErrors.FullName))
+                        {
+                            <div class="error-message">@addUserErrors.FullName</div>
+                        }
+                    </div>
+                    <div class="field">
+                        <label>Role *</label>
+                        <select @bind="newUserRole">
+                            <option value="">Select a role</option>
+                            <option value="Student">Student</option>
+                            <option value="Tutor">Tutor</option>
+                            <option value="Admin">Admin</option>
+                        </select>
+                        @if (!string.IsNullOrEmpty(addUserErrors.Role))
+                        {
+                            <div class="error-message">@addUserErrors.Role</div>
+                        }
+                    </div>
+                    @if (!string.IsNullOrEmpty(addUserGeneralError))
+                    {
+                        <div class="error-message">@addUserGeneralError</div>
+                    }
+                </div>
+                <footer class="m-foot">
+                    <button class="btn ghost" @onclick="CloseAddUserModal">Cancel</button>
+                    <button class="btn primary" @onclick="CreateUser" disabled="@isCreatingUser">
+                        @if (isCreatingUser)
+                        {
+                            <span>Creating...</span>
+                        }
+                        else
+                        {
+                            <span>Create User</span>
+                        }
+                    </button>
+                </footer>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<UserDto> allUsers = new();
+    private List<UserDto> filteredUsers = new();
+    private string searchQuery = "";
+    private string activeFilter = "all";
+    private bool isLoading = true;
+    private bool navOpen = false;
+    private UserDto? selectedUserForWarning;
+    private string warningMessage = "";
+
+    // Add User Modal state
+    private bool showAddUserModal = false;
+    private string newUserEmail = "";
+    private string newUserPassword = "";
+    private string newUserFullName = "";
+    private string newUserRole = "";
+    private bool isCreatingUser = false;
+    private string addUserGeneralError = "";
+    private AddUserErrors addUserErrors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsersAsync();
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        try
+        {
+            isLoading = true;
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                return;
+            }
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.GetAsync("/api/admin/users");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                allUsers = JsonSerializer.Deserialize<List<UserDto>>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<UserDto>();
+
+                FilterAndSearchUsers();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading users: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyFilter(string filter)
+    {
+        activeFilter = filter;
+        FilterAndSearchUsers();
+    }
+
+    private void FilterAndSearchUsers()
+    {
+        var filtered = allUsers.AsEnumerable();
+
+        // Apply tab filter
+        if (activeFilter != "all")
+        {
+            if (activeFilter.StartsWith("role:"))
+            {
+                var role = activeFilter.Substring(5);
+                filtered = filtered.Where(u => u.Role == role);
+            }
+            else if (activeFilter.StartsWith("status:"))
+            {
+                var status = activeFilter.Substring(7);
+                filtered = filtered.Where(u => u.Status == status);
+            }
+        }
+
+        // Apply search
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filtered = filtered.Where(u =>
+                u.FullName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                u.Email.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+        }
+
+        filteredUsers = filtered.ToList();
+        StateHasChanged();
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? "";
+        FilterAndSearchUsers();
+    }
+
+    private string GetRoleBadgeClass(string role)
+    {
+        return role switch
+        {
+            "Student" => "badge-blue",
+            "Tutor" => "badge-indigo",
+            "Admin" => "badge-purple",
+            _ => "badge-gray"
+        };
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Active" => "badge-green",
+            "Suspended" => "badge-amber",
+            "Banned" => "badge-red",
+            _ => "badge-gray"
+        };
+    }
+
+    private async Task BanUser(UserDto user)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", $"Ban {user.FullName}? They will not be able to access the system."))
+            return;
+
+        await UpdateUserStatusAsync(user.UserId, "Banned");
+    }
+
+    private async Task UnbanUser(UserDto user)
+    {
+        await UpdateUserStatusAsync(user.UserId, "Active");
+    }
+
+    private async Task ActivateUser(UserDto user)
+    {
+        await UpdateUserStatusAsync(user.UserId, "Active");
+    }
+
+    private async Task DeleteUser(UserDto user)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to permanently delete {user.FullName}? This action cannot be undone."))
+            return;
+
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.DeleteAsync($"/api/admin/users/{user.UserId}");
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", $"User {user.FullName} has been deleted successfully.");
+                await LoadUsersAsync(); // Refresh
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Failed to delete user: {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error deleting user: {ex.Message}");
+        }
+    }
+
+    private async Task UpdateUserStatusAsync(string userId, string status)
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.PutAsJsonAsync($"/api/admin/users/{userId}/status", new { status });
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadUsersAsync(); // Refresh
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating user status: {ex.Message}");
+        }
+    }
+
+    private void ShowWarnModal(UserDto user)
+    {
+        selectedUserForWarning = user;
+        warningMessage = "";
+    }
+
+    private async Task SendWarning()
+    {
+        if (string.IsNullOrWhiteSpace(warningMessage) || selectedUserForWarning == null) return;
+
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.PostAsJsonAsync(
+                $"/api/admin/users/{selectedUserForWarning.UserId}/warn",
+                new { message = warningMessage });
+
+            if (response.IsSuccessStatusCode)
+            {
+                selectedUserForWarning = null;
+                warningMessage = "";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending warning: {ex.Message}");
+        }
+    }
+
+    private void ToggleNav()
+    {
+        navOpen = !navOpen;
+    }
+
+    private void ToggleNotifications()
+    {
+        // TODO: Implement notifications
+    }
+
+    private void ToggleProfile()
+    {
+        // TODO: Implement profile menu
+    }
+
+    // Add User Modal methods
+    private void ShowAddUserModal()
+    {
+        showAddUserModal = true;
+        ClearAddUserForm();
+    }
+
+    private void CloseAddUserModal()
+    {
+        showAddUserModal = false;
+        ClearAddUserForm();
+    }
+
+    private void ClearAddUserForm()
+    {
+        newUserEmail = "";
+        newUserPassword = "";
+        newUserFullName = "";
+        newUserRole = "";
+        addUserGeneralError = "";
+        addUserErrors = new AddUserErrors();
+    }
+
+    private async Task CreateUser()
+    {
+        if (isCreatingUser) return;
+
+        // Clear previous errors
+        addUserGeneralError = "";
+        addUserErrors = new AddUserErrors();
+
+        // Validate form
+        if (!ValidateAddUserForm())
+        {
+            return;
+        }
+
+        isCreatingUser = true;
+
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                addUserGeneralError = "Authentication token not found. Please log in.";
+                return;
+            }
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var request = new
+            {
+                Email = newUserEmail,
+                Password = newUserPassword,
+                FullName = newUserFullName,
+                Role = newUserRole
+            };
+
+            var response = await Http.PostAsJsonAsync("/api/admin/users", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", $"User {newUserFullName} created successfully!");
+                CloseAddUserModal();
+                await LoadUsersAsync(); // Refresh the user list
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                var errorResult = JsonSerializer.Deserialize<JsonElement>(errorContent);
+
+                if (errorResult.TryGetProperty("error", out var errorElement))
+                {
+                    addUserGeneralError = errorElement.GetString() ?? "Failed to create user";
+                }
+                else
+                {
+                    addUserGeneralError = "Failed to create user";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            addUserGeneralError = $"Error creating user: {ex.Message}";
+            Console.WriteLine($"Error creating user: {ex.Message}");
+        }
+        finally
+        {
+            isCreatingUser = false;
+        }
+    }
+
+    private bool ValidateAddUserForm()
+    {
+        bool isValid = true;
+
+        // Email validation
+        if (string.IsNullOrWhiteSpace(newUserEmail))
+        {
+            addUserErrors.Email = "Email is required";
+            isValid = false;
+        }
+        else if (!IsValidEmail(newUserEmail))
+        {
+            addUserErrors.Email = "Please enter a valid email address";
+            isValid = false;
+        }
+        else if (allUsers.Any(u => u.Email.Equals(newUserEmail, StringComparison.OrdinalIgnoreCase)))
+        {
+            addUserErrors.Email = "A user with this email already exists";
+            isValid = false;
+        }
+
+        // Password validation
+        if (string.IsNullOrWhiteSpace(newUserPassword))
+        {
+            addUserErrors.Password = "Password is required";
+            isValid = false;
+        }
+        else if (newUserPassword.Length < 6)
+        {
+            addUserErrors.Password = "Password must be at least 6 characters long";
+            isValid = false;
+        }
+
+        // Full name validation
+        if (string.IsNullOrWhiteSpace(newUserFullName))
+        {
+            addUserErrors.FullName = "Full name is required";
+            isValid = false;
+        }
+
+        // Role validation
+        if (string.IsNullOrWhiteSpace(newUserRole))
+        {
+            addUserErrors.Role = "Please select a role";
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}

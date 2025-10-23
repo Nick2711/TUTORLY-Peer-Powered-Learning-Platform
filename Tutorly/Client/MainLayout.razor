@@ -1,0 +1,175 @@
+﻿@using Tutorly.Client.Services
+@using Tutorly.Client.Shared
+@using Tutorly.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
+@inject NavigationManager Nav
+@inject CallStateService CallState
+@inject StudyRoomHubService HubService
+@inject IJSRuntime JS
+@inject AuthenticationStateProvider AuthStateProvider
+@implements IDisposable
+
+<main class="min-h-screen">
+    <div key="@_pageKey" class="page-fade">
+        @Body
+    </div>
+</main>
+
+<!-- Call Components -->
+<CallNotification IncomingCall="@IncomingCall" OnResponse="HandleCallResponse" />
+<FloatingCallWindow ActiveCall="@CallState.ActiveCall" OnLeaveCall="HandleLeaveCall" />
+
+@code {
+    private string _pageKey = string.Empty;
+    private CallInvitationDto? IncomingCall;
+    private bool _isStudyRoomHubConnected = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _pageKey = Nav.Uri;
+        Nav.LocationChanged += HandleLocationChanged;
+
+        // Register call event handlers
+        HubService.OnCallInvitationReceived += HandleIncomingCall;
+        HubService.OnCallAccepted += HandleCallAccepted;
+        HubService.OnCallRejected += HandleCallRejected;
+        HubService.OnCallCancelled += HandleCallCancelled;
+
+        // Listen for authentication state changes
+        AuthStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+
+        // Try to connect to StudyRoomHub if already authenticated
+        await TryConnectToStudyRoomHub();
+    }
+
+    private async void OnAuthenticationStateChanged(Task<AuthenticationState> authStateTask)
+    {
+        try
+        {
+            var authState = await authStateTask;
+            Console.WriteLine($"🔐 MainLayout: Auth state changed - IsAuthenticated: {authState.User.Identity?.IsAuthenticated}, HubConnected: {_isStudyRoomHubConnected}");
+            
+            if (authState.User.Identity?.IsAuthenticated == true && !_isStudyRoomHubConnected)
+            {
+                Console.WriteLine("🔐 MainLayout: User authenticated, attempting StudyRoomHub connection...");
+                await TryConnectToStudyRoomHub();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ MainLayout: Error handling auth state change: {ex.Message}");
+        }
+    }
+
+    private async Task TryConnectToStudyRoomHub()
+    {
+        if (_isStudyRoomHubConnected)
+        {
+            Console.WriteLine("✅ MainLayout: StudyRoomHub already connected, skipping");
+            return;
+        }
+
+        try
+        {
+            // Wait a bit for authentication to complete
+            await Task.Delay(1000);
+            
+            var accessToken = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (!string.IsNullOrEmpty(accessToken))
+            {
+                Console.WriteLine("🔗 MainLayout: Connecting to StudyRoomHub for call notifications...");
+                await HubService.ConnectAsync(accessToken);
+                _isStudyRoomHubConnected = true;
+                Console.WriteLine("✅ MainLayout: StudyRoomHub connection established");
+            }
+            else
+            {
+                Console.WriteLine("❌ MainLayout: No access token found, cannot connect to StudyRoomHub");
+                // Try again after a short delay in case auth is still processing
+                await Task.Delay(2000);
+                accessToken = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+                if (!string.IsNullOrEmpty(accessToken))
+                {
+                    Console.WriteLine("🔗 MainLayout: Retrying StudyRoomHub connection...");
+                    await HubService.ConnectAsync(accessToken);
+                    _isStudyRoomHubConnected = true;
+                    Console.WriteLine("✅ MainLayout: StudyRoomHub connection established on retry");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ MainLayout: Failed to connect to StudyRoomHub: {ex.Message}");
+        }
+    }
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        _pageKey = e.Location;      // re-key so the fade runs on each nav
+        StateHasChanged();
+    }
+
+    private async Task HandleIncomingCall(CallInvitationDto invitation)
+    {
+        Console.WriteLine($"📞 MainLayout: HandleIncomingCall called with invitation: {invitation?.CallId}");
+        Console.WriteLine($"📞 MainLayout: From: {invitation?.FromUserName}, Type: {invitation?.CallType}");
+        IncomingCall = invitation;
+        StateHasChanged();
+        Console.WriteLine($"📞 MainLayout: IncomingCall state updated, notification should appear");
+    }
+
+    private async Task HandleCallResponse(bool accepted)
+    {
+        Console.WriteLine($"HandleCallResponse called with accepted: {accepted}");
+        IncomingCall = null;
+        StateHasChanged();
+    }
+
+    private async Task HandleCallAccepted(CallResponseDto response)
+    {
+        Console.WriteLine($"HandleCallAccepted called with RoomId: {response.RoomId}");
+        // Only navigate if we have a valid room ID
+        if (response.RoomId != Guid.Empty)
+        {
+            Nav.NavigateTo($"/calendar/session/{response.RoomId}");
+        }
+        else
+        {
+            Console.WriteLine("Invalid room ID, not navigating");
+        }
+    }
+
+    private async Task HandleCallRejected(CallResponseDto response)
+    {
+        Console.WriteLine($"HandleCallRejected called with RoomId: {response.RoomId}");
+        // Show notification that call was rejected
+        await JS.InvokeVoidAsync("alert", "Call was declined");
+    }
+
+    private async Task HandleCallCancelled(Guid callId)
+    {
+        // Clear any incoming call notification
+        IncomingCall = null;
+        StateHasChanged();
+    }
+
+    private async Task HandleLeaveCall()
+    {
+        CallState.EndCall();
+    }
+
+    public void Dispose()
+    {
+        Nav.LocationChanged -= HandleLocationChanged;
+
+        // Unregister call event handlers
+        HubService.OnCallInvitationReceived -= HandleIncomingCall;
+        HubService.OnCallAccepted -= HandleCallAccepted;
+        HubService.OnCallRejected -= HandleCallRejected;
+        HubService.OnCallCancelled -= HandleCallCancelled;
+
+        // Unregister authentication state change handler
+        AuthStateProvider.AuthenticationStateChanged -= OnAuthenticationStateChanged;
+    }
+}

@@ -1,0 +1,1260 @@
+﻿@page "/calendar/session/{Id?}"
+@inject NavigationManager Nav
+@inject JwtHttpClient Http
+@inject IJSRuntime JS
+@inject MeteredVideoService MeteredVideoService
+@inject StudyRoomHubService HubService
+@inject StudyRoomWebRTCService WebRTCService
+@inject AuthenticationStateProvider AuthStateProvider
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using Tutorly.Shared
+@using Tutorly.Client.Services
+@using Microsoft.AspNetCore.Components
+@implements IAsyncDisposable
+
+<PageTitle>Study Room - @RoomName</PageTitle>
+<link href="css/Session.css" rel="stylesheet" />
+
+<div id="page-session">
+    <!-- ================== DASHBOARD NAVBAR ================== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="mainNav">
+                <a class="db-nav__link" href="/dashboard"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg><span>Home</span></a>
+                <a class="db-nav__link" href="/modules"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" /></svg><span>Modules</span></a>
+                <a class="db-nav__link" href="/messages"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg><span>Messages</span></a>
+                <a class="db-nav__link" href="/forum"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg><span>Forum</span></a>
+                <a class="db-nav__link" href="/calendar/overview"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg><span>Meetings</span></a>
+                <a class="db-nav__link db-nav__link--active" href="/calendar/book" aria-current="page"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16" /></svg><span>Rooms</span></a>
+            </nav>
+
+            <div class="db-actions" id="actionsBar">
+                <div class="search-wrap" id="searchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="searchInput" type="text" placeholder="Search…">
+                </div>
+                <div style="position:relative">
+                    <button class="db-iconbtn" aria-haspopup="true" aria-expanded="false" id="btnNotif">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                    </button>
+                    <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                        <div class="pop__head">Notifications</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">🎓</div><div><div class="pop__title">New badge unlocked</div><div class="pop__text">You earned “Active Learner”.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">💬</div><div><div class="pop__title">Reply from tutor</div><div class="pop__text">Check your thread.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=3" alt="Profile" />
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================== SESSION CONTENT ================== -->
+    <div class="wrap">
+        <h1 class="title">@RoomName</h1>
+
+        @if (isLoading)
+        {
+            <div style="text-align:center;padding:60px">
+                <p>Connecting to room...</p>
+            </div>
+        }
+        else if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div style="text-align:center;padding:60px">
+                <p style="color:#c00">@errorMessage</p>
+                <button class="btn" @onclick="@(() => Nav.NavigateTo("/calendar/book"))">Back to Rooms</button>
+            </div>
+        }
+        else
+        {
+            <section class="stage">
+                <div class="tiles @GetGridClass()">
+                    <!-- Local video (self) -->
+                    <div class="tile @(IsLocalVideoLarge ? "span2 tall" : "") @(IsFullscreenMode && FullscreenVideoId == "localVideo" ? "fullscreen" : "")"
+                         @onclick="ToggleLocalVideoSize"
+                         @ondblclick="@(() => EnterFullscreen("localVideo"))">
+                        <video id="localVideo" autoplay muted playsinline class="video-stream" style="width: 100%; height: 100%; object-fit: cover; background: #000;"></video>
+                        <span class="nameplate">
+                            You
+                            @if (IsMuted)
+                            {
+                                <text>🔇</text>
+                            }
+                            @if (IsScreenSharing)
+                            {
+                                <text>🖥️</text>
+                            }
+                            @if (!IsVideoEnabled)
+                            {
+                                <text>📹</text>
+                            }
+                            @if (IsFullscreenMode && FullscreenVideoId == "localVideo")
+                            {
+                                <text>⛶</text>
+                            }
+                        </span>
+                        @if (!IsVideoEnabled)
+                        {
+                            <div class="video-placeholder">
+                                <div class="avatar-circle">
+                                    <span>@CurrentUserName.Substring(0, 1).ToUpper()</span>
+                                </div>
+                            </div>
+                        }
+                        @if (IsFullscreenMode && FullscreenVideoId == "localVideo")
+                        {
+                            <button class="exit-fullscreen-btn" @onclick="ExitFullscreen" @onclick:stopPropagation="true" title="Exit fullscreen">×</button>
+                        }
+                    </div>
+
+                    <!-- Remote participants -->
+                    @foreach (var participant in RemoteParticipants.Values)
+                    {
+                        <div class="tile @(participant.IsScreenSharing ? "span2 tall" : "") @(participant.IsLarge ? "span2 tall" : "") @(IsFullscreenMode && FullscreenVideoId == $"video_{participant.UserId}" ? "fullscreen" : "")"
+                             @onclick="() => ToggleParticipantVideoSize(participant.UserId)"
+                             @ondblclick="@(() => EnterFullscreen($"video_{participant.UserId}"))">
+                            <video id="video_@participant.UserId" autoplay playsinline muted class="video-stream" style="width: 100%; height: 100%; object-fit: cover; background: #000;"></video>
+                            <span class="nameplate">
+                                @participant.UserName
+                                @if (participant.IsMuted)
+                                {
+                                    <text>🔇</text>
+                                }
+                                @if (participant.IsScreenSharing)
+                                {
+                                    <text>🖥️ Sharing</text>
+                                }
+                                @if (!participant.IsVideoEnabled)
+                                {
+                                    <text>📹</text>
+                                }
+                                @if (IsFullscreenMode && FullscreenVideoId == $"video_{participant.UserId}")
+                                {
+                                    <text>⛶</text>
+                                }
+                            </span>
+                            @if (!participant.IsVideoEnabled)
+                            {
+                                <div class="video-placeholder">
+                                    <div class="avatar-circle">
+                                        <span>@participant.UserName.Substring(0, 1).ToUpper()</span>
+                                    </div>
+                                </div>
+                            }
+                            @if (IsFullscreenMode && FullscreenVideoId == $"video_{participant.UserId}")
+                            {
+                                <button class="exit-fullscreen-btn" @onclick="ExitFullscreen" @onclick:stopPropagation="true" title="Exit fullscreen">×</button>
+                            }
+                        </div>
+                    }
+
+                    <!-- Screen Share Tile (when any user is sharing) -->
+                    @if (RemoteParticipants.Values.Any(p => p.IsScreenSharing) || IsScreenSharing)
+                    {
+                        var screenSharingParticipant = RemoteParticipants.Values.FirstOrDefault(p => p.IsScreenSharing);
+                        var screenSharingUserName = screenSharingParticipant?.UserName ?? (CurrentUserFullName ?? CurrentUserName ?? "User");
+
+                        <div class="tile @(IsFullscreenMode && FullscreenVideoId == "screenShareVideo" ? "fullscreen" : "") @(IsScreenShareLarge ? "large" : "") screen-share-tile"
+                             @onclick="@(() => ToggleScreenShareSize())"
+                             @ondblclick="@(() => EnterFullscreen("screenShareVideo"))">
+                            <video id="screenShareVideo" autoplay muted playsinline class="video-stream" style="width: 100%; height: 100%; object-fit: cover; background: #000;"></video>
+                            <span class="nameplate">
+                                🖥️ @screenSharingUserName's Screen
+                                @if (IsFullscreenMode && FullscreenVideoId == "screenShareVideo")
+                                {
+                                    <text>⛶</text>
+                                }
+                            </span>
+                            @if (IsFullscreenMode && FullscreenVideoId == "screenShareVideo")
+                            {
+                                <button class="exit-fullscreen-btn" @onclick="ExitFullscreen" @onclick:stopPropagation="true" title="Exit fullscreen">×</button>
+                            }
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+
+        <div class="controls" aria-label="Meeting controls">
+            <button class="ctrl @(IsMuted ? "muted" : "")" title="@(IsMuted ? "Unmute" : "Mute")" @onclick="ToggleMute" disabled="@isLoading">
+                @if (!IsMuted)
+                {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /></svg>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22" /><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" /><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" /></svg>
+                }
+            </button>
+
+            <button class="ctrl" title="@(IsVideoEnabled ? "Turn off camera" : "Turn on camera")" @onclick="ToggleVideo" disabled="@isLoading">
+                @if (IsVideoEnabled)
+                {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
+                }
+                else
+                {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 1l22 22" /><path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10" /></svg>
+                }
+            </button>
+
+            <button class="ctrl @(IsScreenSharing ? "active" : "")" title="@(IsScreenSharing ? "Stop sharing" : "Share screen")" @onclick="ToggleScreenShare" disabled="@(isLoading || IsScreenShareInProgress)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2" /><path d="M8 21h8" /><path d="M12 17v4" /><path d="M7 10h10" /></svg>
+            </button>
+
+            <button class="ctrl leave" title="Leave" @onclick="LeaveMeeting">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><path d="M15 12H3" /></svg>
+            </button>
+
+            <button class="ctrl" title="Chat" @onclick="ToggleChat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg>
+            </button>
+
+            <button class="ctrl" title="Participants (@TotalParticipants)" @onclick="@(() => ShowPeople = true)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Chat drawer -->
+    <aside class="chat @(ShowChat ? "show" : "")" aria-hidden="@(!ShowChat)">
+        <div class="chat__head">
+            <span>Group Chat</span>
+            <button class="pill" title="Close" @onclick="ToggleChat">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div class="chat__body" id="chatScroll">
+            @foreach (var msg in Messages)
+            {
+                <div class="msg @(msg.UserId == CurrentUserId ? "me" : "")">
+                    <div class="bubble">
+                        <div class="msg__user">@msg.UserName</div>
+                        <div class="msg__text">@msg.Message</div>
+                        @if (!string.IsNullOrEmpty(msg.FileUrl))
+                        {
+                            <div class="msg__file">
+                                <span class="msg__file-icon">📎</span>
+                                <a href="@msg.FileUrl" target="_blank" class="msg__file-link">
+                                    @msg.FileName
+                                    @if (msg.FileSize.HasValue)
+                                    {
+                                        <span class="msg__file-size">(@FormatFileSize(msg.FileSize.Value))</span>
+                                    }
+                                </a>
+                            </div>
+                        }
+                        <div class="msg__time">@msg.Timestamp.ToString("HH:mm")</div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="chat__input">
+            <input type="file" id="chatFileInput" style="display:none" @onchange="OnFileSelected" />
+            <button class="chat__attach-btn" @onclick="OpenFileDialog" title="Attach file">
+                📎
+            </button>
+            <input @bind="Draft" @bind:event="oninput" placeholder="Type a message…" @onkeydown="OnKeyEnter" />
+            <button @onclick="Send">Send</button>
+        </div>
+    </aside>
+
+    <!-- Participants modal -->
+    <div class="modal @(ShowPeople ? "show" : "")" @onclick="BackdropClick">
+        <div class="card" @onclick:stopPropagation>
+            <div class="card__head">
+                <div>Participants <span class="title-sub">(@TotalParticipants)</span></div>
+                <button class="pill" title="Close" @onclick="@(() => ShowPeople = false)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" /></svg>
+                </button>
+            </div>
+            <div class="card__body">
+                <!-- Local user -->
+                <div class="row">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <img src="https://i.pravatar.cc/36?u=@CurrentUserId" alt="" style="width:36px;height:36px;border-radius:999px;border:2px solid #fff;box-shadow:0 0 0 1px var(--db-border)">
+                        <div>
+                            <div style="font-weight:800">You (Me)</div>
+                            <div style="font-size:12px;color:var(--db-muted)">
+                                @if (IsMuted)
+                                {
+                                    <text>🔇 Muted</text>
+                                }
+                                @if (IsScreenSharing)
+                                {
+                                    <text> • 🖥️ Sharing</text>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    @if (IsHost)
+                    {
+                        <span class="title-sub">Host</span>
+                    }
+                </div>
+
+                <!-- Remote participants -->
+                @foreach (var p in RemoteParticipants.Values)
+                {
+                    <div class="row">
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <img src="@p.AvatarUrl" alt="" style="width:36px;height:36px;border-radius:999px;border:2px solid #fff;box-shadow:0 0 0 1px var(--db-border)">
+                            <div>
+                                <div style="font-weight:800">@p.UserName</div>
+                                <div style="font-size:12px;color:var(--db-muted)">
+                                    @if (p.IsMuted)
+                                    {
+                                        <text>🔇 Muted</text>
+                                    }
+                                    @if (p.IsScreenSharing)
+                                    {
+                                        <text> • 🖥️ Sharing</text>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <span class="title-sub">@p.JoinedAt.ToLocalTime().ToString("h:mm tt")</span>
+                    </div>
+                }
+            </div>
+            <div style="padding:10px 16px;border-top:1px solid var(--db-border);display:flex;justify-content:flex-end;gap:8px;background:rgba(0,0,0,.02)">
+                <button class="btn ghost" @onclick="@(() => ShowPeople = false)">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function initTheme() {
+        try { const saved = localStorage.getItem('theme'); if (saved === 'dark') { document.documentElement.classList.add('theme-dark'); } } catch (_) { }
+    })();
+    function toggleTheme() {
+        const el = document.documentElement;
+        const isDark = el.classList.toggle('theme-dark');
+        try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (_) { }
+    }
+    (function wireNav() {
+        const nav = document.getElementById('mainNav'); if (!nav) return;
+        nav.addEventListener('click', (e) => {
+            const a = e.target.closest('a'); if (!a) return;
+            const href = (a.getAttribute('href') || '').trim();
+            [...nav.querySelectorAll('a')].forEach(x => x.classList.remove('db-nav__link--active'));
+            a.classList.add('db-nav__link--active');
+            if (href === '' || href === '#') { e.preventDefault(); }
+        }, { passive: false });
+    })();
+    (function wireActions() {
+        const sw = document.getElementById('searchWrap'), sb = document.getElementById('btnSearch'), si = document.getElementById('searchInput');
+        const bn = document.getElementById('btnNotif'), pn = document.getElementById('popNotif');
+        const bp = document.getElementById('btnProfile'), pp = document.getElementById('popProfile');
+        function closeAll() { sw?.classList.remove('open'); pn?.classList.remove('show'); bn?.setAttribute('aria-expanded', 'false'); pp?.classList.remove('show'); bp?.setAttribute('aria-expanded', 'false'); }
+        sb?.addEventListener('click', (e) => { e.preventDefault(); const o = sw.classList.toggle('open'); if (o) { si?.focus(); } pn?.classList.remove('show'); pp?.classList.remove('show'); });
+        bn?.addEventListener('click', (e) => { e.preventDefault(); const s = pn.classList.toggle('show'); bn.setAttribute('aria-expanded', s ? 'true' : 'false'); pp?.classList.remove('show'); sw?.classList.remove('open'); });
+        bp?.addEventListener('click', (e) => { e.preventDefault(); const s = pp.classList.toggle('show'); bp.setAttribute('aria-expanded', s ? 'true' : 'false'); pn?.classList.remove('show'); sw?.classList.remove('open'); });
+        document.addEventListener('click', (e) => { const within = e.target.closest('#actionsBar'); const inLeft = e.target.closest('.db-topbar__left'); if (!(within || inLeft)) closeAll(); });
+    })();
+</script>
+
+<script src="/js/metered-video-interop.js"></script>
+
+@code {
+    [Parameter] public string? Id { get; set; }
+
+    // State
+    private bool isLoading = true;
+    private string errorMessage = "";
+    private Guid RoomId;
+    private Guid CurrentUserId;
+    private string? CurrentUserName;
+    private string? CurrentUserFullName;
+    private DotNetObjectReference<Session>? dotNetRef;
+    private string RoomName = "Study Room";
+    private bool IsHost = false;
+
+    // WebRTC State
+    private bool IsMuted = false;
+    private bool IsVideoEnabled = false; // Start with camera off by default
+    private bool IsScreenSharing = false;
+    private bool IsLocalVideoLarge = false;
+    private bool IsScreenShareLarge = false;
+    private bool IsScreenShareInProgress = false; // Prevent double clicks
+    private bool IsFullscreenMode = false;
+    private string? FullscreenVideoId = null;
+    private Dictionary<Guid, StudyRoomParticipantDto> RemoteParticipants = new();
+    private HashSet<Guid> ActiveVideoStreams = new();
+
+    // UI State
+    private bool ShowChat = false;
+    private bool ShowPeople = false;
+
+    // Chat
+    // Replace ChatMsg record with RoomChatMessageDto list
+    private List<RoomChatMessageDto> Messages = new();
+    private string Draft = "";
+
+    private int TotalParticipants => RemoteParticipants.Count + 1;
+
+    private int GridCols
+    {
+        get
+        {
+            var n = TotalParticipants;
+            if (n <= 1) return 2;
+            if (n == 2) return 2;
+            if (n == 3) return 2;
+            if (n <= 4) return 2;
+            if (n <= 6) return 3;
+            return 4;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            Console.WriteLine("🚀 Session.razor OnInitializedAsync started");
+
+            // Wait for authentication to be established
+            var maxRetries = 5;
+            var retryCount = 0;
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            while ((!user.Identity?.IsAuthenticated ?? true) && retryCount < maxRetries)
+            {
+                Console.WriteLine($"🔐 Auth state: IsAuthenticated={user.Identity?.IsAuthenticated}, Name={user.Identity?.Name}, Retry {retryCount + 1}");
+                await Task.Delay(500); // Wait 500ms
+                authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                user = authState.User;
+                retryCount++;
+            }
+
+            Console.WriteLine($"🔐 Final auth state: IsAuthenticated={user.Identity?.IsAuthenticated}, Name={user.Identity?.Name}");
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                errorMessage = "You must be logged in to join a study room";
+                isLoading = false;
+                Console.WriteLine("❌ User not authenticated, redirecting to login");
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            // Get user ID from claims
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("sub")?.Value;
+
+            Console.WriteLine($"👤 User ID claim: {userIdClaim}");
+
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out CurrentUserId))
+            {
+                errorMessage = "Invalid user authentication";
+                isLoading = false;
+                Console.WriteLine("❌ Invalid user ID claim");
+                return;
+            }
+
+            CurrentUserName = user.FindFirst(ClaimTypes.Name)?.Value
+                           ?? user.FindFirst("email")?.Value
+                           ?? "User";
+
+            Console.WriteLine($"👤 Current user: {CurrentUserName} ({CurrentUserId})");
+
+            // Get user's full name from profile API
+            try
+            {
+                var profileResponse = await Http.GetFromJsonAsync<dynamic>("/api/profile/me");
+                if (profileResponse != null)
+                {
+                    // Extract FullName from the profile response
+                    var profileJson = System.Text.Json.JsonSerializer.Serialize(profileResponse);
+                    var profileDoc = System.Text.Json.JsonDocument.Parse(profileJson);
+
+                    if (profileDoc.RootElement.TryGetProperty("Profile", out System.Text.Json.JsonElement profileElement))
+                    {
+                        if (profileElement.TryGetProperty("FullName", out System.Text.Json.JsonElement fullNameElement) &&
+                            fullNameElement.ValueKind != System.Text.Json.JsonValueKind.Null)
+                        {
+                            CurrentUserFullName = fullNameElement.GetString();
+                            Console.WriteLine($"👤 User full name: {CurrentUserFullName}");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Could not fetch user profile: {ex.Message}");
+                CurrentUserFullName = CurrentUserName; // Fallback to username
+            }
+
+            // Parse room ID
+            if (!Guid.TryParse(Id, out RoomId))
+            {
+                errorMessage = "Invalid room ID";
+                isLoading = false;
+                Console.WriteLine($"❌ Invalid room ID: {Id}");
+                return;
+            }
+
+            Console.WriteLine($"🏠 Room ID: {RoomId}");
+
+            // Get access token from localStorage
+            var accessToken = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            Console.WriteLine($"🔑 Access token retrieved: {!string.IsNullOrEmpty(accessToken)}");
+
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                errorMessage = "Authentication token not found. Please log in again.";
+                isLoading = false;
+                Console.WriteLine("❌ No access token found");
+                Nav.NavigateTo("/login");
+                return;
+            }
+
+            // Initialize services
+            Console.WriteLine("🔧 Initializing WebRTC service...");
+
+            try
+            {
+                Console.WriteLine("🔌 Connecting to StudyRoomHub...");
+                await HubService.ConnectAsync(accessToken);
+                Console.WriteLine("✅ StudyRoomHub connection successful");
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Failed to connect to room service: {ex.Message}";
+                isLoading = false;
+                Console.WriteLine($"❌ StudyRoomHub connection failed: {ex.Message}");
+                Console.WriteLine($"❌ Stack trace: {ex.StackTrace}");
+                return;
+            }
+
+            // Register event handlers
+            RegisterEventHandlers();
+
+            // Join the room
+            var joinResponse = await HubService.JoinRoomAsync(RoomId);
+
+            if (!joinResponse.Success)
+            {
+                errorMessage = joinResponse.Message ?? "Failed to join room";
+                isLoading = false;
+                return;
+            }
+
+            if (joinResponse.Room != null)
+            {
+                RoomName = joinResponse.Room.RoomName;
+                IsHost = joinResponse.Room.CreatorUserId == CurrentUserId;
+            }
+
+            // Load chat history
+            var chatHistory = await HubService.GetChatHistoryAsync(RoomId);
+            if (chatHistory != null && chatHistory.Any())
+            {
+                Messages = chatHistory;
+                StateHasChanged();
+            }
+
+            // Start active call state
+            CallStateManager.Instance.StartActiveCall();
+            Console.WriteLine("📞 Session: Call is now active");
+
+            // Initialize WebRTC with TURN servers
+            Console.WriteLine("🔧 Initializing WebRTC service...");
+
+            // Force UI update and wait for DOM to be ready
+            StateHasChanged();
+            await Task.Delay(1000); // Give Blazor more time to render DOM
+
+            // Wait for DOM to be ready and retry if needed
+            Console.WriteLine($"🎯 ===== INITIALIZING WEBRTC =====");
+            Console.WriteLine($"🎯 Parameters: IsVideoEnabled={IsVideoEnabled}");
+            Console.WriteLine($"🎯 Current time: {DateTime.Now:HH:mm:ss.fff}");
+
+            var webRtcMaxRetries = 15;
+            var webRtcRetryCount = 0;
+            var webRtcSuccess = false;
+
+            while (!webRtcSuccess && webRtcRetryCount < webRtcMaxRetries)
+            {
+                await Task.Delay(500); // Wait 500ms between attempts
+                Console.WriteLine($"🎯 DOM ready check {webRtcRetryCount + 1}, checking for localVideo element...");
+                await JS.InvokeVoidAsync("eval", $"console.log('DOM ready check {webRtcRetryCount + 1}, checking for localVideo element...')");
+
+                // Check if video element exists before trying to initialize
+                var elementExists = await JS.InvokeAsync<bool>("eval", "document.getElementById('localVideo') !== null");
+                Console.WriteLine($"🔍 Video element exists: {elementExists}");
+
+                if (!elementExists)
+                {
+                    webRtcRetryCount++;
+                    Console.WriteLine($"❌ Video element not found, attempt {webRtcRetryCount}/{webRtcMaxRetries}");
+                    if (webRtcRetryCount >= webRtcMaxRetries)
+                    {
+                        Console.WriteLine("❌ Max retries reached, video element never appeared - continuing without WebRTC");
+                        Console.WriteLine("⚠️ Video elements will be available but WebRTC may not work properly");
+                        break; // Exit the retry loop but continue with the rest of the initialization
+                    }
+                    continue;
+                }
+
+                try
+                {
+                    Console.WriteLine($"🎯 Setting DotNet reference...");
+                    // Set DotNet reference for JavaScript callbacks
+                    dotNetRef = DotNetObjectReference.Create(this);
+                    await JS.InvokeVoidAsync("webrtcHandler.setDotNetReference", dotNetRef);
+                    Console.WriteLine($"✅ DotNet reference set");
+
+                    Console.WriteLine($"🎯 Initializing media stream...");
+                    // Always initialize with video tracks to enable video toggle functionality
+                    // Video can be disabled/enabled without renegotiation
+                    await JS.InvokeVoidAsync("webrtcHandler.initializeMediaStream", "localVideo", true, true);
+                    webRtcSuccess = true;
+                    Console.WriteLine("✅ WebRTC service initialized");
+
+                    Console.WriteLine($"🎯 Adding local stream to all existing peer connections...");
+                    // Add local stream to all existing peer connections
+                    await WebRTCService.AddLocalStreamToAllConnectionsAsync();
+                    Console.WriteLine($"✅ Local stream added to all connections");
+                }
+                catch (Exception ex)
+                {
+                    webRtcRetryCount++;
+                    Console.WriteLine($"❌ WebRTC initialization attempt {webRtcRetryCount} failed: {ex.Message}");
+                    Console.WriteLine($"❌ WebRTC error details: {ex}");
+                    Console.WriteLine($"❌ WebRTC stack trace: {ex.StackTrace}");
+                    if (webRtcRetryCount >= webRtcMaxRetries)
+                    {
+                        Console.WriteLine("❌ Max retries reached, WebRTC initialization failed - continuing without WebRTC");
+                        Console.WriteLine("⚠️ Video elements will be available but WebRTC may not work properly");
+                        break; // Exit the retry loop but continue with the rest of the initialization
+                    }
+                }
+            }
+
+            isLoading = false;
+            Console.WriteLine($"🎯 UI State: isLoading={isLoading}, errorMessage='{errorMessage}', RoomName='{RoomName}'");
+            Console.WriteLine($"🎯 Video elements should now be rendered in DOM");
+            StateHasChanged();
+
+            // Try to initialize WebRTC after UI is rendered
+            _ = Task.Run(async () =>
+            {
+                await Task.Delay(1000); // Wait for UI to fully render
+                await TryInitializeWebRTCAfterRender();
+            });
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error initializing room: {ex.Message}";
+            isLoading = false;
+            Console.WriteLine($"Error in OnInitializedAsync: {ex}");
+        }
+    }
+
+    private void RegisterEventHandlers()
+    {
+        // Participant joined
+        HubService.OnParticipantJoined += async (participant) =>
+        {
+            Console.WriteLine($"👥 Participant joined: {participant.UserName} ({participant.UserId})");
+            RemoteParticipants[participant.UserId] = participant;
+            await InvokeAsync(StateHasChanged);
+            Console.WriteLine($"✅ Participant added to UI: {participant.UserName}");
+
+            // WebRTC will handle remote streams via HandleRemoteStreamReceived
+        };
+
+        // Participant left
+        HubService.OnParticipantLeft += async (userId) =>
+        {
+            RemoteParticipants.Remove(userId);
+            ActiveVideoStreams.Remove(userId);
+            await InvokeAsync(StateHasChanged);
+        };
+
+        // Chat message received
+        HubService.OnChatMessageReceived += async (chatMessage) =>
+        {
+            Messages.Add(chatMessage);
+            StateHasChanged();
+            await JS.InvokeVoidAsync("eval", "document.getElementById('chatScroll')?.scrollTo(0, 999999)");
+        };
+
+        // Participant mute changed
+        HubService.OnParticipantMuteChanged += async (userId, isMuted) =>
+        {
+            if (RemoteParticipants.TryGetValue(userId, out var participant))
+            {
+                participant.IsMuted = isMuted;
+                await InvokeAsync(StateHasChanged);
+            }
+        };
+
+        // Participant screen share changed
+        HubService.OnParticipantScreenShareChanged += async (userId, isSharing) =>
+        {
+            if (RemoteParticipants.TryGetValue(userId, out var participant))
+            {
+                participant.IsScreenSharing = isSharing;
+                await InvokeAsync(StateHasChanged);
+            }
+        };
+
+        // Participant video changed
+        HubService.OnParticipantVideoChanged += async (userId, isEnabled) =>
+        {
+            if (isEnabled)
+            {
+                ActiveVideoStreams.Add(userId);
+            }
+            else
+            {
+                ActiveVideoStreams.Remove(userId);
+            }
+            await InvokeAsync(StateHasChanged);
+        };
+
+        // Metered Video remote track started
+        MeteredVideoService.OnRemoteTrackStarted += async (trackInfo) =>
+        {
+            // Metered SDK automatically handles video elements
+            // We just need to update our UI state
+            await InvokeAsync(StateHasChanged);
+        };
+
+        // Metered Video local track started
+        MeteredVideoService.OnLocalTrackStarted += async (trackInfo) =>
+        {
+            // Local video is automatically handled by Metered SDK
+            await InvokeAsync(StateHasChanged);
+        };
+    }
+
+    private async Task ToggleMute()
+    {
+        IsMuted = !IsMuted;
+        await HubService.ToggleMuteAsync(IsMuted);
+        StateHasChanged();
+    }
+
+    private async Task ToggleVideo()
+    {
+        IsVideoEnabled = !IsVideoEnabled;
+
+        if (IsVideoEnabled)
+        {
+            // Enable video - get camera stream
+            await JS.InvokeVoidAsync("webrtcHandler.enableVideo");
+            Console.WriteLine("📹 Video enabled");
+        }
+        else
+        {
+            // Disable video - stop camera stream
+            await JS.InvokeVoidAsync("webrtcHandler.disableVideo");
+            Console.WriteLine("📹 Video disabled");
+        }
+
+        await HubService.ToggleVideoAsync(IsVideoEnabled);
+        StateHasChanged();
+    }
+
+    private async Task ToggleScreenShare()
+    {
+        if (IsScreenShareInProgress) return; // Prevent double clicks
+
+        try
+        {
+            IsScreenShareInProgress = true;
+
+            if (IsScreenSharing)
+            {
+                await StopScreenShare();
+            }
+            else
+            {
+                await StartScreenShare();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error toggling screen share: {ex.Message}");
+        }
+        finally
+        {
+            IsScreenShareInProgress = false;
+        }
+    }
+
+    private async Task StartScreenShare()
+    {
+        try
+        {
+            Console.WriteLine("🖥️ Starting screen share...");
+
+            // Set screen sharing state first to render the UI
+            IsScreenSharing = true;
+            StateHasChanged();
+
+            // Give Blazor time to render the screen share tile
+            await Task.Delay(200);
+
+            // Now start the screen share
+            await JS.InvokeVoidAsync("webrtcHandler.startScreenShare");
+            await HubService.ToggleScreenShareAsync(IsScreenSharing);
+
+            Console.WriteLine("✅ Screen share started");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error starting screen share: {ex.Message}");
+            IsScreenSharing = false; // Reset on error
+        }
+    }
+
+    private async Task StopScreenShare()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("webrtcHandler.stopScreenShare");
+            IsScreenSharing = false;
+            await HubService.ToggleScreenShareAsync(IsScreenSharing);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error stopping screen share: {ex.Message}");
+        }
+    }
+
+    private async Task LeaveMeeting()
+    {
+        try
+        {
+            Console.WriteLine("🚪 Session: Leaving meeting...");
+            
+            // End call state
+            CallStateManager.Instance.EndCall();
+            Console.WriteLine("📞 Session: Call state ended");
+            
+            // Clean up WebRTC resources
+            Console.WriteLine("🧹 Session: Cleaning up WebRTC resources...");
+            await WebRTCService.CleanupAsync();
+            Console.WriteLine("✅ Session: WebRTC cleanup complete");
+            
+            // Leave the room
+            await HubService.LeaveRoomAsync();
+            Console.WriteLine("✅ Session: Left room successfully");
+            
+            // Navigate back to calendar
+            Nav.NavigateTo("/calendar/book");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Session: Error leaving meeting: {ex.Message}");
+            // Still navigate even if cleanup fails
+            Nav.NavigateTo("/calendar/book");
+        }
+    }
+
+    private void ToggleChat()
+    {
+        ShowChat = !ShowChat;
+        StateHasChanged();
+    }
+
+    private async Task OnKeyEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await Send();
+        }
+    }
+
+    private async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(Draft)) return;
+
+        try
+        {
+            Console.WriteLine($"💬 Sending chat message: '{Draft}' to room {RoomId}");
+            await HubService.SendChatMessageAsync(RoomId, Draft);
+            Console.WriteLine($"✅ Chat message sent successfully");
+            Draft = "";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error sending chat message: {ex.Message}");
+            errorMessage = $"Failed to send message: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnFileSelected(ChangeEventArgs e)
+    {
+        // TODO: Implement file upload using AzureBlobStoreController
+        // For now, just show a placeholder message
+        var fileInput = e.Value as string;
+        if (!string.IsNullOrEmpty(fileInput))
+        {
+            Draft = $"📎 File selected: {fileInput}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenFileDialog()
+    {
+        await JS.InvokeVoidAsync("eval", "document.getElementById('chatFileInput').click()");
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            len = len / 1024;
+        }
+        return $"{len:0.##} {sizes[order]}";
+    }
+
+    private void BackdropClick(MouseEventArgs _) => ShowPeople = false;
+
+    private bool IsVideoActive(Guid userId) => ActiveVideoStreams.Contains(userId);
+
+    private void ToggleLocalVideoSize()
+    {
+        IsLocalVideoLarge = !IsLocalVideoLarge;
+        StateHasChanged();
+    }
+
+    private void ToggleParticipantVideoSize(Guid userId)
+    {
+        if (RemoteParticipants.TryGetValue(userId, out var participant))
+        {
+            participant.IsLarge = !participant.IsLarge;
+            StateHasChanged();
+        }
+    }
+
+    private void ToggleScreenShareSize()
+    {
+        IsScreenShareLarge = !IsScreenShareLarge;
+        StateHasChanged();
+    }
+
+    private async Task EnterFullscreen(string videoId)
+    {
+        try
+        {
+            IsFullscreenMode = true;
+            FullscreenVideoId = videoId;
+            await JS.InvokeVoidAsync("webrtcHandler.enterFullscreen", videoId);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error entering fullscreen: {ex.Message}");
+        }
+    }
+
+    private async Task ExitFullscreen()
+    {
+        try
+        {
+            IsFullscreenMode = false;
+            FullscreenVideoId = null;
+            await JS.InvokeVoidAsync("webrtcHandler.exitFullscreen");
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error exiting fullscreen: {ex.Message}");
+        }
+    }
+
+    private async Task TryInitializeWebRTCAfterRender()
+    {
+        try
+        {
+            Console.WriteLine("🔄 Attempting WebRTC initialization after UI render...");
+
+            // Check if video element exists now
+            var elementExists = await JS.InvokeAsync<bool>("eval", "document.getElementById('localVideo') !== null");
+            Console.WriteLine($"🔍 Video element exists after render: {elementExists}");
+
+            if (elementExists)
+            {
+                Console.WriteLine("✅ Video element found! Initializing WebRTC...");
+
+                // Set DotNet reference for JavaScript callbacks
+                dotNetRef = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("webrtcHandler.setDotNetReference", dotNetRef);
+
+                // Always initialize with video tracks to enable video toggle functionality
+                await JS.InvokeVoidAsync("webrtcHandler.initializeMediaStream", "localVideo", true, true);
+
+                // Add local stream to all existing peer connections
+                await WebRTCService.AddLocalStreamToAllConnectionsAsync();
+
+                Console.WriteLine("✅ WebRTC initialized successfully after render");
+            }
+            else
+            {
+                Console.WriteLine("❌ Video element still not found after render");
+                Console.WriteLine("🔍 Available elements:", await JS.InvokeAsync<string>("eval", "Array.from(document.querySelectorAll('[id]')).map(el => el.id).join(', ')"));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error in TryInitializeWebRTCAfterRender: {ex.Message}");
+        }
+    }
+
+    private string GetGridClass()
+    {
+        var totalParticipants = 1 + RemoteParticipants.Count; // +1 for local user
+        if (totalParticipants <= 2) return "grid-2";
+        if (totalParticipants <= 4) return "grid-4";
+        if (totalParticipants <= 6) return "grid-6";
+        return "grid-many";
+    }
+
+    /// <summary>
+    /// Handle remote stream received from WebRTC
+    /// </summary>
+    [JSInvokable]
+    public async Task HandleRemoteStreamReceived(string userId, string trackKind)
+    {
+        try
+        {
+            Console.WriteLine($"📹 Remote {trackKind} stream received from {userId}");
+
+            if (Guid.TryParse(userId, out var userGuid))
+            {
+                // Check if participant exists in UI
+                if (RemoteParticipants.TryGetValue(userGuid, out var participant))
+                {
+                    Console.WriteLine($"✅ Participant found in UI: {participant.UserName}");
+
+                    // Attach the remote stream to the video element
+                    await JS.InvokeVoidAsync("webrtcHandler.attachRemoteStream", userId, $"video_{userId}");
+                    Console.WriteLine($"📹 Attempting to attach stream to video_{userId}");
+
+                    // Update the participant's video status
+                    if (trackKind == "video")
+                    {
+                        participant.IsVideoEnabled = true;
+                        Console.WriteLine($"📹 Video enabled for {participant.UserName}");
+                    }
+                    else if (trackKind == "audio")
+                    {
+                        participant.IsMuted = false;
+                        Console.WriteLine($"🎤 Audio enabled for {participant.UserName}");
+                    }
+
+                    await InvokeAsync(StateHasChanged);
+                    Console.WriteLine($"✅ UI updated for {participant.UserName}");
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Participant not found in UI: {userId}");
+                    Console.WriteLine($"🔍 Available participants: {string.Join(", ", RemoteParticipants.Keys)}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling remote stream: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle ICE candidate from WebRTC
+    /// </summary>
+    [JSInvokable]
+    public async Task HandleIceCandidate(string userId, object candidate)
+    {
+        try
+        {
+            Console.WriteLine($"🧊 ICE candidate received for {userId}");
+
+            // Send ICE candidate to the other participant via SignalR
+            await HubService.SendIceCandidateAsync(RoomId, userId, candidate);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling ICE candidate: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle WebRTC offer from another participant
+    /// </summary>
+    [JSInvokable]
+    public async Task HandleWebRTCOffer(string userId, object offer)
+    {
+        try
+        {
+            Console.WriteLine($"📤 WebRTC offer received from {userId}");
+
+            // Send offer to the other participant via SignalR
+            await HubService.SendWebRTCOfferAsync(RoomId, userId, offer);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling WebRTC offer: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle WebRTC answer from another participant
+    /// </summary>
+    [JSInvokable]
+    public async Task HandleWebRTCAnswer(string userId, object answer)
+    {
+        try
+        {
+            Console.WriteLine($"📥 WebRTC answer received from {userId}");
+
+            // Send answer to the other participant via SignalR
+            await HubService.SendWebRTCAnswerAsync(RoomId, userId, answer);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling WebRTC answer: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Trigger answer created event (for pending offers)
+    /// </summary>
+    [JSInvokable]
+    public async Task TriggerAnswerCreatedAsync(string userId, string answerSdp)
+    {
+        try
+        {
+            Console.WriteLine($"📤 Session.TriggerAnswerCreatedAsync: userId={userId}");
+            await WebRTCService.TriggerAnswerCreatedAsync(Guid.Parse(userId), answerSdp);
+            Console.WriteLine($"✅ Session.TriggerAnswerCreatedAsync: Success");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Session.TriggerAnswerCreatedAsync: Error - {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle WebRTC connection state changes
+    /// </summary>
+    [JSInvokable]
+    public async Task HandleConnectionStateChanged(string userId, string connectionState)
+    {
+        try
+        {
+            Console.WriteLine($"🔗 Connection state changed for {userId}: {connectionState}");
+
+            if (Guid.TryParse(userId, out var userGuid))
+            {
+                // Update participant connection status
+                if (RemoteParticipants.TryGetValue(userGuid, out var participant))
+                {
+                    participant.IsActive = connectionState == "connected";
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling connection state change: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Handle screen share stopped event
+    /// </summary>
+    [JSInvokable]
+    public async Task HandleScreenShareStopped()
+    {
+        try
+        {
+            Console.WriteLine("🖥️ Screen share stopped");
+            IsScreenSharing = false;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error handling screen share stopped: {ex.Message}");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            Console.WriteLine("🧹 Session: Disposing resources...");
+            
+            // End call state
+            CallStateManager.Instance.EndCall();
+            Console.WriteLine("📞 Session: Call state ended");
+            
+            // Clean up WebRTC resources
+            Console.WriteLine("🧹 Session: Cleaning up WebRTC resources...");
+            await WebRTCService.CleanupAsync();
+            Console.WriteLine("✅ Session: WebRTC cleanup complete");
+            
+            // Leave room and dispose services
+            await HubService.LeaveRoomAsync();
+            await HubService.DisposeAsync();
+            await MeteredVideoService.DisposeAsync();
+
+            // Dispose DotNet reference
+            dotNetRef?.Dispose();
+            Console.WriteLine("✅ Session: All resources disposed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Session: Error disposing: {ex.Message}");
+        }
+    }
+}

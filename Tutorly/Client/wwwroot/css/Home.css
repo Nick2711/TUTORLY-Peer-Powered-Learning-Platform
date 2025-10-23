@@ -1,0 +1,22 @@
+﻿/* home.css */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* from inline <style> in the original file */
+.sidebar {
+    transition: all 0.3s ease;
+}
+
+.notification-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+}
+
+.active-tab {
+    border-bottom: 3px solid #3b82f6;
+    color: #3b82f6;
+}

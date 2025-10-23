@@ -1,0 +1,709 @@
+﻿@page "/tutor/tutorsessiondetails"
+@using Tutorly.Shared
+@using Microsoft.JSInterop
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Forms
+@using System.Linq
+
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject HttpClient Http
+
+<PageTitle>Tutor Sessions | Tutorly</PageTitle>
+
+<div id="page-tutor-sessions" class="ts-root">
+    <!-- NAVBAR -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="tsToggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/tutor/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="tsMainNav">
+                <a class="db-nav__link" href="/tutor/dashboard"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg><span>Home</span></a>
+                <a class="db-nav__link" href="/tutor/availability"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg><span>Availability</span></a>
+                <a class="db-nav__link" href="/tutor/queue">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/resources"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 4v16" /></svg><span>Resources</span></a>
+                <a class="db-nav__link" href="/tutor/messages"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg><span>Messages</span></a>
+                <a class="db-nav__link" href="/tutor/analytics"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg><span>Analytics</span></a>
+                <a class="db-nav__link db-nav__link--active" href="/tutor/tutorsessiondetails" aria-current="page"><svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span></a>
+            </nav>
+
+            <!-- ACTIONS -->
+            <div class="db-actions">
+                <div class="search-wrap" id="tsSearchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="tsBtnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="tsSearchInput" type="text" placeholder="Search…">
+                </div>
+
+                <div class="menu-wrap" id="tsNotifWrap">
+                    <button class="db-iconbtn" aria-label="Notifications" id="tsBtnNotif">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+                            <path d="M9 17a3 3 0 0 0 6 0" />
+                        </svg>
+                    </button>
+                    <div class="db-menu" id="tsNotifMenu" role="menu" aria-hidden="true">
+                        <div class="menu-head">Notifications</div>
+                        <a class="notice" href="#"><span class="ic ic--cal"></span><div><div class="n-title">Session starts soon</div><div class="n-sub">Algebra Basics at 5:00 PM.</div></div></a>
+                        <a class="notice" href="#"><span class="ic ic--star"></span><div><div class="n-title">New rating</div><div class="n-sub">You received a 5★ from Alex.</div></div></a>
+                    </div>
+                </div>
+
+                <div class="menu-wrap" id="tsProfileWrap">
+                    <button class="db-avatar" id="tsBtnAvatar"><img src="https://i.pravatar.cc/40?img=4" alt="Me"></button>
+                    <div class="db-menu db-menu--profile" id="tsProfileMenu" role="menu" aria-hidden="true">
+                        <div class="menu-head">My Profile</div>
+
+                        <!-- Menu items styled like your second image -->
+                        <button class="menu-item" @onclick="() => ShowPhoto = true">
+                            <span class="mi-ic mi-ic--photo">
+                                <svg viewBox="0 0 24 24"><path fill="#9CA3AF" d="M3 7a2 2 0 0 1 2-2h2l1-2h6l1 2h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" /><circle cx="12" cy="13" r="4" fill="#22C55E" /></svg>
+                            </span>
+                            <div><div class="mi-title">Change Photo</div><div class="mi-sub">Upload a new profile picture.</div></div>
+                        </button>
+
+                        <button class="menu-item" @onclick="() => ShowSettings = true">
+                            <span class="mi-ic mi-ic--settings">
+                                <svg viewBox="0 0 24 24"><path fill="#94A3B8" d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8z" /><path fill="#CBD5E1" d="M19 13a7 7 0 1 1-14 0 7 7 0 0 1 14 0z" /></svg>
+                            </span>
+                            <div><div class="mi-title">Settings</div><div class="mi-sub">Manage account and preferences.</div></div>
+                        </button>
+
+                        <button class="menu-item" @onclick="() => ShowAchievements = true">
+                            <span class="mi-ic mi-ic--ach">
+                                <svg viewBox="0 0 24 24"><path fill="#F59E0B" d="M6 4h12v6a6 6 0 1 1-12 0V4z" /><rect x="9" y="16" width="6" height="5" rx="1" fill="#FDE68A" /></svg>
+                            </span>
+                            <div><div class="mi-title">Achievements</div><div class="mi-sub">See all earned badges.</div></div>
+                        </button>
+
+                        <button class="menu-item danger" onclick="tsLogout()">
+                            <span class="mi-ic mi-ic--logout">
+                                <svg viewBox="0 0 24 24"><rect x="3" y="4" width="12" height="16" rx="2" fill="#FCA5A5" /><path d="M14 12h7m0 0-3-3m3 3-3 3" stroke="#7F1D1D" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                            </span>
+                            <div><div class="mi-title">Logout</div><div class="mi-sub">Sign out of your account.</div></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- BODY -->
+    <div class="wrap">
+        <section class="panel ts-grid">
+            <div class="ts-left">
+                <div class="ts-head">
+                    <h2 class="ts-title">Tutor Sessions</h2>
+                    <p class="ts-sub">Create or join meetings with your tutees.</p>
+                </div>
+
+                <div class="ts-section">
+                    <div class="ts-section__head">
+                        <h3>Upcoming Meetings</h3>
+                        <button class="btn btn--primary" @onclick="OpenCreate">
+                            <span class="plus">+</span> Create Meeting
+                        </button>
+                    </div>
+
+                    @if (isLoadingUpcoming)
+                    {
+                        <div class="empty">Loading upcoming sessions…</div>
+                    }
+                    else if (UpcomingApi.Any())
+                    {
+                        @foreach (var s in UpcomingApi.Take(3))
+                        {
+                            <div class="meet-card">
+                                <div class="meet-card__main">
+                                    <div>
+                                        <div class="meet-title">@(!string.IsNullOrWhiteSpace(s.Title) ? s.Title : s.ModuleName)</div>
+                                        <div class="meet-sub">@s.DateDisplay • @s.TimeDisplay</div>
+                                        <div class="meet-peeps">
+                                            <span class="chip">@s.ParticipantName</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge">Session</span>
+                                </div>
+                                <div class="meet-card__actions">
+                                    <button class="btn-link" @onclick="() => JoinUpcomingAsync(s)">Join</button>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty">No upcoming meetings scheduled.</div>
+                    }
+                </div>
+
+                <div class="ts-section">
+                    <h3>Past Meetings</h3>
+                    @if (isLoadingPast)
+                    {
+                        <div class="empty">Loading past sessions…</div>
+                    }
+                    else if (PastApi.Any())
+                    {
+                        @foreach (var s in PastApi.Take(3))
+                        {
+                            <div class="meet-card is-past">
+                                <div class="meet-card__main">
+                                    <div>
+                                        <div class="meet-title">@s.ModuleName</div>
+                                        <div class="meet-sub">@FormatDate(s.ScheduledStart) • @FormatRange(s.ScheduledStart, s.ScheduledEnd)</div>
+                                        <div class="meet-peeps">
+                                            <span class="chip">@s.StudentName</span>
+                                        </div>
+                                    </div>
+                                    <span class="badge">Completed</span>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty">No past meetings.</div>
+                    }
+                </div>
+            </div>
+
+            <aside class="ts-right">
+                <div class="aside-block">
+                    <div class="aside-head">
+                        <h3>Your Tutees</h3>
+                    </div>
+                    @if (isLoadingTutees)
+                    {
+                        <div class="empty">Loading tutees…</div>
+                    }
+                    else if (Tutees.Count == 0)
+                    {
+                        <div class="empty">No tutees found.</div>
+                    }
+                    else
+                    {
+                        <ul class="tutee-list" style="max-height:220px;overflow:auto">
+                            @foreach (var t in Tutees)
+                            {
+                                <li class="tutee">
+                                    <span class="avatar">@t.Initials</span>
+                                    <span>@t.Name</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </aside>
+        </section>
+    </div>
+
+    <!-- CREATE MEETING MODAL -->
+    @if (ShowCreate)
+    {
+        <div class="ts-modal" @onclick="BackdropClick">
+            <div class="ts-dialog" @onclick:stopPropagation="true">
+                <div class="dlg-head">
+                    <h3>Create Meeting</h3>
+                    <button class="icon-x" @onclick="CloseCreate" aria-label="Close">×</button>
+                </div>
+
+                <EditForm Model="Create" OnValidSubmit="SaveCreate">
+                    <div class="form">
+                        <div class="form-row">
+                            <label>Title</label>
+                            <InputText class="in" @bind-Value="Create.Title" placeholder="Tutor Session" />
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-row">
+                                <label>Date</label>
+                                <input class="in" type="date" @bind-value="Create.Date" />
+                            </div>
+                            <div class="form-row">
+                                <label>Start Time</label>
+                                <input class="in" type="time" @bind-value="Create.StartTime" />
+                            </div>
+                        </div>
+
+                        <div class="grid-2">
+                            <div class="form-row">
+                                <label>Duration</label>
+                                <InputSelect TValue="int" class="in" @bind-Value="Create.DurationMinutes">
+                                    <option value="30">30 minutes</option>
+                                    <option value="45">45 minutes</option>
+                                    <option value="60">60 minutes</option>
+                                    <option value="90">90 minutes</option>
+                                </InputSelect>
+                            </div>
+                            <div class="form-row">
+                                <label>Platform</label>
+                                <select class="in" @bind="Create.Platform">
+                                    <option value="Tutorly">Tutorly</option>
+                                    <option value="InPerson">In-person</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label>Student</label>
+                            <select class="in" @bind="Create.SelectedStudentId">
+                                <option value="">Select a student…</option>
+                                @foreach (var t in Tutees)
+                                {
+                                    <option value="@t.Id">@t.Name</option>
+                                }
+                            </select>
+                            <div class="help">Only tutees you've worked with will appear.</div>
+                        </div>
+
+                        <div class="actions">
+                            <button type="button" class="btn" @onclick="CloseCreate">Cancel</button>
+                            <button type="submit" class="btn btn--primary">Create</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+    <!-- PROFILE MODALS -->
+    @if (ShowPhoto)
+    {
+        <div class="ts-modal" @onclick="() => ShowPhoto = false">
+            <div class="ts-dialog" @onclick:stopPropagation="true">
+                <div class="dlg-head">
+                    <h3>Change Photo</h3>
+                    <button class="icon-x" @onclick="() => ShowPhoto = false" aria-label="Close">×</button>
+                </div>
+                <div class="form">
+                    <div class="photo-row">
+                        <img class="photo-preview" src="@PhotoPreviewUrl" alt="Preview" />
+                        <input type="file" accept=".png,.jpg,.jpeg" @onchange="OnPhotoPicked">
+                    </div>
+                    <div class="help">PNG/JPG up to ~2MB works best.</div>
+                    <div class="actions">
+                        <button class="btn" @onclick="() => ShowPhoto = false">Cancel</button>
+                        <button class="btn btn--primary" @onclick="SavePhoto">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (ShowSettings)
+    {
+        <div class="ts-modal" @onclick="() => ShowSettings = false">
+            <div class="ts-dialog" @onclick:stopPropagation="true">
+                <div class="dlg-head">
+                    <h3>Profile Settings</h3>
+                    <button class="icon-x" @onclick="() => ShowSettings = false" aria-label="Close">×</button>
+                </div>
+                <div class="form">
+                    <div class="form-row">
+                        <label>First name</label>
+                        <input class="in" @bind="SettingsFirst" placeholder="Jane" />
+                    </div>
+                    <div class="form-row">
+                        <label>Last name</label>
+                        <input class="in" @bind="SettingsLast" placeholder="Doe" />
+                    </div>
+                    <div class="form-row">
+                        <label>Degree</label>
+                        <select class="in" @bind="SettingsDegree">
+                            <option value="">Select…</option>
+                            <option>BSc</option>
+                            <option>BEng</option>
+                            <option>BA</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <div class="help">These preferences are stored locally on this browser.</div>
+                    <div class="actions">
+                        <button class="btn" @onclick="() => ShowSettings = false">Cancel</button>
+                        <button class="btn btn--primary" @onclick="SaveSettings">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (ShowAchievements)
+    {
+        <div class="ts-modal" @onclick="() => ShowAchievements = false">
+            <div class="ts-dialog" @onclick:stopPropagation="true">
+                <div class="dlg-head">
+                    <h3>Your Achievements</h3>
+                    <button class="icon-x" @onclick="() => ShowAchievements = false" aria-label="Close">×</button>
+                </div>
+                <div class="form">
+                    <ul class="ach-list">
+                        <li><strong>Active Learner</strong> — asked 10+ questions this week</li>
+                        <li><strong>Helper</strong> — answered 3 peer questions</li>
+                        <li><strong>On Track</strong> — met your weekly goal</li>
+                    </ul>
+                    <div class="actions">
+                        <button class="btn btn--primary" @onclick="() => ShowAchievements = false">Nice!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    // ---------- Models ----------
+    class Tutee { public string Id { get; set; } = default!; public string Name { get; set; } = default!; public string Initials { get; set; } = default!; }
+
+    class Meeting
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        public string Title { get; set; } = "Tutor Session";
+        public DateTime When { get; set; } = DateTime.Today.AddHours(14);
+        public int DurationMinutes { get; set; } = 60;
+        public string Platform { get; set; } = "Zoom";
+        public List<string> InviteeIds { get; set; } = new();
+        public string RoomUrl { get; set; } = "https://example.com/meet/" + Guid.NewGuid().ToString("N")[..8];
+    }
+
+    List<Tutee> Tutees = new();
+
+    List<Meeting> Meetings = new()
+    {
+        new() { Title="Tutor Session", When = new DateTime(2025,10,7,14,0,0), DurationMinutes=60, Platform="Zoom", InviteeIds=new(){ "u2","u3" } },
+        new() { Title="Past Check-in", When = DateTime.Today.AddDays(-5).AddHours(10), DurationMinutes=45, Platform="Teams", InviteeIds=new(){ "u1" } }
+    };
+
+    IEnumerable<Meeting> Upcoming => Meetings.Where(m => m.When >= DateTime.Now).OrderBy(m => m.When);
+    IEnumerable<Meeting> Past => Meetings.Where(m => m.When < DateTime.Now).OrderByDescending(m => m.When);
+
+    // Create modal state
+    bool ShowCreate = false;
+
+    // Profile modal state
+    bool ShowPhoto = false;
+    bool ShowSettings = false;
+    bool ShowAchievements = false;
+
+    string? PhotoPreviewUrl = "https://i.pravatar.cc/80?img=4";
+    string SettingsFirst { get; set; } = "";
+    string SettingsLast { get; set; } = "";
+    string SettingsDegree { get; set; } = "";
+
+    class CreateModel
+    {
+        public string Title { get; set; } = "Tutor Session";
+        public DateOnly? Date { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+        public TimeOnly? StartTime { get; set; } = TimeOnly.FromDateTime(DateTime.Now);
+        public int DurationMinutes { get; set; } = 60;
+        public string Platform { get; set; } = "Tutorly";
+        public string? SelectedStudentId { get; set; }
+    }
+
+    CreateModel Create = new();
+
+    int currentTutorId;
+    List<UpcomingSessionDto> UpcomingApi = new();
+    List<SessionDto> PastApi = new();
+    bool isLoadingUpcoming = true;
+    bool isLoadingPast = true;
+    bool isLoadingTutees = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var s = await JS.InvokeAsync<string?>("localStorage.getItem", "ts.profile");
+            if (!string.IsNullOrWhiteSpace(s))
+            {
+                var parts = s.Split("|");
+                SettingsFirst = parts.ElementAtOrDefault(0) ?? "";
+                SettingsLast = parts.ElementAtOrDefault(1) ?? "";
+                SettingsDegree = parts.ElementAtOrDefault(2) ?? "";
+            }
+        }
+        catch { }
+
+        await LoadTuteesAsync();
+        await LoadUpcomingAsync();
+        await LoadPastAsync();
+    }
+
+    private async Task LoadTuteesAsync()
+    {
+        try
+        {
+            var profile = await Http.GetFromJsonAsync<UnifiedSessionDto>("/api/profile/me");
+            if (profile?.Profile?.TutorId == null) return;
+            currentTutorId = profile.Profile.TutorId.Value;
+
+            var start = DateTime.Today.AddMonths(-6);
+            var end = DateTime.Today.AddDays(1);
+            var sessions = await Http.GetFromJsonAsync<List<SessionDto>>($"/api/booking/sessions/{currentTutorId}?startDate={start:yyyy-MM-dd}&endDate={end:yyyy-MM-dd}");
+            if (sessions == null) return;
+
+            var byStudent = new Dictionary<int, string>();
+            foreach (var s in sessions)
+            {
+                if (!byStudent.ContainsKey(s.StudentId)) byStudent[s.StudentId] = s.StudentName;
+            }
+
+            Tutees = byStudent
+                .Select(kv => new Tutee { Id = kv.Key.ToString(), Name = kv.Value, Initials = GetInitials(kv.Value) })
+                .OrderBy(t => t.Name)
+                .ToList();
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tutees: {ex.Message}");
+        }
+        finally { isLoadingTutees = false; }
+    }
+
+    private async Task LoadUpcomingAsync()
+    {
+        try
+        {
+            if (currentTutorId == 0)
+            {
+                var profile = await Http.GetFromJsonAsync<UnifiedSessionDto>("/api/profile/me");
+                if (profile?.Profile?.TutorId == null) return;
+                currentTutorId = profile.Profile.TutorId.Value;
+            }
+
+            var api = await Http.GetFromJsonAsync<List<UpcomingSessionDto>>($"/api/booking/upcoming-sessions/{currentTutorId}?limit=3");
+            UpcomingApi = api ?? new List<UpcomingSessionDto>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading upcoming sessions: {ex.Message}");
+            UpcomingApi = new List<UpcomingSessionDto>();
+        }
+        finally { isLoadingUpcoming = false; }
+    }
+
+    private async Task LoadPastAsync()
+    {
+        try
+        {
+            if (currentTutorId == 0)
+            {
+                var profile = await Http.GetFromJsonAsync<UnifiedSessionDto>("/api/profile/me");
+                if (profile?.Profile?.TutorId == null) return;
+                currentTutorId = profile.Profile.TutorId.Value;
+            }
+
+            var start = DateTime.Today.AddDays(-90);
+            var end = DateTime.Today.AddDays(1);
+            var sessions = await Http.GetFromJsonAsync<List<SessionDto>>($"/api/booking/sessions/{currentTutorId}?startDate={start:yyyy-MM-dd}&endDate={end:yyyy-MM-dd}");
+            if (sessions == null)
+            {
+                PastApi = new List<SessionDto>();
+                return;
+            }
+
+            PastApi = sessions
+                .Where(s => s.ScheduledEnd < DateTime.Now && (s.Status == "Completed" || s.Status == "Confirmed"))
+                .OrderByDescending(s => s.ScheduledStart)
+                .Take(10)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading past sessions: {ex.Message}");
+            PastApi = new List<SessionDto>();
+        }
+        finally { isLoadingPast = false; }
+    }
+
+    private static string FormatDate(DateTime dt) => dt.ToString("MMM d, yyyy");
+    private static string FormatRange(DateTime start, DateTime end) => $"{start: h:mm tt} – {end: h:mm tt}";
+
+    private static string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0].Substring(0, Math.Min(2, parts[0].Length)).ToUpperInvariant();
+        return (parts[0][0].ToString() + parts[^1][0].ToString()).ToUpperInvariant();
+    }
+
+    void OpenCreate() { ShowCreate = true; StateHasChanged(); }
+    void CloseCreate() { ShowCreate = false; }
+
+    async Task SaveCreate()
+    {
+        if (string.IsNullOrWhiteSpace(Create.SelectedStudentId)) { return; }
+
+        var d = Create.Date ?? DateOnly.FromDateTime(DateTime.Today);
+        var t = Create.StartTime ?? new TimeOnly(9, 0);
+        var localStart = new DateTime(d.Year, d.Month, d.Day, t.Hour, t.Minute, 0, DateTimeKind.Local);
+
+        var studentId = int.Parse(Create.SelectedStudentId);
+        var moduleId = PastApi.FirstOrDefault(s => s.StudentId == studentId)?.ModuleId ?? 0;
+        if (moduleId == 0)
+        {
+            try
+            {
+                var start = DateTime.Today.AddMonths(-6);
+                var end = DateTime.Today.AddDays(1);
+                var sessions = await Http.GetFromJsonAsync<List<SessionDto>>($"/api/booking/sessions/{currentTutorId}?startDate={start:yyyy-MM-dd}&endDate={end:yyyy-MM-dd}");
+                var match = sessions?.Where(s => s.StudentId == studentId).OrderByDescending(s => s.ScheduledStart).FirstOrDefault();
+                if (match != null) moduleId = match.ModuleId;
+            }
+            catch { }
+        }
+        if (moduleId == 0) { return; }
+
+        var payload = new
+        {
+            TutorId = currentTutorId,
+            StudentId = studentId,
+            ModuleId = moduleId,
+            ScheduledStart = localStart,
+            DurationMinutes = Create.DurationMinutes,
+            Platform = Create.Platform
+        };
+
+        var resp = await Http.PostAsJsonAsync("/api/booking/create-session", payload);
+        if (resp.IsSuccessStatusCode)
+        {
+            await LoadUpcomingAsync();
+            await LoadPastAsync();
+            Create = new CreateModel();
+            ShowCreate = false;
+            StateHasChanged();
+        }
+    }
+
+    async Task Copy(Meeting m) => await JS.InvokeVoidAsync("navigator.clipboard.writeText", m.RoomUrl);
+
+    void Join(Meeting m)
+    {
+        var people = string.Join(", ",
+            m.InviteeIds.Select(id => Tutees.FirstOrDefault(t => t.Id == id)?.Name)
+                        .Where(n => !string.IsNullOrWhiteSpace(n)));
+
+        var url = $"/tutor/tutoractivesession?title={Uri.EscapeDataString(m.Title)}&people={Uri.EscapeDataString(people)}";
+        Nav.NavigateTo(url);
+    }
+
+    async Task JoinUpcomingAsync(UpcomingSessionDto s)
+    {
+        try
+        {
+            if (s.SessionId == Guid.Empty) { return; }
+            var resp = await Http.PostAsync($"/api/booking/sessions/{s.SessionId}/start-room", null);
+            if (resp.IsSuccessStatusCode)
+            {
+                var payload = await resp.Content.ReadFromJsonAsync<JoinStartRoomDto>();
+                if (payload != null && payload.RoomId != Guid.Empty)
+                {
+                    Nav.NavigateTo($"/calendar/session/{payload.RoomId}");
+                    return;
+                }
+            }
+            var title = string.IsNullOrWhiteSpace(s.Title) ? s.ModuleName : s.Title;
+            var people = string.IsNullOrWhiteSpace(s.ParticipantName) ? string.Empty : s.ParticipantName;
+            var url = $"/tutor/tutoractivesession?title={Uri.EscapeDataString(title)}&people={Uri.EscapeDataString(people)}";
+            Nav.NavigateTo(url);
+        }
+        catch
+        {
+            var title = string.IsNullOrWhiteSpace(s.Title) ? s.ModuleName : s.Title;
+            var people = string.IsNullOrWhiteSpace(s.ParticipantName) ? string.Empty : s.ParticipantName;
+            var url = $"/tutor/tutoractivesession?title={Uri.EscapeDataString(title)}&people={Uri.EscapeDataString(people)}";
+            Nav.NavigateTo(url);
+        }
+    }
+
+    class JoinStartRoomDto { public Guid RoomId { get; set; } }
+
+    void Delete(string id)
+    {
+        var m = Meetings.FirstOrDefault(x => x.Id == id);
+        if (m is not null) Meetings.Remove(m);
+    }
+
+    void BackdropClick() => CloseCreate();
+
+    Task OnPhotoPicked(ChangeEventArgs e)
+    {
+        // demo preview
+        PhotoPreviewUrl = "https://i.pravatar.cc/80?img=5";
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    Task SavePhoto() { ShowPhoto = false; return Task.CompletedTask; }
+
+    async Task SaveSettings()
+    {
+        try { await JS.InvokeVoidAsync("localStorage.setItem", "ts.profile", $"{SettingsFirst}|{SettingsLast}|{SettingsDegree}"); } catch { }
+        ShowSettings = false;
+    }
+}
+
+<script>
+    (function ensureTsCss() {
+        if (document.getElementById('ts-css')) return;
+        const l = document.createElement('link'); l.id = 'ts-css'; l.rel = 'stylesheet'; l.href = 'css/TutorSessionDetails.css';
+        l.onerror = () => setTimeout(() => { const b = document.createElement('link'); b.rel = 'stylesheet'; b.href = 'css/TutorSessionDetails.css?v=' + Date.now(); document.head.appendChild(b); }, 60);
+        document.head.appendChild(l);
+    })();
+
+    (function wireTopbar() {
+        try { const saved = localStorage.getItem('theme'); if (saved === 'dark') document.documentElement.classList.add('theme-dark'); } catch (_) { }
+
+        // Search toggle
+        const sw = document.getElementById('tsSearchWrap'), sb = document.getElementById('tsBtnSearch'), si = document.getElementById('tsSearchInput');
+        sb?.addEventListener('click', (e) => { e.preventDefault(); const o = sw.classList.toggle('open'); if (o) si?.focus(); });
+
+        // Active nav link
+        const nav = document.getElementById('tsMainNav');
+        if (nav) {
+            const links = [...nav.querySelectorAll('a')];
+            const curr = links.find(a => a.getAttribute('href') === location.pathname);
+            if (curr) { links.forEach(x => x.classList.remove('db-nav__link--active')); curr.classList.add('db-nav__link--active'); curr.setAttribute('aria-current', 'page'); }
+        }
+
+        // Menus
+        const notifBtn = document.getElementById('tsBtnNotif');
+        const notifMenu = document.getElementById('tsNotifMenu');
+        const avatarBtn = document.getElementById('tsBtnAvatar');
+        const profileMenu = document.getElementById('tsProfileMenu');
+
+        function closeAll(){ notifMenu?.classList.remove('open'); profileMenu?.classList.remove('open'); }
+        notifBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); const o = notifMenu.classList.toggle('open'); if(o) profileMenu?.classList.remove('open'); });
+        avatarBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); const o = profileMenu.classList.toggle('open'); if(o) notifMenu?.classList.remove('open'); });
+        document.addEventListener('click', (e)=>{ if(!(e.target.closest?.('.menu-wrap'))) closeAll(); });
+    })();
+
+    // Logout → clear common auth keys & go to /login
+    function tsLogout() {
+        try {
+            localStorage.removeItem('auth');
+            localStorage.removeItem('token');
+            localStorage.removeItem('sb:token');
+            localStorage.removeItem('supabase.auth.token');
+            sessionStorage.clear();
+        } catch(_) {}
+        window.location.href = '/login';
+    }
+</script>

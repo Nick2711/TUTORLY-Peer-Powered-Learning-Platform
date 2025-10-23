@@ -1,0 +1,33 @@
+﻿.res-type {
+    border: 1px solid #d1d5db; /* gray-300 */
+    border-radius: .5rem; /* rounded-lg */
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    background: #fff;
+    transition: background-color .15s, border-color .15s, box-shadow .15s;
+}
+
+    .res-type:hover {
+        background: #eef2ff;
+        border-color: #c7d2fe;
+    }
+    /* indigo-50/200 */
+    .res-type.selected {
+        background: #eef2ff;
+        border-color: #6366f1; /* indigo-500 */
+        box-shadow: 0 0 0 2px rgba(99,102,241,.25);
+    }
+
+#drop-zone {
+    border: 2px dashed #d1d5db; /* gray-300 */
+    border-radius: .75rem; /* rounded-xl */
+    padding: 1.5rem;
+    text-align: center;
+    transition: border-color .15s, background-color .15s;
+}
+
+    #drop-zone.dragging {
+        border-color: #6366f1; /* indigo-500 */
+        background: #eef2ff; /* indigo-50 */
+    }

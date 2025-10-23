@@ -1,0 +1,244 @@
+﻿/* ===== Page tokens (match login/register) ===== */
+:root {
+    --brand-500: #3ECF8E;
+    --brand-600: #33c684;
+    --brand-700: #2bb673;
+    --page-bg: #f8fafc;
+    --card-bg: #fff;
+    --text-main: #111827;
+    --text-sub: #6b7280;
+    --border-soft: #e5e7eb;
+    --neo-surface: #f9fafb;
+    --neo-surface-hi: #f3f4f6;
+    --neo-text: #111827;
+    /* 3D button */
+    --btn-bg: #e3e6ea;
+    --btn-text: #111827;
+    --btn-text-shadow: #fff;
+    --btn-inset: #fff;
+    --btn-1: #d2d6db;
+    --btn-2: #c8cdd3;
+    --btn-3: #c0c6cd;
+    --btn-4: #b7bdc5;
+    --btn-5: #afb5be;
+    --btn-6: #a7adb7;
+    --btn-7: #9fa6af;
+    --btn-drop: rgba(0,0,0,.26);
+    --btn-fixed-width: 11.5rem;
+    --btn-fixed-height: 44px;
+}
+
+html[data-theme="dark"] {
+    --page-bg: #0b0d11;
+    --card-bg: #0f1115;
+    --text-main: #e5e7eb;
+    --text-sub: #9aa4b2;
+    --border-soft: #1f232b;
+    --neo-surface: #141821;
+    --neo-surface-hi: #0f141d;
+    --neo-text: #e5e7eb;
+    --btn-bg: #1f2329;
+    --btn-text: #e6e7e9;
+    --btn-text-shadow: #000;
+    --btn-inset: #31353b;
+    --btn-1: #191c21;
+    --btn-2: #15181c;
+    --btn-3: #12151a;
+    --btn-4: #0f1216;
+    --btn-5: #0c0f13;
+    --btn-6: #0a0c10;
+    --btn-7: #07090c;
+    --btn-drop: rgba(0,0,0,.70);
+}
+
+/* Keep the rest identical to register but SCOPED */
+.forgot-page .gradient-bg {
+    background: linear-gradient(135deg,var(--brand-700) 0%,var(--brand-500) 100%) !important;
+}
+
+.forgot-page .bg-white {
+    background-color: var(--card-bg) !important;
+}
+
+.forgot-page .text-gray-900 {
+    color: var(--text-main) !important;
+}
+
+.forgot-page .text-gray-600 {
+    color: var(--text-sub) !important;
+}
+
+.forgot-page .border-gray-300 {
+    border-color: var(--border-soft) !important;
+}
+
+/* Inputs */
+.forgot-page .neo-field {
+    position: relative;
+}
+
+.forgot-page .neo-input {
+    width: 100%;
+    height: 44px;
+    border: 0;
+    border-radius: 10px;
+    outline: none;
+    background: var(--neo-surface);
+    color: var(--neo-text);
+    padding: 0 12px;
+    box-shadow: 6px 6px 14px rgba(0,0,0,.08), -6px -6px 14px rgba(255,255,255,.9) !important;
+    transition: box-shadow .25s, background .25s, color .25s;
+}
+
+    .forgot-page .neo-input:hover {
+        background: #f7f7fb;
+    }
+
+    .forgot-page .neo-input:focus {
+        background: var(--neo-surface-hi);
+        box-shadow: 6px 6px 14px rgba(0,0,0,.08), -6px -6px 14px rgba(255,255,255,.9), inset 6px 6px 12px rgba(0,0,0,.12), inset -6px -6px 12px rgba(255,255,255,.65) !important;
+    }
+
+html[data-theme="dark"] .forgot-page .neo-input {
+    background: var(--neo-surface);
+    box-shadow: 10px 10px 24px rgba(0,0,0,.55), -6px -6px 16px rgba(255,255,255,.03) !important;
+}
+
+    html[data-theme="dark"] .forgot-page .neo-input:hover {
+        background: color-mix(in srgb,var(--neo-surface) 92%, #000 8%);
+    }
+
+    html[data-theme="dark"] .forgot-page .neo-input:focus {
+        background: var(--neo-surface-hi);
+        box-shadow: 8px 8px 18px rgba(0,0,0,.55), inset 8px 8px 16px rgba(0,0,0,.35), inset -8px -8px 16px rgba(255,255,255,.04) !important;
+    }
+/* floating label */
+.forgot-page .neo-label {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    font-size: .95rem;
+    color: var(--text-sub);
+    pointer-events: none;
+    transition: top .2s, font-size .2s, color .2s;
+}
+
+.forgot-page .neo-input:focus + .neo-label,
+.forgot-page .neo-input:not(:placeholder-shown) + .neo-label {
+    top: -16px;
+    font-size: .72rem;
+    color: var(--brand-600);
+}
+
+/* Center action rows */
+.forgot-page .form-actions {
+    display: flex;
+    justify-content: center;
+}
+
+/* 3D button (same as login/register) */
+.forgot-page .btn-3d, .forgot-page a.btn-3d {
+    background-color: var(--btn-bg) !important;
+    color: var(--btn-text) !important;
+    border: 0 !important;
+    border-radius: .5em !important;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 .0625em 0 var(--btn-text-shadow);
+    padding: .35em .9em;
+    line-height: 1;
+    box-sizing: border-box;
+    box-shadow: inset 0 .0625em 0 0 var(--btn-inset), 0 .0625em 0 0 var(--btn-1), 0 .125em 0 0 var(--btn-2), 0 .25em 0 0 var(--btn-3), 0 .3125em 0 0 var(--btn-4), 0 .375em 0 0 var(--btn-5), 0 .425em 0 0 var(--btn-6), 0 .425em .5em 0 var(--btn-drop);
+    transition: transform .15s, box-shadow .15s;
+}
+
+.forgot-page .btn-3d--tiny {
+    font-size: .95rem;
+}
+
+.forgot-page .btn-3d--fixed {
+    min-width: var(--btn-fixed-width);
+    height: var(--btn-fixed-height);
+}
+
+.forgot-page .btn-3d:active, .forgot-page a.btn-3d:active {
+    transform: translateY(.225em);
+    box-shadow: inset 0 .03em 0 0 var(--btn-inset), 0 .03em 0 0 var(--btn-1), 0 .0625em 0 0 var(--btn-2), 0 .125em 0 0 var(--btn-3), 0 .125em 0 0 var(--btn-4), 0 .2em 0 0 var(--btn-5), 0 .225em 0 0 var(--btn-6), 0 .225em .375em 0 var(--btn-drop);
+}
+
+/* Compact theme button (identical to register) */
+.forgot-page .theme-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: 1px solid var(--border-soft);
+    background: var(--card-bg);
+    box-shadow: 0 6px 16px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.9);
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform .08s, box-shadow .2s, background .2s, border-color .2s;
+}
+
+    .forgot-page .theme-btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .forgot-page .theme-btn:active {
+        transform: translateY(0);
+    }
+
+    .forgot-page .theme-btn::before {
+        content: "";
+        width: 20px;
+        height: 20px;
+        display: block;
+        -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>') center/contain no-repeat;
+        mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>') center/contain no-repeat;
+        background: #6b7280;
+    }
+
+    .forgot-page .theme-btn.is-dark {
+        background: #1b1f24;
+        border-color: #2a2f37;
+        box-shadow: 0 10px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+    }
+
+        .forgot-page .theme-btn.is-dark::before {
+            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>') center/contain no-repeat;
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>') center/contain no-repeat;
+            background: #cfd6df;
+        }
+/* --- Fix floating label on empty inputs --- */
+.neo-field .neo-label {
+    /* start hidden, sitting on the input line */
+    opacity: 0;
+    top: 12px; /* your current base position */
+    transition: top .2s ease, font-size .2s ease, color .2s ease, opacity .15s ease;
+    pointer-events: none;
+}
+
+/* show + float the label only when focused OR when user typed something */
+.neo-field .neo-input:focus + .neo-label,
+.neo-field .neo-input:not(:placeholder-shown) + .neo-label {
+    opacity: 1;
+    top: -16px;
+    font-size: .72rem;
+    color: var(--brand-600);
+}
+
+/* treat browser autofill as “has value” */
+.neo-field .neo-input:-webkit-autofill + .neo-label {
+    opacity: 1;
+    top: -16px;
+    font-size: .72rem;
+    color: var(--brand-600);
+}
+
+/* ensure the placeholder text is visible (overrides any earlier rule) */
+.neo-field .neo-input::placeholder {
+    opacity: 1;
+    color: #9ca3af; /* feel free to tweak */
+}

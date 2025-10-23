@@ -1,0 +1,52 @@
+﻿@page "/maintenance"
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<PageTitle>We’ll be back soon</PageTitle>
+
+<div class="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+    <div class="max-w-3xl w-full text-center">
+        <div class="mx-auto h-16 w-16 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shadow" data-aos="zoom-in">
+            <i data-feather="tool" class="h-8 w-8"></i>
+        </div>
+        <h1 class="mt-6 text-3xl font-bold text-gray-900">Scheduled maintenance</h1>
+        <p class="mt-2 text-gray-600">
+            We’re improving things behind the scenes. You’ll be able to use Tutorly again shortly.
+        </p>
+
+        <!-- Countdown -->
+        <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 justify-center" data-aos="fade-up">
+            @foreach (var p in parts)
+            {
+                <div class="timebox">
+                    <div class="value" id="@p.Id">--</div>
+                    <div class="label">@p.Label</div>
+                </div>
+            }
+        </div>
+
+        <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+            <button class="btn primary" @onclick="GoStatus"><i data-feather="activity" class="h-4 w-4"></i> Status Page</button>
+            <button class="btn ghost" @onclick="Notify"><i data-feather="bell" class="h-4 w-4"></i> Notify me</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    // ends in ~30 minutes from first render (demo)
+    private DateTime End => DateTime.UtcNow.AddMinutes(30);
+    private (string Id, string Label)[] parts = new[] {
+    ("dd","Days"), ("hh","Hours"), ("mm","Minutes"), ("ss","Seconds")
+  };
+
+    private void GoStatus() => Nav.NavigateTo("/status");
+    private async Task Notify() => await JS.InvokeVoidAsync("alert", "We’ll notify you when we’re back!");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JS.InvokeVoidAsync("ui.initFeather");
+        await JS.InvokeVoidAsync("ui.initAOS");
+        await JS.InvokeVoidAsync("ui.loadScript", "/js/status-pages.js");
+        await JS.InvokeVoidAsync("statusPages.initMaintenance", End.ToString("o")); // ISO
+    }
+}

@@ -1,0 +1,353 @@
+﻿@page "/tutor/tutoractivesession"
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<PageTitle>Tutor Session | Tutorly</PageTitle>
+
+<div id="page-tutor-active" class="tas-root">
+    <!-- ================== NAVBAR ================== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="tasToggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/tutor/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <!-- The same nav as other tutor pages -->
+            <nav class="db-nav" id="tasMainNav">
+                <a class="db-nav__link db-nav__link--active" href="/tutor/dashboard" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+                    <span>Home</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/availability">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg>
+                    <span>Availability</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/queue">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/resources">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 4v16" /></svg>
+                    <span>Resources</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/analytics">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg>
+                    <span>Analytics</span>
+                </a>
+                <a class="db-nav__link" href="/tutorforum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- main bubble -->
+                        <path d="M21 12a4 4 0 0 1-4 4H9l-4 3V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4z" />
+                        <!-- secondary bubble -->
+                        <path d="M7 14H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2" />
+                    </svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/tutorsessiondetails">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span>
+                </a>
+                <!-- This page -->
+                <a class="db-nav__link db-nav__link--active" href="/tutor/tutoractivesession">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="5" width="14" height="14" rx="2" />
+                        <path d="M21 7v10l-4-3v-4l4-3z" />
+                    </svg>
+                    <span>Active Session</span>
+                </a>
+            </nav>
+
+            <div class="db-actions">
+                <button class="db-avatar"><img src="https://i.pravatar.cc/40?img=4" alt="Me"></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================== PAGE CONTENT ================== -->
+    <div class="tas-head">
+        <h1 class="tas-title">@Title</h1>
+    </div>
+
+    <div class="tas-stage">
+        <div class="feed">
+            <img src="https://images.unsplash.com/photo-1527980965255-d3b416303d12?q=80&w=1200&auto=format&fit=crop" alt="Participant 1" />
+            <span class="tag">@Participants[0].Name</span>
+        </div>
+
+        <div class="feed">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1200&auto=format&fit=crop" alt="Participant 2" />
+            <span class="tag">@Participants[Math.Min(1, Participants.Count - 1)].Name</span>
+        </div>
+
+        <div class="feed feed--wide">
+            <img src="https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?q=80&w=1200&auto=format&fit=crop" alt="Participant 3" />
+            <span class="tag">@Participants[Math.Min(2, Participants.Count - 1)].Name</span>
+        </div>
+    </div>
+
+    <div class="tas-controls">
+        <!-- Mute -->
+        <button class="btn-ctrl @(Muted ? "is-active" : "")"
+                title="@(Muted ? "Unmute" : "Mute")"
+                @onclick="ToggleMute">
+            @if (!Muted)
+            {
+                <!-- mic on -->
+                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v1a7 7 0 0 1-14 0v-1" />
+                    <path d="M12 19v4" />
+                    <path d="M8 23h8" />
+                </svg>
+            }
+            else
+            {
+                <!-- mic off -->
+                <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3 3 3 0 0 0 3-3V7" />
+                    <path d="M19 10v1a7 7 0 0 1-10.59 5.91" />
+                    <path d="M12 19v4" />
+                    <path d="M8 23h8" />
+                    <path d="M2 2l20 20" />
+                </svg>
+            }
+        </button>
+
+        <!-- Leave -->
+        <button class="btn-ctrl btn-ctrl--leave" title="Leave" @onclick="Leave">
+            <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h4" />
+                <path d="M16 17l5-5-5-5" />
+                <path d="M21 12H9" />
+            </svg>
+        </button>
+
+        <!-- Chat -->
+        <button class="btn-ctrl" title="Chat" @onclick="ToggleChat">
+            <svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z"></path></svg>
+        </button>
+
+        <!-- People -->
+        <button class="btn-ctrl" title="Participants" @onclick="OpenPeople">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </button>
+    </div>
+
+    <!-- Chat drawer (starts CLOSED) -->
+    <aside id="tasChat" class="tas-chat @(ShowChat ? "open" : "")" aria-hidden="@(!ShowChat)">
+        <div class="chat-head">
+            <strong>Group Chat</strong>
+            <button class="icon-x" @onclick="ToggleChat" aria-label="Close">×</button>
+        </div>
+
+        <div class="chat-body" id="tasChatBody">
+            @foreach (var m in Messages)
+            {
+                <div class="msg @(m.Me ? "me" : "")">
+                    <div class="bubble">@m.Text</div>
+                    <div class="time">@m.At.ToString("h:mm tt")</div>
+                </div>
+            }
+        </div>
+
+        <div class="chat-input">
+            <input placeholder="Type a message…" @bind="ChatInput" @bind:event="oninput" @onkeydown="OnChatKeyDown" />
+            <button class="btn-send" @onclick="Send">Send</button>
+        </div>
+    </aside>
+
+    <!-- Participants modal -->
+    @if (ShowPeople)
+    {
+        <div class="tas-backdrop" @onclick="ClosePeople"></div>
+        <div class="tas-people">
+            <div class="people-head">
+                <div><strong>Participants</strong><span class="count">(@Participants.Count)</span></div>
+                <button class="icon-x" @onclick="ClosePeople" aria-label="Close">×</button>
+            </div>
+
+            <ul class="people-list">
+                @foreach (var p in Participants)
+                {
+                    <li class="person">
+                        <img class="avatar" src="@p.Avatar" alt="@p.Name" />
+                        <div class="person-main">
+                            <div class="name">@p.Name <span class="role">(@p.Role)</span></div>
+                            <div class="email">@p.Email</div>
+                        </div>
+                        <span class="status">Joined</span>
+                    </li>
+                }
+            </ul>
+
+            <div class="invite-row">
+                <input class="invite" placeholder="Invite by email…" />
+                <button class="btn-primary">Send Invite</button>
+            </div>
+
+            <div class="dlg-actions">
+                <button class="btn" @onclick="ClosePeople">Close</button>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Ensure CSS + set active nav exactly like other pages -->
+<script>
+    (function () {
+      // Force-load CSS even on hot nav
+      function ensureCss() {
+        if (document.getElementById('tas-css')) return;
+        const l = document.createElement('link');
+        l.id = 'tas-css';
+        l.rel = 'stylesheet';
+        l.href = 'TutorActiveSession.css';
+        l.onerror = () => setTimeout(() => {
+          const b = document.createElement('link');
+          b.rel = 'stylesheet';
+          b.href = 'TutorActiveSession.css?v=' + Date.now();
+          document.head.appendChild(b);
+        }, 60);
+        document.head.appendChild(l);
+      }
+
+      // Set correct active tab (green underline)
+      function setActiveNav() {
+        const nav = document.getElementById('tasMainNav');
+        if (!nav) return;
+        const links = Array.from(nav.querySelectorAll('a.db-nav__link'));
+        const path = location.pathname.replace(/\/+$/, '');
+        const hit = links.find(a => a.getAttribute('href').replace(/\/+$/, '') === path);
+        links.forEach(a => a.classList.remove('db-nav__link--active'));
+        if (hit) {
+          hit.classList.add('db-nav__link--active');
+          hit.setAttribute('aria-current', 'page');
+        }
+      }
+
+      // Theme helper used by the button
+      window.tasToggleTheme = function () {
+        const el = document.documentElement;
+        const isDark = el.classList.toggle('theme-dark');
+        try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (_) {}
+      };
+
+      // Chat autoscroll helper for interop
+      window.tasScrollChat = function () {
+        const el = document.getElementById('tasChatBody');
+        if (el) el.scrollTop = el.scrollHeight;
+      };
+
+      // Run on load (and a tick later just in case)
+      ensureCss();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setActiveNav, { once: true });
+      } else {
+        setActiveNav();
+      }
+      setTimeout(setActiveNav, 0);
+    })();
+</script>
+
+@code {
+    // ---------- Models ----------
+    record Person(string Name, string Email, string Role, string Avatar);
+    class ChatMsg { public string Text { get; set; } = ""; public DateTime At { get; set; } = DateTime.Now; public bool Me { get; set; } }
+
+    // ---------- State ----------
+    string Title = "Tutor Session";
+    List<Person> Participants = new();
+    bool ShowChat = false;        // CLOSED on load
+    bool ShowPeople = false;
+    bool Muted = false;
+    List<ChatMsg> Messages = new();
+    string ChatInput = "";
+
+    protected override void OnInitialized()
+    {
+        // read ?title= & ?people=
+        var uri = new Uri(Nav.Uri);
+        var qs = ParseQuery(uri.Query);
+
+        if (qs.TryGetValue("title", out var t) && !string.IsNullOrWhiteSpace(t))
+            Title = Uri.UnescapeDataString(t);
+
+        var names = new List<string>();
+        if (qs.TryGetValue("people", out var p) && !string.IsNullOrWhiteSpace(p))
+            names = Uri.UnescapeDataString(p).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+        if (names.Count == 0) names = new() { "Sarah M.", "John D.", "Alex T." };
+
+        for (int i = 0; i < names.Count; i++)
+        {
+            var name = names[i];
+            var role = (i == names.Count - 1) ? "Tutor" : "Student";
+            var email = name.ToLower().Replace(' ', '.') + "@tutorly.edu";
+            var avatar = i switch
+            {
+                0 => "https://i.pravatar.cc/64?img=12",
+                1 => "https://i.pravatar.cc/64?img=32",
+                2 => "https://i.pravatar.cc/64?img=47",
+                _ => "https://i.pravatar.cc/64"
+            };
+            Participants.Add(new Person(name, email, role, avatar));
+        }
+
+        // Seed chat
+        Messages.Add(new ChatMsg { Text = "Hey team, let’s start in a minute 💡", Me = false, At = DateTime.Now.AddMinutes(-2) });
+        Messages.Add(new ChatMsg { Text = "Sounds good!", Me = true, At = DateTime.Now.AddMinutes(-1) });
+    }
+
+    void ToggleChat() => ShowChat = !ShowChat;
+    void OpenPeople() => ShowPeople = true;
+    void ClosePeople() => ShowPeople = false;
+    void ToggleMute() => Muted = !Muted;
+
+    async Task Send()
+    {
+        if (string.IsNullOrWhiteSpace(ChatInput)) return;
+        Messages.Add(new ChatMsg { Text = ChatInput.Trim(), Me = true, At = DateTime.Now });
+        ChatInput = "";
+        await JS.InvokeVoidAsync("tasScrollChat");
+    }
+
+    async Task OnChatKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await Send();
+    }
+
+    static Dictionary<string, string> ParseQuery(string qs)
+    {
+        var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrEmpty(qs)) return dict;
+        if (qs.StartsWith("?")) qs = qs[1..];
+        foreach (var pair in qs.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = pair.Split('=', 2);
+            var k = Uri.UnescapeDataString(kv[0]);
+            var v = kv.Length > 1 ? Uri.UnescapeDataString(kv[1]) : "";
+            dict[k] = v;
+        }
+        return dict;
+    }
+
+    void Leave()
+    {
+        // Navigate back to sessions
+        Nav.NavigateTo("/tutor/tutorsessiondetails");
+    }
+}

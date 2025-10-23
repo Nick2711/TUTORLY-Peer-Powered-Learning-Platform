@@ -1,0 +1,352 @@
+﻿@page "/admin/analytics"
+@inject IJSRuntime JS
+<PageTitle>Analytics • Admin</PageTitle>
+
+<HeadContent>
+    <link rel="stylesheet" href="css/AdminAnalytics.css" />
+</HeadContent>
+
+<div id="admin-analytics-page" class="analytics-shell">
+    <!-- Topbar -->
+    <header class="ad-topbar">
+        <div class="brand">Tutorly<span>Admin</span></div>
+
+        <button class="nav-toggle" id="navToggle-analytics" aria-controls="topnav-analytics" aria-expanded="false">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav class="ad-topnav" id="topnav-analytics" aria-label="Primary">
+            <NavLink class="nav-item" href="/admin/dashboard">Dashboard</NavLink>
+            <NavLink class="nav-item" href="/admin/user-management">User Management</NavLink>
+            <NavLink class="nav-item" href="/admin/forum-moderation">Forum Moderation</NavLink>
+            <NavLink class="nav-item" href="/admin/module-management">Module Management</NavLink>
+            <NavLink class="nav-item" href="/admin/tutors">Tutors</NavLink>
+            <NavLink class="nav-item" href="/admin/analytics" Match="NavLinkMatch.All">Analytics</NavLink>
+            <NavLink class="nav-item" href="/admin/database">Database</NavLink>
+            <NavLink class="nav-item" href="/admin/faqs">FAQs</NavLink>
+        </nav>
+
+        <div class="top-actions">
+            <div class="aa-anchor">
+                <button id="aaNotifyBtn" class="icon-btn" aria-haspopup="menu" aria-controls="aaNotifyMenu" aria-expanded="false" title="Notifications">
+                    <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" /></svg>
+                </button>
+                <div id="aaNotifyMenu" class="aa-pop aa-notify" role="menu" tabindex="-1" hidden>
+                    <div class="aa-pop-title">Notifications</div>
+                    <ul>
+                        <li class="note"><span class="ico">📈</span><div><div class="t">Weekly report ready</div><div class="s">View the latest KPIs</div></div></li>
+                        <li class="note"><span class="ico">💬</span><div><div class="t">New forum reports</div><div class="s">3 items need review</div></div></li>
+                        <li class="note"><span class="ico">📦</span><div><div class="t">Uploads processed</div><div class="s">22 new files scanned</div></div></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="aa-anchor">
+                <button id="aaProfileBtn" class="user-mini" aria-haspopup="menu" aria-controls="aaProfileMenu" aria-expanded="false">
+                    <img id="aaAvatar" src="https://i.pravatar.cc/40?img=8" alt="Admin avatar" />
+                    <div><div class="name">Admin User</div><div class="muted">Super Admin</div></div>
+                    <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" /></svg>
+                </button>
+                <div id="aaProfileMenu" class="aa-pop aa-profile" role="menu" tabindex="-1" hidden>
+                    <div class="aa-pop-title">My Profile</div>
+                    <button id="aaChangePhotoOpen" class="row">
+                        <span class="ico badge">🖼️</span>
+                        <div><div class="t">Change Photo</div><div class="s">Upload a new profile picture.</div></div>
+                    </button>
+                    <a class="row" href="/settings">
+                        <span class="ico badge">⚙️</span>
+                        <div><div class="t">Settings</div><div class="s">Manage account and preferences.</div></div>
+                    </a>
+                    <button id="aaLogoutBtn" class="row danger">
+                        <span class="ico badge">🚪</span>
+                        <div><div class="t">Logout</div><div class="s">Sign out of your account.</div></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page -->
+    <main class="ad-main">
+        <div id="page-analytics" class="analytics-v3" data-range="7d">
+            <div class="an-toolbar">
+                <h1>Analytics</h1>
+                <div class="controls">
+                    <label class="filter">
+                        <span>Filter By</span>
+                        <select id="anFilterSel">
+                            <option value="all" selected>All</option>
+                            <option value="students">Students</option>
+                            <option value="tutors">Tutors</option>
+                        </select>
+                    </label>
+                    <label class="filter">
+                        <span>Range</span>
+                        <select id="anRangeSel">
+                            <option value="7d" selected>Last 7 days</option>
+                            <option value="30d">Last 30 days</option>
+                            <option value="90d">Last 90 days</option>
+                        </select>
+                    </label>
+                    <button id="exportBtn" class="btn ghost">
+                        <svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zm7-18-5 5h3v6h4V7h3l-5-5z" /></svg>
+                        Export to PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI tiles -->
+            <section class="tile-row">
+                <article class="tile" data-key="activeUsers">
+                    <div class="t-title">Active Users</div>
+                    <div class="t-value" data-value>0</div>
+                    <div class="t-delta good" data-delta>+0%</div>
+                    <a class="cta" href="/admin/user-management">
+                        View users
+                        <svg viewBox="0 0 24 24"><path d="M13 5l7 7-7 7-1.4-1.4L16.2 13H4v-2h12.2L11.6 6.4 13 5z" /></svg>
+                    </a>
+                </article>
+
+                <article class="tile" data-key="signups">
+                    <div class="t-title">New Signups</div>
+                    <div class="t-value" data-value>0</div>
+                    <div class="t-delta good" data-delta>+0%</div>
+                </article>
+
+                <article class="tile" data-key="sessions">
+                    <div class="t-title">Sessions</div>
+                    <div class="t-value" data-value>0</div>
+                    <div class="t-delta bad" data-delta>0%</div>
+                </article>
+
+                <article class="tile" data-key="reports">
+                    <div class="t-title">Reports</div>
+                    <div class="t-value" data-value>0</div>
+                    <div class="t-delta bad" data-delta>0%</div>
+                    <a class="cta" href="/admin/forum-moderation">
+                        View reports
+                        <svg viewBox="0 0 24 24"><path d="M13 5l7 7-7 7-1.4-1.4L16.2 13H4v-2h12.2L11.6 6.4 13 5z" /></svg>
+                    </a>
+                </article>
+
+                <article class="tile" data-key="modules">
+                    <div class="t-title">Modules</div>
+                    <div class="t-value" data-value>0</div>
+                    <div class="t-delta" data-delta>0%</div>
+                    <a class="cta" href="/admin/module-management">
+                        View modules
+                        <svg viewBox="0 0 24 24"><path d="M13 5l7 7-7 7-1.4-1.4L16.2 13H4v-2h12.2L11.6 6.4 13 5z" /></svg>
+                    </a>
+                </article>
+            </section>
+
+            <!-- Usage Overview -->
+            <section class="card hero">
+                <header class="card-head"><div class="title">Usage Overview</div></header>
+                <div class="hero-grid">
+                    <div class="chart-wrap">
+                        <svg id="anBarLine" viewBox="0 0 1024 340" preserveAspectRatio="none"></svg>
+                        <div class="legend"><span class="dot users"></span> Users <span class="dot sessions"></span> Sessions</div>
+                    </div>
+                    <aside class="side-metrics">
+                        <div class="m-block">
+                            <div class="m-title">In-app Calls Quality</div>
+                            <div class="m-value" id="callsQoSVal">—</div>
+                            <div class="meter"><div id="callsBar" class="bar good" style="width:0%"></div></div>
+                            <div class="hint">Successful calls</div>
+                        </div>
+                        <div class="m-block">
+                            <div class="m-title">Avg Response Time</div>
+                            <div class="m-value" id="respVal">—</div>
+                            <div class="meter"><div id="respBar" class="bar" style="width:0%"></div></div>
+                            <div class="hint">24h rolling average</div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+
+            <!-- Lower cards -->
+            <section class="card-grid">
+                <article class="card">
+                    <header class="card-head"><div class="title">File Uploads</div></header>
+                    <div class="small-body two-col">
+                        <div class="donut-wrap"><svg id="donut" viewBox="0 0 200 200"></svg></div>
+                        <ul class="legend-list" id="uploadLegend"></ul>
+                    </div>
+                    <footer class="card-foot"><a class="link" href="/admin/uploads">View all uploads</a></footer>
+                </article>
+
+                <article class="card">
+                    <header class="card-head"><div class="title">Response Time by Hour</div></header>
+                    <div class="small-body">
+                        <svg id="hourLine" viewBox="0 0 680 240" preserveAspectRatio="none"></svg>
+                        <div class="legend"><span class="dot users"></span> Weekdays <span class="dot sessions"></span> Weekends</div>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <!-- Change Photo Modal -->
+    <div id="aaPhotoModal" class="aa-modal" aria-hidden="true" role="dialog" aria-labelledby="aaPhotoTitle">
+        <div class="scrim" data-aa-close></div>
+        <div class="dialog" role="document">
+            <header class="m-head">
+                <h3 id="aaPhotoTitle">Change Photo</h3>
+                <button class="x" data-aa-close aria-label="Close">✕</button>
+            </header>
+            <div class="m-body">
+                <div class="preview-wrap"><img id="aaPreview" src="https://i.pravatar.cc/64?img=8" alt="Preview"></div>
+                <div class="file-wrap">
+                    <input id="aaFile" type="file" accept="image/png,image/jpeg" />
+                    <div class="help">PNG/JPG up to ~2MB works best.</div>
+                    <div id="aaFileError" class="err" hidden></div>
+                </div>
+            </div>
+            <footer class="m-foot">
+                <button class="btn ghost" data-aa-close>Cancel</button>
+                <button id="aaSavePhoto" class="btn primary">Save</button>
+            </footer>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+      const root = document.getElementById('admin-analytics-page'); if (!root) return;
+      const qs = (s, ctx=root) => ctx.querySelector(s);
+      const outside = (el, e) => el && !el.contains(e.target);
+
+      /* Nav + menus */
+      const navBtn = qs('#navToggle-analytics'), nav = qs('#topnav-analytics');
+      navBtn?.addEventListener('click', ()=>{ const open=nav.classList.toggle('is-open'); navBtn.setAttribute('aria-expanded', open?'true':'false'); });
+
+      const pBtn=qs('#aaProfileBtn'), pMenu=document.getElementById('aaProfileMenu');
+      const nBtn=qs('#aaNotifyBtn'), nMenu=document.getElementById('aaNotifyMenu');
+
+      function toggleMenu(menu, btn){
+        const opening = menu.hasAttribute('hidden');
+        opening ? menu.removeAttribute('hidden') : menu.setAttribute('hidden','');
+        btn?.setAttribute('aria-expanded', opening?'true':'false');
+        if (opening) menu.focus();
+      }
+      pBtn?.addEventListener('click', e=>{ e.stopPropagation(); toggleMenu(pMenu, pBtn); });
+      nBtn?.addEventListener('click', e=>{ e.stopPropagation(); toggleMenu(nMenu, nBtn); });
+      document.addEventListener('click', e=>{ if (pMenu && outside(pMenu,e) && outside(pBtn,e)) pMenu.setAttribute('hidden',''); if (nMenu && outside(nMenu,e) && outside(nBtn,e)) nMenu.setAttribute('hidden',''); });
+      document.addEventListener('keydown', e=>{ if (e.key==='Escape'){ pMenu?.setAttribute('hidden',''); nMenu?.setAttribute('hidden',''); closePhoto(); }});
+      qs('#aaLogoutBtn')?.addEventListener('click', ()=>{ try{localStorage.clear();sessionStorage.clear();}catch{} window.location.href='/'; });
+
+      /* Modal */
+      const photoModal=document.getElementById('aaPhotoModal');
+      const openPhotoBtn=document.getElementById('aaChangePhotoOpen');
+      const fileInp=document.getElementById('aaFile');
+      const fileErr=document.getElementById('aaFileError');
+      const preview=document.getElementById('aaPreview');
+      const avatar=document.getElementById('aaAvatar');
+      const saveBtn=document.getElementById('aaSavePhoto');
+
+      function openPhoto(){ photoModal.classList.add('open'); photoModal.setAttribute('aria-hidden','false'); }
+      function closePhoto(){ photoModal.classList.remove('open'); photoModal.setAttribute('aria-hidden','true'); if(fileErr){fileErr.hidden=true;fileErr.textContent='';} if(fileInp) fileInp.value=''; }
+      openPhotoBtn?.addEventListener('click', openPhoto);
+      photoModal?.addEventListener('click', (e)=>{ if (e.target.matches('[data-aa-close], .aa-modal .scrim')) closePhoto(); });
+
+      fileInp?.addEventListener('change', ()=>{ fileErr.hidden=true; fileErr.textContent=''; const f=fileInp.files?.[0]; if(!f) return;
+        const okType=['image/png','image/jpeg'].includes(f.type), okSize=f.size<=2*1024*1024;
+        if(!okType || !okSize){ fileErr.hidden=false; fileErr.textContent=!okType?'Please select a PNG or JPG image.':'Image must be 2MB or smaller.'; fileInp.value=''; return; }
+        const r=new FileReader(); r.onload=ev=>{ preview.src = ev.target.result; }; r.readAsDataURL(f);
+      });
+      saveBtn?.addEventListener('click', ()=>{ if(preview?.src){ if(avatar) avatar.src=preview.src; try{localStorage.setItem('aa-avatar', preview.src);}catch{} } closePhoto(); });
+      try{ const saved=localStorage.getItem('aa-avatar'); if(saved && avatar){ avatar.src=saved; if(preview) preview.src=saved; } }catch{}
+
+      /* Data + charts (mock data) */
+      const make=(n,b,v=.25)=>{const a=[];let x=b;for(let i=0;i<n;i++){x=Math.max(0,x+(Math.random()-.5)*b*v);a.push(Math.round(x));}return a;};
+      const sum=a=>a.reduce((p,c)=>p+c,0); const avg=a=>a.reduce((p,c)=>p+c,0)/(a.length||1);
+      const dataset={
+        '7d':{labels:[...Array(12)].map((_,i)=>String(i+1)),users:make(12,1200,.18),sessions:make(12,2000,.2),signups:make(7,150,.3),reports:make(7,18,.6),modules:make(7,42,.08),resp:make(7,1.6,.2),calls:make(7,98.6,.02),uploadsByType:{pdf:38,image:27,ppt:14,other:21},hourWeekday:make(12,2,.2).map((v,i)=>1.3+Math.sin(i/1.5)*.25+Math.random()*.05),hourWeekend:make(12,2,.2).map((v,i)=>1.6+Math.cos(i/1.5)*.18+Math.random()*.05)},
+        '30d':{labels:[...Array(12)].map((_,i)=>String(i+1)),users:make(12,1000,.15),sessions:make(12,1800,.18),signups:make(7,120,.25),reports:make(7,24,.4),modules:make(7,41,.06),resp:make(7,1.7,.15),calls:make(7,98.2,.02),uploadsByType:{pdf:44,image:22,ppt:11,other:23},hourWeekday:make(12,2,.2).map((v,i)=>1.35+Math.sin(i/1.6)*.22+Math.random()*.05),hourWeekend:make(12,2,.2).map((v,i)=>1.7+Math.cos(i/1.6)*.16+Math.random()*.05)},
+        '90d':{labels:[...Array(12)].map((_,i)=>String(i+1)),users:make(12,900,.12),sessions:make(12,1600,.15),signups:make(7,110,.2),reports:make(7,27,.35),modules:make(7,40,.05),resp:make(7,1.8,.12),calls:make(7,98,.02),uploadsByType:{pdf:41,image:26,ppt:12,other:21},hourWeekday:make(12,2,.2).map((v,i)=>1.4+Math.sin(i/1.7)*.2+Math.random()*.05),hourWeekend:make(12,2,.2).map((v,i)=>1.75+Math.cos(i/1.7)*.14+Math.random()*.05)}
+      };
+
+      const rangeSel=document.getElementById('anRangeSel');
+      const filterSel=document.getElementById('anFilterSel');
+      const barSvg=document.getElementById('anBarLine');
+      const donutSvg=document.getElementById('donut');
+      const hourSvg=document.getElementById('hourLine');
+
+      function pathLine(values,w,h,pad){ const min=Math.min(...values), max=Math.max(...values);
+        const dx=(w-2*pad)/(values.length-1||1);
+        const norm=v=>h-pad-((v-min)/(max-min||1))*(h-2*pad);
+        return values.map((v,i)=>(i?'L':'M')+(pad+i*dx)+' '+norm(v)).join(' ');
+      }
+      function drawBarLine(svg, labels, bars, line){
+        const w=svg.viewBox.baseVal.width||1024, h=svg.viewBox.baseVal.height||340;
+        svg.innerHTML=''; const pad=30, innerW=w-2*pad, innerH=h-2*pad, n=bars.length;
+        const bMax=Math.max(...bars), bw=innerW/n*.5, step=innerW/n, normB=v=>h-pad-(v/(bMax||1))*innerH;
+
+        const base=document.createElementNS('http://www.w3.org/2000/svg','path');
+        base.setAttribute('d',`M${pad} ${h-pad} H${w-pad}`); base.setAttribute('stroke','#e8edf3'); base.setAttribute('fill','none'); svg.appendChild(base);
+
+        bars.forEach((v,i)=>{ const x=pad+i*step+(step-bw)/2, y=normB(v), bh=h-pad-y;
+          const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+          r.setAttribute('x',x); r.setAttribute('y',y); r.setAttribute('width',bw); r.setAttribute('height',bh); r.setAttribute('rx','6');
+          r.setAttribute('fill','#6ee7b7'); svg.appendChild(r);
+        });
+
+        const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+        p.setAttribute('d', pathLine(line, w, h, pad)); p.setAttribute('fill','none'); p.setAttribute('stroke','#4f46e5'); p.setAttribute('stroke-width','2.4'); p.setAttribute('vector-effect','non-scaling-stroke'); svg.appendChild(p);
+      }
+      function drawLine(svg, values, color){
+        const w=svg.viewBox.baseVal.width||680, h=svg.viewBox.baseVal.height||240;
+        svg.innerHTML=''; const d=pathLine(values, w, h, 16);
+        const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+        p.setAttribute('d',d); p.setAttribute('fill','none'); p.setAttribute('stroke',color); p.setAttribute('stroke-width','2.2'); p.setAttribute('vector-effect','non-scaling-stroke'); svg.appendChild(p);
+      }
+      function drawDonut(svg, parts){
+        const total=Object.values(parts).reduce((a,b)=>a+b,0)||1;
+        const colors=['#10b981','#60a5fa','#f59e0b','#a78bfa']; const cx=100, cy=100, r=70, r2=50;
+        let a0=-Math.PI/2, i=0; svg.innerHTML='';
+        for(const [k,v] of Object.entries(parts)){
+          const a1=a0+(v/total)*Math.PI*2, x0=cx+r*Math.cos(a0), y0=cy+r*Math.sin(a0), x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+          const large=(a1-a0)>Math.PI?1:0; const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+          path.setAttribute('d',`M${cx} ${cy} L${x0} ${y0} A${r} ${r} 0 ${large} 1 ${x1} ${y1} Z`);
+          path.setAttribute('fill',colors[i++%colors.length]); path.setAttribute('opacity','.94'); svg.appendChild(path); a0=a1;
+        }
+        const hole=document.createElementNS('http://www.w3.org/2000/svg','circle'); hole.setAttribute('cx',cx); hole.setAttribute('cy',cy); hole.setAttribute('r',r2); hole.setAttribute('fill','#fff'); svg.appendChild(hole);
+      }
+
+      function paintTiles(r){
+        const d=dataset[r];
+        [['activeUsers','users'],['signups','signups'],['sessions','sessions'],['reports','reports'],['modules','modules']].forEach(([key,ds])=>{
+          const tile=document.querySelector(`.tile[data-key="${key}"]`); if(!tile) return;
+          tile.querySelector('[data-value]').textContent=(ds==='reports'||ds==='modules'? d[ds].at(-1) : sum(d[ds])).toLocaleString();
+          const arr=d[ds]; const delta=(arr.length<2)?0:((arr.at(-1)-arr.at(-2))/(arr.at(-2)||1))*100;
+          const el=tile.querySelector('[data-delta]'); const up=delta>=0; el.textContent=`${up?'+':''}${delta.toFixed(1)}%`; el.classList.toggle('good',up); el.classList.toggle('bad',!up);
+        });
+      }
+      function paintMain(r){
+        const d=dataset[r];
+        drawBarLine(barSvg, d.labels, d.users, d.sessions);
+        const calls=avg(d.calls), resp=avg(d.resp);
+        document.getElementById('callsQoSVal').textContent=calls.toFixed(1)+'%';
+        document.getElementById('respVal').textContent=resp.toFixed(2)+'s';
+        document.getElementById('callsBar').style.width=Math.min(100, Math.max(0,calls))+'%';
+        document.getElementById('respBar').style.width=Math.min(100,(2.6/resp)*40+40)+'%';
+      }
+      function paintSmall(r){
+        const d=dataset[r]; drawDonut(donutSvg, d.uploadsByType);
+        const UL=document.getElementById('uploadLegend'); UL.innerHTML='';
+        const pretty={pdf:'PDFs', image:'Images', ppt:'PPT', other:'Other'};
+        const colors={pdf:'#10b981', image:'#60a5fa', ppt:'#f59e0b', other:'#a78bfa'};
+        Object.entries(d.uploadsByType).forEach(([k,v])=>{ const li=document.createElement('li'); li.innerHTML=`<span class="dot" style="background:${colors[k]}"></span>${pretty[k]}<span class="right">${v}</span>`; UL.appendChild(li); });
+        drawLine(hourSvg, d.hourWeekday, '#10b981');
+        const p2=document.createElementNS('http://www.w3.org/2000/svg','path');
+        p2.setAttribute('d', (function(){ const w=hourSvg.viewBox.baseVal.width||680, h=hourSvg.viewBox.baseVal.height||240; return (function(v){ const min=Math.min(...v), max=Math.max(...v); const dx=(w-32)/(v.length-1||1); const norm=val=>h-16-((val-min)/(max-min||1))*(h-32); return v.map((val,i)=> (i?'L':'M') + (16+i*dx) + ' ' + norm(val)).join(' '); })(d.hourWeekend);}()));
+        p2.setAttribute('fill','none'); p2.setAttribute('stroke','#4f46e5'); p2.setAttribute('stroke-width','2.2'); p2.setAttribute('vector-effect','non-scaling-stroke'); hourSvg.appendChild(p2);
+      }
+
+      function apply(){ const r=rangeSel.value; paintTiles(r); paintMain(r); paintSmall(r); }
+      rangeSel.addEventListener('change', apply); filterSel.addEventListener('change', apply);
+      document.getElementById('exportBtn')?.addEventListener('click', ()=> window.print());
+      apply();
+    })();
+</script>

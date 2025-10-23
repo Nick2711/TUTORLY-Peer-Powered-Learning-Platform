@@ -1,0 +1,883 @@
+﻿/* ===== Scoped tokens (same family as Dashboard/Modules) ===== */
+#page-messages.pg-messages {
+    --db-bg: #f3f5f7;
+    --db-surface: #fff;
+    --db-text: #1f2937;
+    --db-muted: #6b7280;
+    --db-text-muted: #6b7280;
+    --db-border: #e5e7eb;
+    --db-accent: #7ac043;
+    --db-link: #2563eb;
+    --db-hover: rgba(0,0,0,.03);
+    --db-shadow: 0 1px 2px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+    background: var(--db-bg) !important;
+    color: var(--db-text);
+    font: 15px/1.45 system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+.theme-dark #page-messages.pg-messages {
+    --db-bg: #0f1317;
+    --db-surface: #2f353c;
+    --db-text: #e9eaed;
+    --db-muted: #c5cad3;
+    --db-text-muted: #c5cad3;
+    --db-border: #444b54;
+    --db-accent: #7ac043;
+    --db-link: #9ec3ff;
+    --db-hover: #2a3038;
+    --db-shadow: 0 2px 10px rgba(0,0,0,.45);
+}
+
+#page-messages, #page-messages * {
+    box-sizing: border-box
+}
+
+    /* ===== Topbar (identical look) ===== */
+    #page-messages .db-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--db-surface) !important;
+        border-bottom: 1px solid var(--db-border) !important;
+        box-shadow: var(--db-shadow) !important;
+        overflow: visible
+    }
+
+    #page-messages .db-topbar__inner {
+        width: 100%;
+        padding: 16px 22px;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 16px
+    }
+
+    #page-messages .db-topbar__left {
+        display: flex;
+        align-items: center;
+        gap: 12px
+    }
+
+    #page-messages .db-toggle, #page-messages .db-iconbtn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid var(--db-border);
+        background: transparent;
+        color: var(--db-muted);
+        display: grid;
+        place-items: center;
+        cursor: pointer
+    }
+
+        #page-messages .db-toggle svg, #page-messages .db-iconbtn svg {
+            width: 18px;
+            height: 18px
+        }
+
+.theme-dark #page-messages .icon-sun {
+    display: none
+}
+
+#page-messages .icon-moon {
+    display: none
+}
+
+.theme-dark #page-messages .icon-moon {
+    display: block
+}
+
+#page-messages .db-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: inherit
+}
+
+#page-messages .db-brand__logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #e6f3f4;
+    display: grid;
+    place-items: center
+}
+
+.theme-dark #page-messages .db-brand__logo {
+    background: #20343a
+}
+
+#page-messages .db-logo {
+    width: 18px;
+    height: 18px;
+    fill: #12a6b2
+}
+
+#page-messages .db-brand__text {
+    font-weight: 900;
+    font-size: 18px
+}
+
+#page-messages .db-nav {
+    display: flex;
+    gap: 22px;
+    justify-content: center
+}
+
+#page-messages .db-nav__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 2px 10px;
+    text-decoration: none;
+    color: var(--db-muted);
+    font-weight: 800;
+    font-size: 15px
+}
+
+#page-messages .db-nav__icon {
+    width: 17px;
+    height: 17px;
+    opacity: .85
+}
+
+#page-messages .db-nav__link--active {
+    color: var(--db-text)
+}
+
+    #page-messages .db-nav__link--active::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -2px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--db-accent)
+    }
+
+#page-messages .db-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-self: end
+}
+
+#page-messages .db-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #e5f2f2;
+    background: transparent
+}
+
+    #page-messages .db-avatar img {
+        width: 100%;
+        height: 100%;
+        display: block
+    }
+
+/* search expand */
+#page-messages .search-wrap {
+    position: relative
+}
+
+    #page-messages .search-wrap input {
+        position: absolute;
+        right: 46px;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 38px;
+        width: 0;
+        border: 1px solid var(--db-border);
+        outline: none;
+        background: var(--db-surface);
+        color: var(--db-text);
+        border-radius: 10px;
+        padding: 0 10px;
+        opacity: 0;
+        transition: width .25s,opacity .2s;
+        box-shadow: var(--db-shadow);
+        pointer-events: none
+    }
+
+    #page-messages .search-wrap.open input {
+        width: 220px;
+        opacity: 1;
+        pointer-events: auto
+    }
+
+/* pop menus */
+#page-messages .pop {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    width: 320px;
+    background: var(--db-surface) !important;
+    border: 1px solid var(--db-border) !important;
+    border-radius: 12px;
+    box-shadow: var(--db-shadow);
+    display: none;
+    z-index: 2000
+}
+
+    #page-messages .pop.show {
+        display: block
+    }
+
+#page-messages .pop__head {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--db-border);
+    font-weight: 800
+}
+
+#page-messages .pop__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 380px;
+    overflow: auto
+}
+
+#page-messages .pop__item {
+    padding: 10px 12px;
+    border-top: 1px solid var(--db-border)
+}
+
+    #page-messages .pop__item:first-child {
+        border-top: none
+    }
+
+#page-messages .pop__row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start
+}
+
+#page-messages .pop__icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: #e6f3f4;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto
+}
+
+#page-messages .pop__title {
+    font-weight: 800
+}
+
+#page-messages .pop__text {
+    font-size: 12px;
+    color: var(--db-muted)
+}
+
+/* ===== Messages layout ===== */
+#page-messages .ms-wrap {
+    max-width: 1100px;
+    width: 100%;
+    margin: 18px auto 28px;
+    padding: 0 22px
+}
+
+#page-messages .ms-grid {
+    display: grid;
+    grid-template-columns: 320px minmax(0,1fr);
+    gap: 16px;
+    width: 100%
+}
+
+#page-messages .ms-panel {
+    background: var(--db-surface) !important;
+    border: 1px solid var(--db-border) !important;
+    border-radius: 14px;
+    box-shadow: var(--db-shadow)
+}
+
+#page-messages .ms-chat {
+    min-width: 0
+}
+
+/* Sidebar */
+#page-messages .ms-side {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 120px);
+    overflow: hidden;
+    position: relative
+}
+
+#page-messages .ms-side__search {
+    padding: 12px;
+    border-bottom: 1px solid var(--db-border)
+}
+
+#page-messages .ms-row {
+    display: flex;
+    gap: 8px
+}
+
+#page-messages .ms-search-in {
+    flex: 1;
+    height: 38px;
+    border: 1px solid var(--db-border);
+    border-radius: 10px;
+    padding: 0 10px;
+    background: var(--db-surface);
+    color: var(--db-text)
+}
+
+#page-messages .ms-addbtn {
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid var(--db-border);
+    background: var(--db-link);
+    color: #fff;
+    font-weight: 900;
+    box-shadow: var(--db-shadow);
+    cursor: pointer
+}
+
+/* Thread list */
+#page-messages .ms-threads {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow: auto
+}
+
+#page-messages .ms-thread {
+    border-top: 1px solid var(--db-border)
+}
+
+    #page-messages .ms-thread:first-child {
+        border-top: none
+    }
+
+#page-messages .ms-thread__btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 12px;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+    font: inherit
+}
+
+#page-messages .ms-thread:hover {
+    background: var(--db-hover)
+}
+
+#page-messages .ms-thread--active {
+    background: var(--db-hover)
+}
+
+#page-messages .ms-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex: 0 0 auto
+}
+
+    #page-messages .ms-avatar img {
+        width: 100%;
+        height: 100%;
+        display: block
+    }
+
+#page-messages .ms-tname {
+    font-weight: 800;
+    font-size: 14px
+}
+
+#page-messages .ms-tprev {
+    color: var(--db-muted);
+    font-size: 12px
+}
+
+#page-messages .ms-tmeta {
+    margin-left: auto;
+    text-align: right;
+    color: var(--db-muted);
+    font-size: 11px
+}
+
+/* New chat pop */
+#page-messages .ms-newchat-pop {
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    top: 70px;
+    background: var(--db-surface);
+    border: 1px solid var(--db-border);
+    border-radius: 12px;
+    box-shadow: var(--db-shadow);
+    padding: 12px;
+    display: none;
+    z-index: 5
+}
+
+    #page-messages .ms-newchat-pop.show {
+        display: block
+    }
+
+#page-messages .ms-newchat-title {
+    font-weight: 900;
+    margin: 0 0 8px
+}
+
+#page-messages .ms-nc-input {
+    width: 100%;
+    height: 38px;
+    border: 1px solid var(--db-border);
+    border-radius: 10px;
+    padding: 0 10px;
+    background: var(--db-surface);
+    color: var(--db-text)
+}
+
+#page-messages .ms-nc-results {
+    margin-top: 12px;
+    max-height: 240px;
+    overflow-y: auto
+}
+
+#page-messages .ms-nc-results-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--db-text-muted);
+    margin-bottom: 6px
+}
+
+#page-messages .ms-nc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0
+}
+
+    #page-messages .ms-nc-list li {
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: background-color .2s
+    }
+
+        #page-messages .ms-nc-list li:hover {
+            background: var(--db-hover)
+        }
+
+    #page-messages .ms-nc-list .nc-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--db-link);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px
+    }
+
+    #page-messages .ms-nc-list .nc-info {
+        flex: 1
+    }
+
+    #page-messages .ms-nc-list .nc-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--db-text)
+    }
+
+    #page-messages .ms-nc-list .nc-role {
+        font-size: 12px;
+        color: var(--db-text-muted)
+    }
+
+#page-messages .ms-nc-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 10px
+}
+
+#page-messages .ms-btn-ghost {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--db-border);
+    background: transparent;
+    font-weight: 800;
+    color: var(--db-text)
+}
+
+#page-messages .ms-btn-primary {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--db-border);
+    background: var(--db-link);
+    color: #fff;
+    font-weight: 800
+}
+
+/* Chat panel */
+#page-messages .ms-chat {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 120px);
+    overflow: hidden
+}
+
+#page-messages .ms-chat__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--db-border)
+}
+
+#page-messages .ms-chat__title {
+    font-weight: 900
+}
+
+#page-messages .ms-chat__sub {
+    color: var(--db-muted);
+    font-size: 12px;
+    margin-top: 2px
+}
+
+#page-messages .ms-chat__actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px
+}
+
+#page-messages .iconbtn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid var(--db-border);
+    background: transparent;
+    color: var(--db-muted);
+    display: grid;
+    place-items: center
+}
+
+#page-messages .ms-chat__body {
+    flex: 1;
+    overflow: auto;
+    padding: 14px 14px 8px;
+    background: linear-gradient(to bottom, rgba(0,0,0,.02), rgba(0,0,0,0))
+}
+
+#page-messages .chip-day {
+    display: inline-block;
+    margin: 8px auto 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.06);
+    color: var(--db-muted);
+    font-size: 12px
+}
+
+#page-messages .msgrow {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+    align-items: flex-end
+}
+
+    #page-messages .msgrow.me {
+        justify-content: flex-end
+    }
+
+#page-messages .bubble {
+    max-width: 66%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--db-border);
+    background: #eef6f7
+}
+
+.theme-dark #page-messages .bubble {
+    background: #2a3038
+}
+
+#page-messages .bubble .time {
+    display: block;
+    margin-top: 4px;
+    color: var(--db-muted);
+    font-size: 11px;
+    text-align: right
+}
+
+#page-messages .me .bubble {
+    background: var(--db-link);
+    color: #fff;
+    border-color: transparent
+}
+
+    #page-messages .me .bubble .time {
+        color: rgba(255,255,255,.9)
+    }
+
+#page-messages .ms-chat .ms-avatar {
+    width: 36px;
+    height: 36px
+}
+
+#page-messages .filecard {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px dashed var(--db-border);
+    padding: 8px;
+    border-radius: 10px;
+    background: rgba(0,0,0,.03)
+}
+
+    #page-messages .filecard .fname {
+        font-weight: 700;
+        font-size: 13px
+    }
+
+    #page-messages .filecard .fsize {
+        color: var(--db-muted);
+        font-size: 12px
+    }
+
+#page-messages .imgbubble {
+    max-width: 320px;
+    border-radius: 12px;
+    display: block
+}
+
+#page-messages .imgwrap {
+    padding: 6px;
+    border: 1px solid var(--db-border);
+    border-radius: 12px;
+    background: rgba(0,0,0,.02)
+}
+
+/* Composer */
+#page-messages .ms-chat__input {
+    border-top: 1px solid var(--db-border);
+    padding: 10px 12px;
+    background: var(--db-surface);
+    position: relative
+}
+
+#page-messages .ms-iptwrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px
+}
+
+#page-messages .ms-ipt {
+    flex: 1;
+    border: 1px solid var(--db-border);
+    height: 42px;
+    border-radius: 10px;
+    padding: 0 12px;
+    background: var(--db-surface);
+    color: var(--db-text)
+}
+
+#page-messages .ms-sendbtn {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--db-border);
+    background: var(--db-link);
+    color: #fff;
+    font-weight: 800;
+    box-shadow: var(--db-shadow)
+}
+
+    #page-messages .ms-sendbtn:disabled {
+        opacity: .6
+    }
+
+/* Attach menu */
+#page-messages .attach {
+    position: relative
+}
+
+#page-messages .attach-pop {
+    position: absolute;
+    bottom: 46px;
+    left: 0;
+    width: 240px;
+    background: var(--db-surface);
+    border: 1px solid var(--db-border);
+    border-radius: 12px;
+    box-shadow: var(--db-shadow);
+    padding: 8px;
+    display: none;
+    z-index: 10
+}
+
+    #page-messages .attach-pop.show {
+        display: block
+    }
+
+#page-messages .att-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--db-border);
+    background: transparent;
+    font-weight: 800;
+    cursor: pointer;
+    margin-bottom: 6px
+}
+
+    #page-messages .att-item:last-child {
+        margin-bottom: 0
+    }
+
+    #page-messages .att-item svg {
+        width: 16px;
+        height: 16px
+    }
+
+    #page-messages .att-item:hover {
+        background: var(--db-hover)
+    }
+
+/* ===== MODALS (scoped to Messages page) ===== */
+#page-messages .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000
+}
+
+    #page-messages .modal.show {
+        display: flex
+    }
+
+#page-messages .modal__card {
+    width: min(520px,92vw);
+    background: var(--db-surface);
+    color: var(--db-text);
+    border: 1px solid var(--db-border);
+    border-radius: 14px;
+    box-shadow: var(--db-shadow);
+    overflow: hidden
+}
+
+#page-messages .modal__head {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--db-border);
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
+#page-messages .modal__body {
+    padding: 14px 16px
+}
+
+#page-messages .modal__foot {
+    padding: 12px 16px;
+    border-top: 1px solid var(--db-border);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    background: rgba(0,0,0,.02)
+}
+
+#page-messages .btn {
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-weight: 800;
+    border: 1px solid var(--db-border);
+    background: #fff;
+    cursor: pointer
+}
+
+.theme-dark #page-messages .btn {
+    background: var(--db-surface)
+}
+
+#page-messages .btn--primary {
+    background: var(--db-accent);
+    border-color: var(--db-accent);
+    color: #073b0a
+}
+
+#page-messages .btn--ghost {
+    background: transparent
+}
+
+#page-messages .field {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px
+}
+
+    #page-messages .field label {
+        font-weight: 800;
+        font-size: 13px
+    }
+
+    #page-messages .field input, #page-messages .field select {
+        height: 38px;
+        border: 1px solid var(--db-border);
+        border-radius: 10px;
+        padding: 0 10px;
+        background: var(--db-surface);
+        color: var(--db-text)
+    }
+
+#page-messages .photo-row {
+    display: flex;
+    align-items: center;
+    gap: 14px
+}
+
+    #page-messages .photo-row img {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 2px solid #e5f2f2;
+        object-fit: cover
+    }
+
+#page-messages .muted {
+    color: var(--db-muted)
+}
+
+/* Responsive */
+@media (max-width:1024px) {
+    #page-messages .ms-grid {
+        grid-template-columns: 1fr
+    }
+
+    #page-messages .ms-side, #page-messages .ms-chat {
+        min-height: auto
+    }
+}

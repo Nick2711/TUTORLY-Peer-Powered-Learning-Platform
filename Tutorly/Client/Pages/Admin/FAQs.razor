@@ -1,0 +1,418 @@
+﻿@page "/admin/faqs"
+@inject IJSRuntime JS
+
+<PageTitle>Admin • FAQs</PageTitle>
+
+<HeadContent>
+    <link rel="stylesheet" href="css/FAQs.css" />
+</HeadContent>
+
+<div id="faq-app" class="faq-v1">
+    <!-- Topbar -->
+    <header class="ad-topbar">
+        <div class="brand">Tutorly<span>Admin</span></div>
+
+        <button class="nav-toggle" id="faqNavToggle" aria-controls="faqTopnav" aria-expanded="false" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav id="faqTopnav" class="ad-topnav" aria-label="Primary">
+            <NavLink class="nav-item" href="/admin/dashboard">Dashboard</NavLink>
+            <NavLink class="nav-item" href="/admin/user-management">User Management</NavLink>
+            <NavLink class="nav-item" href="/admin/forum-moderation">Forum Moderation</NavLink>
+            <NavLink class="nav-item" href="/admin/module-management">Module Management</NavLink>
+            <NavLink class="nav-item" href="/admin/tutors">Tutors</NavLink>
+            <NavLink class="nav-item" href="/admin/analytics">Analytics</NavLink>
+            <NavLink class="nav-item" href="/admin/database">Database</NavLink>
+            <NavLink class="nav-item" href="/admin/faqs" Match="NavLinkMatch.All">FAQs</NavLink>
+        </nav>
+
+        <div class="top-actions">
+            <button id="faqNotifyBtn" class="icon-btn" title="Notifications" aria-haspopup="menu" aria-controls="faqNotifyMenu" aria-expanded="false">
+                <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2Z" /></svg>
+            </button>
+
+            <button id="faqProfileBtn" class="user-mini" aria-haspopup="menu" aria-controls="faqProfileMenu" aria-expanded="false">
+                <img id="faqAvatar" src="https://i.pravatar.cc/40?img=8" alt="Admin avatar" />
+                <div>
+                    <div class="name">Admin User</div>
+                    <div class="muted">Super Admin</div>
+                </div>
+                <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" /></svg>
+            </button>
+        </div>
+
+        <!-- Notifications -->
+        <div id="faqNotifyMenu" class="aa-pop menu aa-notify" role="menu" tabindex="-1" hidden>
+            <div class="menu-head">
+                <div class="bell">🔔</div>
+                <div>
+                    <div class="t">Notifications</div>
+                    <div class="s">Latest updates</div>
+                </div>
+            </div>
+            <ul class="notes">
+                <li class="note">
+                    <div class="ico">📄</div>
+                    <div>
+                        <div class="t">New FAQ submitted</div>
+                        <div class="s">2 minutes ago</div>
+                    </div>
+                </li>
+                <li class="note">
+                    <div class="ico">🛠️</div>
+                    <div>
+                        <div class="t">System maintenance complete</div>
+                        <div class="s">1 hour ago</div>
+                    </div>
+                </li>
+                <li class="note">
+                    <div class="ico">👤</div>
+                    <div>
+                        <div class="t">New admin added</div>
+                        <div class="s">Yesterday</div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div id="faqProfileMenu" class="aa-pop menu aa-profile" role="menu" tabindex="-1" hidden>
+            <div class="menu-head">
+                <img src="https://i.pravatar.cc/40?img=8" alt="">
+                <div>
+                    <div class="t">Account</div>
+                    <div class="s">Admin controls</div>
+                </div>
+            </div>
+
+            <div class="menu-list">
+                <!-- Change photo (🖼️) -->
+                <button class="row" data-open="#faqPhotoModal">
+                    <div class="ico" aria-hidden="true">🖼️</div>
+                    <div>
+                        <div class="t">Change photo</div>
+                        <div class="s">Update your avatar</div>
+                    </div>
+                </button>
+
+                <!-- Settings (⚙️) -->
+                <a class="row" href="/admin/settings">
+                    <div class="ico" aria-hidden="true">⚙️</div>
+                    <div>
+                        <div class="t">Settings</div>
+                        <div class="s">Preferences &amp; security</div>
+                    </div>
+                </a>
+
+                <!-- Log out (🚪) -->
+                <button id="faqLogoutBtn" class="row danger">
+                    <div class="ico" aria-hidden="true">🚪</div>
+                    <div>
+                        <div class="t">Log out</div>
+                        <div class="s">Sign out of Admin</div>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+
+    </header>
+
+    <!-- Main -->
+    <main class="ad-main">
+        <header class="faq-header">
+            <h1>FAQs</h1>
+            <div class="header-actions">
+                <div class="search">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 015.94 12.18l3.69 3.69-1.41 1.41-3.69-3.69A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" /></svg>
+                    <input id="faqSearch" type="search" placeholder="Search FAQs..." />
+                </div>
+                <button id="faqAddBtn" class="btn primary">
+                    <svg viewBox="0 0 24 24"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" /></svg>
+                    Add FAQ
+                </button>
+            </div>
+        </header>
+
+        <!-- FAQ list -->
+        <section class="faq-list" id="faqList"><!-- rendered by JS --></section>
+        <div id="faqEmpty" class="empty" hidden>No FAQs found.</div>
+    </main>
+
+    <!-- Add/Edit FAQ Modal -->
+    <div id="faqCrudModal" class="aa-modal" aria-hidden="true" aria-labelledby="faqCrudTitle" role="dialog">
+        <div class="scrim" data-close></div>
+        <div class="dialog" role="document">
+            <header class="m-head">
+                <h3 id="faqCrudTitle">Add FAQ</h3>
+                <button class="x" data-close aria-label="Close">✕</button>
+            </header>
+            <div class="m-body">
+                <input type="hidden" id="faqId" />
+                <div class="field full">
+                    <label>Question <span class="req">*</span></label>
+                    <input id="faqQuestion" type="text" placeholder="Enter the question..." />
+                    <div class="hint">Keep it short and clear.</div>
+                </div>
+                <div class="field full">
+                    <label>Answer <span class="req">*</span></label>
+                    <textarea id="faqAnswer" placeholder="Write the answer..."></textarea>
+                </div>
+            </div>
+            <footer class="m-foot">
+                <button class="btn ghost" data-close>Cancel</button>
+                <button id="faqSaveBtn" class="btn primary">Save</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Change Photo Modal -->
+    <div id="faqPhotoModal" class="aa-modal photo" aria-hidden="true" aria-labelledby="faqPhotoTitle" role="dialog">
+        <div class="scrim" data-close></div>
+        <div class="dialog" role="document">
+            <header class="m-head">
+                <h3 id="faqPhotoTitle">Change Photo</h3>
+                <button class="x" data-close aria-label="Close">✕</button>
+            </header>
+            <div class="m-body photo-grid">
+                <div class="photo-preview"><img id="faqPreview" src="https://i.pravatar.cc/240?img=8" alt="Preview"></div>
+                <div class="file-wrap">
+                    <input id="faqFile" type="file" accept="image/png,image/jpeg" />
+                    <div class="help">PNG/JPG up to ~2MB works best.</div>
+                    <div id="faqFileError" class="err" hidden></div>
+                </div>
+            </div>
+            <footer class="m-foot">
+                <button class="btn ghost" data-close>Cancel</button>
+                <button id="faqSavePhoto" class="btn primary">Save</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="faqToast" class="toast" hidden></div>
+</div>
+
+<script>
+    (function(){
+      const root = document.getElementById('faq-app');
+      if(!root) return;
+      const $  = (s,c=root)=>c.querySelector(s);
+      const $$ = (s,c=root)=>Array.from(c.querySelectorAll(s));
+      const outside=(el,e)=>el && !el.contains(e.target);
+
+      // ---------- Nav toggle ----------
+      const navBtn=$('#faqNavToggle'), nav=$('#faqTopnav');
+      navBtn?.addEventListener('click', ()=>{
+        const open = nav.classList.toggle('is-open');
+        navBtn.setAttribute('aria-expanded', open ? 'true':'false');
+      });
+
+      // ---------- Dropdowns (fixed & consistent) ----------
+      const nBtn=$('#faqNotifyBtn'), nMenu=$('#faqNotifyMenu');
+      const pBtn=$('#faqProfileBtn'), pMenu=$('#faqProfileMenu');
+
+      function toggleMenu(menu, btn){
+        const opening = menu.hasAttribute('hidden');
+        if (opening) {
+          menu.removeAttribute('hidden');
+        } else {
+          menu.setAttribute('hidden','');
+        }
+        btn?.setAttribute('aria-expanded', opening ? 'true':'false');
+      }
+
+      nBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); toggleMenu(nMenu, nBtn); pMenu?.setAttribute('hidden',''); pBtn?.setAttribute('aria-expanded','false'); });
+      pBtn?.addEventListener('click', (e)=>{ e.stopPropagation(); toggleMenu(pMenu, pBtn); nMenu?.setAttribute('hidden',''); nBtn?.setAttribute('aria-expanded','false'); });
+
+      document.addEventListener('click', (e)=>{
+        if (nMenu && outside(nMenu,e) && outside(nBtn,e)) nMenu.setAttribute('hidden','');
+        if (pMenu && outside(pMenu,e) && outside(pBtn,e)) pMenu.setAttribute('hidden','');
+      });
+      document.addEventListener('keydown', (e)=>{
+        if (e.key==='Escape'){ nMenu?.setAttribute('hidden',''); pMenu?.setAttribute('hidden',''); closeModal($('#faqCrudModal')); closeModal($('#faqPhotoModal')); }
+      });
+
+      // ---------- Toast ----------
+      const toastEl = $('#faqToast');
+      function toast(msg){
+        if(!toastEl) return;
+        toastEl.textContent = msg;
+        toastEl.hidden = false;
+        toastEl.classList.remove('show');
+        requestAnimationFrame(()=>toastEl.classList.add('show'));
+        setTimeout(()=>{ toastEl.classList.remove('show'); setTimeout(()=>toastEl.hidden=true, 180); }, 1600);
+      }
+
+      // ---------- Change Photo modal ----------
+      const photoModal = $('#faqPhotoModal');
+      const fileInp = $('#faqFile');
+      const errBox  = $('#faqFileError');
+      const preview = $('#faqPreview');
+      const avatar  = $('#faqAvatar');
+      const savePhoto= $('#faqSavePhoto');
+
+      function openModal(mod){ mod?.classList.add('open'); mod?.setAttribute('aria-hidden','false'); }
+      function closeModal(mod){ mod?.classList.remove('open'); mod?.setAttribute('aria-hidden','true'); }
+
+      $$('[data-open]').forEach(b=>{
+        b.addEventListener('click', ()=>{
+          const sel=b.getAttribute('data-open');
+          const mod=document.querySelector(sel);
+          openModal(mod);
+        });
+      });
+      $$('[data-close]').forEach(b=> b.addEventListener('click', ()=> closeModal(b.closest('.aa-modal')) ));
+
+      if (fileInp){
+        fileInp.addEventListener('change', ()=>{
+          errBox.hidden=true; errBox.textContent='';
+          const f=fileInp.files?.[0]; if(!f) return;
+          const okType=['image/png','image/jpeg'].includes(f.type);
+          const okSize=f.size <= 2*1024*1024;
+          if(!okType || !okSize){
+            errBox.hidden=false;
+            errBox.textContent = !okType ? 'Please select a PNG or JPG image.' : 'Image must be 2MB or smaller.';
+            fileInp.value=''; return;
+          }
+          const r=new FileReader();
+          r.onload = e=> { preview.src = e.target.result; };
+          r.readAsDataURL(f);
+        });
+      }
+      savePhoto?.addEventListener('click', ()=>{
+        if (avatar && preview){ avatar.src=preview.src; try{ localStorage.setItem('faq-avatar', preview.src);}catch{} }
+        closeModal(photoModal); toast('Photo updated');
+      });
+      try{ const saved=localStorage.getItem('faq-avatar'); if(saved){ avatar.src=saved; preview.src=saved; } }catch{}
+
+      $('#faqLogoutBtn')?.addEventListener('click', ()=>{
+        try{ localStorage.clear(); sessionStorage.clear(); }catch{}
+        window.location.href='/';
+      });
+
+      // ---------- FAQs data + CRUD ----------
+      const listEl  = $('#faqList');
+      const emptyEl = $('#faqEmpty');
+      const search  = $('#faqSearch');
+      const addBtn  = $('#faqAddBtn');
+
+      const crudModal = $('#faqCrudModal');
+      const fldId   = $('#faqId');
+      const fldQ    = $('#faqQuestion');
+      const fldA    = $('#faqAnswer');
+      const saveBtn = $('#faqSaveBtn');
+      const titleEl = $('#faqCrudTitle');
+
+      function uid(){ return 'f' + Math.random().toString(36).slice(2, 9); }
+
+      let faqs = [];
+      try{
+        const saved = localStorage.getItem('faqs-data');
+        faqs = saved ? JSON.parse(saved) : [
+          { id: uid(), q:'How do I reset a user password?', a:'Go to User Management → Edit user → Reset Password.', t: Date.now()-3600000 },
+          { id: uid(), q:'How can I approve/reject a tutor?', a:'Open Tutors page and use Approve/Reject in Actions.', t: Date.now()-7200000 },
+          { id: uid(), q:'Where are flagged posts?', a:'Forum Moderation → review reported items.', t: Date.now()-10800000 },
+          { id: uid(), q:'How do I create a module?', a:'Module Management → Add Module → fill the form and save.', t: Date.now()-14400000 },
+        ];
+      }catch{ faqs=[]; }
+
+      function persist(){ try{ localStorage.setItem('faqs-data', JSON.stringify(faqs)); }catch{} }
+
+      function render(){
+        if(!listEl) return;
+        listEl.innerHTML='';
+        const q = (search?.value || '').trim().toLowerCase();
+        let shown=0;
+        faqs.forEach(item=>{
+          const hay=(item.q + ' ' + item.a).toLowerCase();
+          const ok = !q || hay.includes(q);
+          if(!ok) return;
+          shown++;
+          const art = document.createElement('article');
+          art.className='faq-item';
+          art.dataset.id=item.id;
+          art.innerHTML = `
+            <div class="faq-head">
+              <button class="faq-q" type="button" aria-expanded="false">
+                <span>${escapeHtml(item.q)}</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+              </button>
+              <div class="faq-actions">
+                <button class="act edit" title="Edit">Edit</button>
+                <button class="act danger delete" title="Delete">Delete</button>
+              </div>
+            </div>
+            <div class="faq-a">${escapeHtml(item.a)}</div>
+          `;
+          listEl.appendChild(art);
+        });
+        emptyEl.hidden = shown>0;
+      }
+
+      function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+      // Delegated events
+      listEl?.addEventListener('click', (e)=>{
+        const qBtn = e.target.closest?.('.faq-q');
+        const edit = e.target.closest?.('.edit');
+        const del  = e.target.closest?.('.delete');
+        const item = e.target.closest?.('.faq-item');
+
+        if (edit && item){
+          e.stopPropagation();
+          const id=item.dataset.id;
+          const row=faqs.find(x=>x.id===id);
+          if(!row) return;
+          titleEl.textContent = 'Edit FAQ';
+          fldId.value = row.id;
+          fldQ.value  = row.q;
+          fldA.value  = row.a;
+          openModal(crudModal);
+          return;
+        }
+
+        if (del && item){
+          e.stopPropagation();
+          const id=item.dataset.id;
+          if (confirm('Delete this FAQ?')){
+            faqs = faqs.filter(x=>x.id!==id);
+            persist(); render();
+            toast('FAQ deleted');
+          }
+          return;
+        }
+
+        if (qBtn && item){
+          const open = item.classList.toggle('open');
+          qBtn.setAttribute('aria-expanded', open?'true':'false');
+        }
+      });
+
+      addBtn?.addEventListener('click', ()=>{
+        titleEl.textContent='Add FAQ';
+        fldId.value=''; fldQ.value=''; fldA.value='';
+        openModal(crudModal);
+      });
+
+      saveBtn?.addEventListener('click', ()=>{
+        const q = (fldQ.value||'').trim();
+        const a = (fldA.value||'').trim();
+        if(!q || !a){ toast('Question and answer are required'); return; }
+        const id=fldId.value;
+        if (id){
+          const row=faqs.find(x=>x.id===id);
+          if(row){ row.q=q; row.a=a; row.t=Date.now(); }
+          toast('FAQ updated');
+        } else {
+          faqs.unshift({ id: uid(), q, a, t: Date.now() });
+          toast('FAQ added');
+        }
+        persist(); render(); closeModal(crudModal);
+      });
+
+      ['input','keyup','search'].forEach(ev=> search?.addEventListener(ev, render));
+
+      render();
+    })();
+</script>

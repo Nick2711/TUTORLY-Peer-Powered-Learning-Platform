@@ -1,0 +1,1082 @@
+﻿@page "/tutor/resources"
+@using Microsoft.JSInterop
+@using Microsoft.AspNetCore.Components.Forms
+@using Tutorly.Shared
+@using System.Net.Http.Json
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ResourceService ResourceService
+
+<PageTitle>Resources | Tutorly</PageTitle>
+
+<div id="page-tutor-res">
+    <!-- ================== NAVBAR (student-style) ================== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="trToggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/tutor/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="trMainNav">
+                <a class="db-nav__link" href="/tutor/dashboard">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+                    <span>Home</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/availability">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg>
+                    <span>Availability</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/queue">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" href="/tutor/resources" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 4v16" /></svg>
+                    <span>Resources</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/analytics">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg>
+                    <span>Analytics</span>
+                </a>
+                <a class="db-nav__link" href="/tutorforum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- main bubble -->
+                        <path d="M21 12a4 4 0 0 1-4 4H9l-4 3V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4z" />
+                        <!-- secondary bubble -->
+                        <path d="M7 14H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2" />
+                    </svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/tutorsessiondetails">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span>
+                </a>
+            </nav>
+
+            <div class="db-actions">
+                <div class="search-wrap" id="trSearchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="trBtnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="trSearchInput" type="text" placeholder="Search…">
+                </div>
+
+                <!-- Notifications -->
+                <div class="notify-host" style="position:relative">
+                    <button class="db-iconbtn" aria-label="Notifications" id="trBtnBell">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14v-3a6 6 0 1 0-12 0v3a2 2 0 0 1-.6 1.4L4 17h5" />
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                        </svg>
+                    </button>
+
+                    <div class="notify-panel soft-panel" id="trNotifyPan" role="menu" aria-label="Notifications">
+                        <div class="dropdown__head">Notifications</div>
+
+                        <div class="note-row">
+                            <div class="note-icon cal">📅</div>
+                            <div>
+                                <div class="note-title">Session starts soon</div>
+                                <div class="note-sub">Algebra Basics at 5:00 PM.</div>
+                            </div>
+                        </div>
+
+                        <div class="note-row">
+                            <div class="note-icon star">⭐</div>
+                            <div>
+                                <div class="note-title">New rating</div>
+                                <div class="note-sub">You received a 5★ from Alex.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /Notifications -->
+                <!-- My Profile (same behavior as ModuleDetail, scoped here) -->
+                <div style="position:relative">
+                    <button class="db-avatar" id="trBtnProfile" aria-haspopup="true" aria-expanded="false">
+                        <img id="trAvatarImg" src="https://i.pravatar.cc/40?img=4" alt="Me">
+                    </button>
+
+                    <div class="pop" id="trPopProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#trModalPhoto">
+                                <div class="pop__row">
+                                    <div class="pop__icon">🖼️</div>
+                                    <div>
+                                        <div class="pop__title">Change Photo</div>
+                                        <div class="pop__text">Upload a new profile picture.</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#trModalSettings">
+                                <div class="pop__row">
+                                    <div class="pop__icon">⚙️</div>
+                                    <div>
+                                        <div class="pop__title">Settings</div>
+                                        <div class="pop__text">Manage account and preferences.</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#trModalBadges">
+                                <div class="pop__row">
+                                    <div class="pop__icon">🏆</div>
+                                    <div>
+                                        <div class="pop__title">Achievements</div>
+                                        <div class="pop__text">See all earned badges.</div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="pop__item">
+                                <a class="pop__row pop__logout" href="#" id="trBtnLogout" role="button">
+                                    <div class="pop__icon">🚪</div>
+                                    <div>
+                                        <div class="pop__title">Logout</div>
+                                        <div class="pop__text">Sign out of your account.</div>
+                                    </div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- /My Profile -->
+            </div>
+        </div>
+    </header>
+
+    <!-- ================== PAGE BODY ================== -->
+    <div class="wrap">
+        <section class="panel">
+            <div class="panel__head">
+                <h3>
+                    @(view == ResView.Modules ? "Your Modules"
+                                        : view == ResView.Manage ? $"{CurrentModule?.Name} — Resources"
+                                        : view == ResView.Upload ? $"Upload Resource · {CurrentModule?.Name}"
+                                        : $"Edit Resource · {CurrentModule?.Name}")
+                </h3>
+
+                @if (view == ResView.Manage)
+                {
+                    <button class="btn btn--primary" @onclick="() => GoUpload(CurrentModuleId)">
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                        Upload Resource
+                    </button>
+                }
+            </div>
+
+            <!-- Loading and Error Indicators -->
+            @if (isLoading)
+            {
+                <div class="panel__body" style="text-align: center; padding: 2rem;">
+                    <div style="display: inline-block; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <div style="margin-bottom: 0.5rem;">🔄</div>
+                        <div>Loading modules and resources...</div>
+                    </div>
+                </div>
+            }
+            else if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="panel__body" style="text-align: center; padding: 1rem;">
+                    <div style="display: inline-block; padding: 1rem; background: #fee; border: 1px solid #fcc; border-radius: 8px; color: #c33;">
+                        <div style="margin-bottom: 0.5rem;">⚠️</div>
+                        <div>@errorMessage</div>
+                    </div>
+                </div>
+            }
+
+            @if (view == ResView.Modules)
+            {
+                <!-- MODULES GRID -->
+                <div class="mods">
+                    @foreach (var m in Modules)
+                    {
+                        <div class="mod-card">
+                            <div class="mod-card__head">
+                                <div class="mod-ico" style="background:@m.Color">@m.Emoji</div>
+                                <div>
+                                    <div class="mod-title">@m.Name</div>
+                                    <div class="mod-sub">@m.Code</div>
+                                </div>
+                            </div>
+                            <div class="mod-actions">
+                                <button class="btn btn--primary" @onclick="() => GoManage(m.Id)">Manage Resources</button>
+                                <button class="btn" @onclick="() => GoUpload(m.Id)">Upload Resource</button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (view == ResView.Manage)
+            {
+                <!-- MANAGE LIST -->
+                <div class="list">
+                    @if (!Filtered.Any())
+                    {
+                        <div class="empty">No resources yet for this module.</div>
+                    }
+                    else
+                    {
+                        <div class="r-rows">
+                            @foreach (var r in Filtered)
+                            {
+                                <div class="r-row">
+                                    <div class="r-left">
+                                        <span class="r-ico">@TypeEmoji(r.Type)</span>
+                                        <div>
+                                            <div class="r-title">@r.Title</div>
+                                            <div class="r-sub">@r.Type · @r.Updated.ToString("MMM d, yyyy")</div>
+                                        </div>
+                                    </div>
+                                    <div class="r-actions">
+                                        <button class="btn btn--ghost" @onclick="() => EditResource(r.Id)">Edit</button>
+                                        <button class="btn btn--danger" @onclick="() => DeleteResource(r.Id)">Delete</button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="footer-actions">
+                    <button class="btn" @onclick="GoModules">Back to Modules</button>
+                </div>
+            }
+
+            @if (view == ResView.Upload || view == ResView.Edit)
+            {
+                <!-- UPLOAD / EDIT FORM -->
+                <EditForm Model="upload" OnValidSubmit="SaveUpload">
+                    <div class="form">
+                        <div class="form-row">
+                            <label>Resource Type</label>
+                            <div class="type-grid">
+                                @foreach (var t in TypeCards)
+                                {
+                                    <button type="button"
+                                            class="type-card @(upload.Type == t.Key ? "is-active" : "")"
+                                            @onclick="() => upload.Type = t.Key">
+                                        <span class="type-ico">@t.Value.Emoji</span>
+                                        <span class="type-label">@t.Value.Label</span>
+                                    </button>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label>Title</label>
+                            <input class="in" placeholder="Enter resource title" @bind="upload.Title" required />
+                        </div>
+
+                        <div class="form-row">
+                            <label>Description</label>
+                            <textarea class="in" placeholder="Brief description of the resource" rows="4" @bind="upload.Description"></textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <label>File</label>
+                            <div class="drop" @ondrop:preventDefault @ondragover:preventDefault>
+                                <InputFile OnChange="HandleFileUpload" class="hidden" id="fileInput" disabled="@isUploading" />
+                                <div class="drop-inner" @onclick="() => JSClickFile()" style="@(isUploading ? "opacity: 0.6; pointer-events: none;" : "")">
+                                    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5-5 5 5" /><path d="M12 15V3" /></svg>
+                                    <div class="drop-text">
+                                        @if (string.IsNullOrWhiteSpace(upload.FileName))
+                                        {
+                                            @:Drag and drop files here or <a href="javascript:void(0)">browse files</a>
+                                        }
+                                        else
+                                        {
+                                            <strong>@upload.FileName</strong>
+                                        }
+                                    </div>
+                                    <div class="drop-sub">Max file size: 50MB</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label>Module/Topic</label>
+                            <select class="in" @bind="upload.ModuleId" required>
+                                @foreach (var m in Modules)
+                                {
+                                    <option value="@m.Id">@m.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label>Tags</label>
+                            <input class="in" placeholder="Add tags (comma separated)" @bind="upload.Tags" />
+                            <div class="help">e.g. derivatives, calculus, math</div>
+                        </div>
+
+                        <div class="form-row form-row--sm">
+                            <label>Version</label>
+                            <input class="in"
+                                   style="max-width:120px"
+                                   @bind-value="upload.Version"
+                                   @bind-value:event="oninput"
+                                   placeholder="1.0" />
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="form-row">
+                                <div class="error-message" style="color: #dc2626; background: #fef2f2; padding: 12px; border-radius: 6px; border: 1px solid #fecaca;">
+                                    @errorMessage
+                                </div>
+                            </div>
+                        }
+
+                        <div class="form-actions">
+                            <button type="button" class="btn" @onclick="CancelUpload" disabled="@isUploading">Cancel</button>
+                            <button type="submit" class="btn btn--primary" disabled="@isUploading">
+                                @if (isUploading)
+                                {
+                                    <span>Uploading...</span>
+                                }
+                                else
+                                {
+                                    @(view == ResView.Edit ? "Save Changes" : "Upload Resource")
+                                }
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            }
+        </section>
+    </div>
+
+    <!-- ===== Profile Pack Modals (scoped to page) ===== -->
+    <div class="modal" id="trModalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="trModalPhotoTitle">
+            <div class="modal__head"><span id="trModalPhotoTitle">Change Photo</span><button class="btn btn--ghost" data-close="trModalPhoto">✕</button></div>
+            <div class="modal__body">
+                <div class="photo-row">
+                    <img id="trPhotoPreview" src="https://i.pravatar.cc/80?img=4" alt="Preview">
+                    <div>
+                        <input type="file" id="trPhotoInput" accept="image/*">
+                        <div class="pop__text" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="trModalPhoto">Cancel</button>
+                <button class="btn btn--primary" id="trSavePhotoBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="trModalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="trModalSettingsTitle">
+            <div class="modal__head"><span id="trModalSettingsTitle">Profile Settings</span><button class="btn btn--ghost" data-close="trModalSettings">✕</button></div>
+            <div class="modal__body">
+                <div class="field"><label for="trFirstName">First name</label><input id="trFirstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label for="trLastName">Last name</label><input id="trLastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label for="trDegree">Degree</label>
+                    <select id="trDegree">
+                        <option value="">Select…</option>
+                        <option>BComp</option>
+                        <option>BIT</option>
+                        <option>DIT</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="pop__text">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="trModalSettings">Cancel</button>
+                <button class="btn btn--primary" id="trSaveSettingsBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="trModalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="trModalBadgesTitle">
+            <div class="modal__head"><span id="trModalBadgesTitle">Your Achievements</span><button class="btn btn--ghost" data-close="trModalBadges">✕</button></div>
+            <div class="modal__body">
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>Active Mentor</strong> — uploaded 5+ resources</li>
+                    <li><strong>Helpful Tutor</strong> — answered 10 student messages</li>
+                    <li><strong>On Time</strong> — kept your availability updated</li>
+                </ul>
+            </div>
+            <div class="modal__foot"><button class="btn btn--primary" data-close="trModalBadges">Nice!</button></div>
+        </div>
+    </div>
+    <!-- /Profile Pack Modals -->
+</div>
+
+@code {
+    enum ResView { Modules, Manage, Upload, Edit }
+
+    class ModuleInfo
+    {
+        public string Id { get; set; } = default!;
+        public string Name { get; set; } = default!;
+        public string Code { get; set; } = default!;
+        public string Color { get; set; } = "#eef2ff";
+        public string Emoji { get; set; } = "📘";
+    }
+
+    class ResourceInfo
+    {
+        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        public string ModuleId { get; set; } = default!;
+        public string Title { get; set; } = default!;
+        public string Type { get; set; } = "Document"; // "Document" | "Video" | "Link" | "Image"
+        public string Description { get; set; } = "";
+        public DateTime Updated { get; set; } = DateTime.Now;
+        public string Tags { get; set; } = "";
+        public string Version { get; set; } = "1.0";
+        public string FileName { get; set; } = "";
+    }
+
+    ResView view = ResView.Modules;
+
+    // Demo data (kept as fallback)
+    List<ModuleInfo> DemoModules = new()
+    {
+        new() { Id="m1", Name="Calculus I",  Code="MATH 101", Color="#eef2ff", Emoji="📘" },
+        new() { Id="m2", Name="Intro to CS", Code="CS 101",   Color="#ecfdf5", Emoji="💻" },
+        new() { Id="m3", Name="Physics I",   Code="PHYS 110", Color="#fff7ed", Emoji="🔭" },
+    };
+
+    List<ResourceInfo> DemoResources = new()
+    {
+        new() { ModuleId="m1", Title="Derivatives – Cheat Sheet", Type="Document", Description="One-pager formulas", Updated=DateTime.Today.AddDays(-1) },
+        new() { ModuleId="m1", Title="Limits Lecture",            Type="Video",    Description="HD recording",      Updated=DateTime.Today.AddDays(-2) },
+        new() { ModuleId="m2", Title="Recursion Notes",           Type="Document", Updated=DateTime.Today.AddDays(-3) },
+        new() { ModuleId="m3", Title="Kinematics Slides",         Type="Link",     Updated=DateTime.Today.AddDays(-5) },
+    };
+
+    // Real data (will be loaded from API)
+    List<ModuleInfo> RealModules = new();
+    List<ResourceInfo> RealResources = new();
+
+    // Combined data (real data takes precedence, falls back to demo)
+    List<ModuleInfo> Modules => RealModules.Any() ? RealModules : DemoModules;
+    List<ResourceInfo> All => RealResources.Any() ? RealResources : DemoResources;
+
+    string CurrentModuleId = "m1";
+    ModuleInfo? CurrentModule => Modules.FirstOrDefault(x => x.Id == CurrentModuleId);
+    IEnumerable<ResourceInfo> Filtered => All.Where(x => x.ModuleId == CurrentModuleId).OrderByDescending(x => x.Updated);
+
+    // upload/edit model
+    ResourceInfo upload = new();
+    
+    // Error handling
+    string errorMessage = "";
+    bool isUploading = false;
+
+    record TypeCard(string Label, string Emoji);
+    Dictionary<string, TypeCard> TypeCards = new()
+    {
+        ["Document"] = new("Document", "📄"),
+        ["Video"] = new("Video", "🎬"),
+        ["Link"] = new("Link", "🔗"),
+        ["Image"] = new("Image", "🖼️"),
+    };
+
+    void GoModules() => view = ResView.Modules;
+
+    void GoManage(string moduleId)
+    {
+        CurrentModuleId = moduleId;
+        view = ResView.Manage;
+        StateHasChanged();
+    }
+
+    void GoUpload(string moduleId)
+    {
+        CurrentModuleId = moduleId;
+        upload = new ResourceInfo { ModuleId = moduleId, Version = "1.0" };
+        view = ResView.Upload;
+    }
+
+    void EditResource(string id)
+    {
+        var r = All.First(x => x.Id == id);
+        upload = new ResourceInfo
+        {
+            Id = r.Id,
+            ModuleId = r.ModuleId,
+            Title = r.Title,
+            Type = r.Type,
+            Description = r.Description,
+            Tags = r.Tags,
+            Version = r.Version,
+            FileName = r.FileName,
+            Updated = r.Updated
+        };
+        CurrentModuleId = upload.ModuleId;
+        view = ResView.Edit;
+    }
+
+    async Task DeleteResource(string id)
+    {
+        try
+        {
+            var success = await ResourceService.DeleteResourceAsync(id);
+            if (success)
+            {
+                // Remove from local list
+                var r = All.FirstOrDefault(x => x.Id == id);
+                if (r is not null) 
+                {
+                    All.Remove(r);
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                errorMessage = "Failed to delete resource. Please try again.";
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Resources - Delete error: {ex.Message}");
+            errorMessage = "Delete failed: " + ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    async Task JSClickFile() => await JS.InvokeVoidAsync("trClickFile");
+
+    async Task SaveUpload()
+    {
+        // Validate form
+        if (string.IsNullOrWhiteSpace(upload.Title))
+        {
+            errorMessage = "Please enter a title for the resource";
+            StateHasChanged();
+            return;
+        }
+
+        if (view == ResView.Upload && string.IsNullOrWhiteSpace(upload.FileName))
+        {
+            errorMessage = "Please select a file to upload";
+            StateHasChanged();
+            return;
+        }
+
+        try
+        {
+            upload.Updated = DateTime.Now;
+
+            if (view == ResView.Edit)
+            {
+                // For editing, we only update metadata (not the file itself)
+                var success = await ResourceService.UpdateResourceMetadataAsync(
+                    upload.Id, 
+                    upload.Title, 
+                    upload.Description, 
+                    upload.Tags, 
+                    upload.Version
+                );
+                
+                if (success)
+                {
+                    var existing = All.First(x => x.Id == upload.Id);
+                    existing.Title = upload.Title;
+                    existing.Description = upload.Description;
+                    existing.Type = upload.Type;
+                    existing.Tags = upload.Tags;
+                    existing.Version = upload.Version;
+                    existing.FileName = upload.FileName;
+                    existing.Updated = upload.Updated;
+                }
+                else
+                {
+                    errorMessage = "Failed to update resource metadata. Please try again.";
+                    StateHasChanged();
+                    return;
+                }
+            }
+            // Note: New uploads are handled by HandleFileUpload method
+
+            view = ResView.Manage;
+            errorMessage = "";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Resources - Save error: {ex.Message}");
+            errorMessage = "Save failed: " + ex.Message;
+            StateHasChanged();
+        }
+    }
+
+    void CancelUpload()
+    {
+        upload = new ResourceInfo { ModuleId = CurrentModuleId, Version = "1.0" };
+        view = ResView.Manage;
+        StateHasChanged();
+    }
+
+    string TypeEmoji(string t) => TypeCards.TryGetValue(t, out var c) ? c.Emoji : "📄";
+
+    // ================== REAL DATA LOADING ==================
+    bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRealData();
+    }
+
+    private async Task LoadRealData()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+            StateHasChanged();
+
+            // Get current user's tutor ID
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userIdClaim = authState.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                Console.WriteLine("DEBUG: Resources - User not authenticated, using demo data");
+                return;
+            }
+
+            // Get user profile to get tutor ID
+            var profileResponse = await Http.GetAsync("/api/profile/me");
+            if (!profileResponse.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"DEBUG: Resources - Profile request failed: {profileResponse.StatusCode}");
+                return;
+            }
+
+            var session = await profileResponse.Content.ReadFromJsonAsync<UnifiedSessionDto>();
+            if (session?.Profile?.TutorId == null)
+            {
+                Console.WriteLine("DEBUG: Resources - Tutor ID not found, using demo data");
+                return;
+            }
+
+            var tutorId = session.Profile.TutorId.Value;
+            Console.WriteLine($"DEBUG: Resources - Loading modules for tutor {tutorId}");
+
+            // Load tutor's modules
+            await LoadTutorModules(tutorId);
+
+            // Load existing resources for all modules
+            await LoadModuleResources();
+
+            Console.WriteLine($"DEBUG: Resources - Loaded {RealModules.Count} modules and {RealResources.Count} resources");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Resources - Error loading real data: {ex.Message}");
+            errorMessage = "Failed to load data. Using demo data.";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadTutorModules(int tutorId)
+    {
+        try
+        {
+            var response = await Http.GetAsync($"/api/module/tutor/{tutorId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var modules = await response.Content.ReadFromJsonAsync<List<Module>>();
+                if (modules != null)
+                {
+                    RealModules.Clear();
+                    foreach (var module in modules)
+                    {
+                        RealModules.Add(new ModuleInfo
+                        {
+                            Id = module.ModuleId.ToString(),
+                            Name = module.ModuleName,
+                            Code = module.ModuleCode,
+                            Color = GetModuleColor(module.ModuleCode),
+                            Emoji = GetModuleEmoji(module.ModuleCode)
+                        });
+                    }
+
+                    // Set current module to first one if available
+                    if (RealModules.Any() && CurrentModuleId == "m1")
+                    {
+                        CurrentModuleId = RealModules.First().Id;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Resources - Error loading tutor modules: {ex.Message}");
+        }
+    }
+
+    private async Task LoadModuleResources()
+    {
+        try
+        {
+            RealResources.Clear();
+
+            foreach (var module in RealModules)
+            {
+                var moduleId = int.Parse(module.Id);
+                var resources = await ResourceService.GetModuleResourcesAsync(moduleId);
+
+                foreach (var resource in resources)
+                {
+                    RealResources.Add(new ResourceInfo
+                    {
+                        Id = resource.ResourceId,
+                        ModuleId = module.Id,
+                        Title = resource.ResourceName,
+                        Type = GetResourceTypeFromContentType(resource.ContentType),
+                        Description = resource.Description,
+                        Updated = resource.CreatedAt,
+                        FileName = resource.ResourceName,
+                        Tags = "", 
+                        Version = "1.0"
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Resources - Error loading module resources: {ex.Message}");
+        }
+    }
+
+    private string GetModuleColor(string moduleCode)
+    {
+        return moduleCode.ToUpper() switch
+        {
+            var code when code.Contains("MATH") => "#eef2ff",
+            var code when code.Contains("CS") || code.Contains("COMP") => "#ecfdf5",
+            var code when code.Contains("PHYS") => "#fff7ed",
+            var code when code.Contains("CHEM") => "#f0f9ff",
+            var code when code.Contains("BIO") => "#f0fdf4",
+            _ => "#f8fafc"
+        };
+    }
+
+    private string GetModuleEmoji(string moduleCode)
+    {
+        return moduleCode.ToUpper() switch
+        {
+            var code when code.Contains("MATH") => "📘",
+            var code when code.Contains("PRG") || code.Contains("SEN") => "💻",
+            var code when code.Contains("PHYS") => "🔭",
+            var code when code.Contains("CHEM") => "🧪",
+            var code when code.Contains("BIO") => "🧬",
+            _ => "📚"
+        };
+    }
+
+    private string GetResourceTypeFromContentType(string contentType)
+    {
+        return contentType.ToLower() switch
+        {
+            var ct when ct.StartsWith("video/") => "Video",
+            var ct when ct.StartsWith("image/") => "Image",
+            var ct when ct.Contains("pdf") || ct.Contains("document") || ct.Contains("text") => "Document",
+            _ => "Document"
+        };
+    }
+
+    // ================== ENHANCED UPLOAD FUNCTIONALITY ==================
+    private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file == null) return;
+
+            isUploading = true;
+            errorMessage = "";
+            StateHasChanged();
+
+            // Validate file size (50MB limit)
+            if (file.Size > 50 * 1024 * 1024)
+            {
+                errorMessage = "File size exceeds 50MB limit";
+                isUploading = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Get current module
+            var currentModule = Modules.FirstOrDefault(m => m.Id == CurrentModuleId);
+            if (currentModule == null) 
+            {
+                errorMessage = "Please select a module first";
+                isUploading = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Get current user (tutor) - use same approach as LoadRealData
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userIdClaim = authState.User.FindFirst("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")?.Value;
+
+            Console.WriteLine($"DEBUG: Resources - Upload - User ID claim: {userIdClaim}");
+            Console.WriteLine($"DEBUG: Resources - Upload - User authenticated: {authState.User.Identity?.IsAuthenticated}");
+            Console.WriteLine($"DEBUG: Resources - Upload - User name: {authState.User.Identity?.Name}");
+
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                errorMessage = "User not authenticated. Please log in again.";
+                isUploading = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Get user profile to get tutor ID
+            var profileResponse = await Http.GetAsync("/api/profile/me");
+            Console.WriteLine($"DEBUG: Resources - Upload - Profile response status: {profileResponse.StatusCode}");
+            
+            if (!profileResponse.IsSuccessStatusCode)
+            {
+                errorMessage = "Failed to get user profile. Please try again.";
+                isUploading = false;
+                StateHasChanged();
+                return;
+            }
+
+            var session = await profileResponse.Content.ReadFromJsonAsync<UnifiedSessionDto>();
+            Console.WriteLine($"DEBUG: Resources - Upload - Session: {session?.Profile?.TutorId}");
+            
+            if (session?.Profile?.TutorId == null)
+            {
+                errorMessage = "Tutor profile not found. Please ensure you have a tutor account.";
+                isUploading = false;
+                StateHasChanged();
+                return;
+            }
+
+            var tutorId = session.Profile.TutorId.Value.ToString();
+
+            // Create upload request
+            var uploadRequest = new ResourceUploadRequest
+            {
+                ResourceType = ResourceType.ModuleResource,
+                ModuleId = int.Parse(CurrentModuleId),
+                ModuleCode = currentModule.Code,
+                UploadedBy = tutorId,
+                Description = upload.Description
+            };
+
+            // Upload file
+            using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+            var result = await ResourceService.UploadResourceAsync(stream, file.Name, file.ContentType, uploadRequest);
+
+            if (result != null)
+            {
+                // Add to local list
+                RealResources.Add(new ResourceInfo
+                {
+                    Id = result.ResourceId,
+                    ModuleId = CurrentModuleId,
+                    Title = upload.Title,
+                    Type = GetResourceTypeFromContentType(file.ContentType),
+                    Description = upload.Description,
+                    Updated = DateTime.Now,
+                    FileName = file.Name,
+                    Tags = upload.Tags,
+                    Version = upload.Version
+                });
+
+                // Reset upload form
+                upload = new ResourceInfo { ModuleId = CurrentModuleId, Version = "1.0" };
+                view = ResView.Manage;
+                errorMessage = "";
+            }
+            else
+            {
+                errorMessage = "Failed to upload file. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Resources - Upload error: {ex.Message}");
+            errorMessage = "Upload failed: " + ex.Message;
+        }
+        finally
+        {
+            isUploading = false;
+            StateHasChanged();
+        }
+    }
+}
+
+<script>
+    (function trInit() {
+        // theme (persist)
+        try { const saved = localStorage.getItem('theme'); if (saved === 'dark') { document.documentElement.classList.add('theme-dark'); } } catch (_) { }
+
+        // search toggle
+        const sw = document.getElementById('trSearchWrap');
+        const sb = document.getElementById('trBtnSearch');
+        const si = document.getElementById('trSearchInput');
+        sb?.addEventListener('click', (e) => { e.preventDefault(); const o = sw.classList.toggle('open'); if (o) { si?.focus(); } });
+
+        // highlight active nav
+        const nav = document.getElementById('trMainNav');
+        if (nav) {
+            const links = [...nav.querySelectorAll('a')];
+            const curr = links.find(a => a.getAttribute('href') === location.pathname);
+            if (curr) { links.forEach(x => x.classList.remove('db-nav__link--active')); curr.classList.add('db-nav__link--active'); curr.setAttribute('aria-current', 'page'); }
+        }
+
+        // ==== Notifications ====
+        const bell = document.getElementById('trBtnBell');
+        const pan  = document.getElementById('trNotifyPan');
+        bell?.addEventListener('click', (e) => {
+            e.preventDefault();
+            pan?.classList.toggle('show');
+            // close others
+            document.getElementById('trPopProfile')?.classList.remove('show');
+            sw?.classList.remove('open');
+        });
+
+        // ==== Profile UI (popover + modals) ====
+        document.addEventListener('click', (e) => {
+            // profile popover
+            const bp = e.target.closest && e.target.closest('#trBtnProfile');
+            if (bp) {
+                e.preventDefault();
+                const pp = document.getElementById('trPopProfile');
+                const s = pp?.classList.toggle('show');
+                bp.setAttribute('aria-expanded', s ? 'true' : 'false');
+                // close other UI
+                sw?.classList.remove('open');
+                pan?.classList.remove('show');
+                return;
+            }
+
+            // open sub-modals
+            const li = e.target.closest && e.target.closest('#trPopProfile .clickable');
+            if (li) {
+                const target = li.getAttribute('data-target');
+                if (target) document.querySelector(target)?.classList.add('show');
+                document.getElementById('trPopProfile')?.classList.remove('show');
+                return;
+            }
+
+            // close via data-close
+            const closeBtn = e.target.closest && e.target.closest('[data-close]');
+            if (closeBtn) {
+                const id = closeBtn.getAttribute('data-close');
+                if (id) document.getElementById(id)?.classList.remove('show');
+                return;
+            }
+
+            // clicking backdrop closes modal
+            if (e.target.classList && e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+                return;
+            }
+
+            // logout (demo)
+            const lg = e.target.closest && e.target.closest('#trBtnLogout, .pop__logout');
+            if (lg) {
+                e.preventDefault();
+                try { fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => { }); } catch (_) { }
+                try {
+                    const theme = localStorage.getItem('theme');
+                    sessionStorage.clear(); localStorage.clear();
+                    if (theme) localStorage.setItem('theme', theme);
+                } catch (_) { }
+                document.getElementById('trPopProfile')?.classList.remove('show');
+                window.location.href = '/';
+                return;
+            }
+
+            // click outside topbar closes popover, search and notifications
+            const inside = e.target.closest && (e.target.closest('.db-topbar__inner'));
+            if (!inside) {
+                document.getElementById('trPopProfile')?.classList.remove('show');
+                sw?.classList.remove('open');
+                pan?.classList.remove('show');
+            }
+        }, { passive: false });
+
+        // ESC closes any open modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.show').forEach(m => m.classList.remove('show'));
+                document.getElementById('trNotifyPan')?.classList.remove('show');
+            }
+        });
+
+        // persist profile fields
+        function loadPersisted() {
+            try {
+                const p = localStorage.getItem('tr.profile.photo');
+                const avatarImg = document.getElementById('trAvatarImg'); if (p && avatarImg) avatarImg.src = p;
+                const fn = document.getElementById('trFirstName'); if (fn) fn.value = localStorage.getItem('tr.profile.first') || '';
+                const ln = document.getElementById('trLastName'); if (ln) ln.value = localStorage.getItem('tr.profile.last') || '';
+                const dg = document.getElementById('trDegree'); if (dg) dg.value = localStorage.getItem('tr.profile.degree') || '';
+                const prev = document.getElementById('trPhotoPreview'); if (prev && p) prev.src = p;
+            } catch (_) { }
+        }
+        if (document.readyState !== 'loading') loadPersisted();
+        else document.addEventListener('DOMContentLoaded', loadPersisted);
+
+        // photo input preview
+        document.addEventListener('change', (e) => {
+            const input = e.target && e.target.id === 'trPhotoInput' ? e.target : null; if (!input) return;
+            const f = input.files?.[0]; if (!f) return;
+            const r = new FileReader(); r.onload = () => { const prev = document.getElementById('trPhotoPreview'); if (prev) prev.src = r.result; }; r.readAsDataURL(f);
+        });
+
+        // save photo / settings
+        document.addEventListener('click', (e) => {
+            const savePhoto = e.target.closest && e.target.closest('#trSavePhotoBtn');
+            if (savePhoto) {
+                try {
+                    const prev = document.getElementById('trPhotoPreview');
+                    if (prev && prev.src) { localStorage.setItem('tr.profile.photo', prev.src); const avatarImg = document.getElementById('trAvatarImg'); if (avatarImg) avatarImg.src = prev.src; }
+                } catch (_) { }
+                document.getElementById('trModalPhoto')?.classList.remove('show');
+            }
+            const saveSettings = e.target.closest && e.target.closest('#trSaveSettingsBtn');
+            if (saveSettings) {
+                try {
+                    const fn = document.getElementById('trFirstName'); const ln = document.getElementById('trLastName'); const dg = document.getElementById('trDegree');
+                    localStorage.setItem('tr.profile.first', fn?.value?.trim() || '');
+                    localStorage.setItem('tr.profile.last', ln?.value?.trim() || '');
+                    localStorage.setItem('tr.profile.degree', dg?.value || '');
+                } catch (_) { }
+                document.getElementById('trModalSettings')?.classList.remove('show');
+            }
+        });
+    })();
+
+    function trToggleTheme() {
+        const el = document.documentElement; const isDark = el.classList.toggle('theme-dark');
+        try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (_) { }
+    }
+    window.trClickFile = function () { const el = document.getElementById('fileInput'); if (el) el.click(); };
+</script>

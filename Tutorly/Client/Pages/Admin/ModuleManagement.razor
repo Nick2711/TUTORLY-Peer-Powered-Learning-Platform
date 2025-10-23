@@ -1,0 +1,692 @@
+﻿@page "/admin/module-management"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using System.Text.Json
+@using Tutorly.Shared
+
+<PageTitle>Module Management | Tutorly</PageTitle>
+
+<HeadContent>
+    <link rel="stylesheet" href="css/ModuleManagement.css" />
+</HeadContent>
+
+<div id="module-mgmt-app" class="mm-v1">
+    <!-- Top bar (scoped) -->
+    <header class="ad-topbar">
+        <div class="brand">Tutorly<span>Admin</span></div>
+
+        <button class="nav-toggle" id="mmNavToggle" aria-controls="mmTopnav" aria-expanded="false" @onclick="ToggleNav">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav class="ad-topnav @(navOpen ? "is-open" : "")" id="mmTopnav" aria-label="Primary">
+            <NavLink class="nav-item" href="/admin/dashboard">Dashboard</NavLink>
+            <NavLink class="nav-item" href="/admin/user-management">User Management</NavLink>
+            <NavLink class="nav-item" href="/admin/forum-moderation">Forum Moderation</NavLink>
+            <NavLink class="nav-item active" href="/admin/module-management" Match="NavLinkMatch.All">Module Management</NavLink>
+            <NavLink class="nav-item" href="/admin/tutors">Tutors</NavLink>
+            <NavLink class="nav-item" href="/admin/analytics">Analytics</NavLink>
+            <NavLink class="nav-item" href="/admin/database">Database</NavLink>
+            <NavLink class="nav-item" href="/admin/faqs">FAQs</NavLink>
+        </nav>
+
+        <div class="top-actions">
+            <!-- Notifications trigger -->
+            <button id="mmNotifyBtn" class="icon-btn" title="Notifications" aria-haspopup="menu" aria-controls="mmNotifyMenu" aria-expanded="false">
+                <svg viewBox="0 0 24 24"><path d="M12 22a2 2 0 002-2H10a2 2 0 002 2zm6-6V11a6 6 0 10-12 0v5l-2 2v1h16v-1l-2-2z" /></svg>
+            </button>
+
+            <!-- Profile trigger -->
+            <button id="mmProfileBtn" class="user-mini" aria-haspopup="menu" aria-controls="mmProfileMenu" aria-expanded="false">
+                <img id="mmAvatar" src="https://i.pravatar.cc/40?img=8" alt="Admin avatar">
+                <div>
+                    <div class="name">Admin User</div>
+                    <div class="muted">Super Admin</div>
+                </div>
+                <svg class="chev" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" /></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="ad-main" id="page-modules">
+        <div class="mm-header">
+            <h1>Module Management</h1>
+
+            <div class="mm-actions">
+                <!-- Department Filter dropdown -->
+                <div class="dropdown" id="mmFilter">
+                    <button class="dd-btn" type="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="label">Filter: @(string.IsNullOrEmpty(filterDepartment) ? "All Departments" : filterDepartment)</span>
+                        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" /></svg>
+                    </button>
+                    <ul class="dd-menu" role="menu">
+                        <li role="menuitem" data-filter="" class="@(string.IsNullOrEmpty(filterDepartment) ? "active" : "")" @onclick='() => ApplyFilter("")'>All Departments</li>
+                        <li role="menuitem" data-filter="Mathematics" class="@(filterDepartment == "Mathematics" ? "active" : "")" @onclick='() => ApplyFilter("Mathematics")'>Mathematics</li>
+                        <li role="menuitem" data-filter="Physics" class="@(filterDepartment == "Physics" ? "active" : "")" @onclick='() => ApplyFilter("Physics")'>Physics</li>
+                        <li role="menuitem" data-filter="Computer Science" class="@(filterDepartment == "Computer Science" ? "active" : "")" @onclick='() => ApplyFilter("Computer Science")'>Computer Science</li>
+                        <li role="menuitem" data-filter="Engineering" class="@(filterDepartment == "Engineering" ? "active" : "")" @onclick='() => ApplyFilter("Engineering")'>Engineering</li>
+                        <li role="menuitem" data-filter="Business" class="@(filterDepartment == "Business" ? "active" : "")" @onclick='() => ApplyFilter("Business")'>Business</li>
+                        <li role="menuitem" data-filter="General" class="@(filterDepartment == "General" ? "active" : "")" @onclick='() => ApplyFilter("General")'>General</li>
+                    </ul>
+                </div>
+
+                <!-- Sort dropdown -->
+                <div class="dropdown" id="mmSort">
+                    <button class="dd-btn" type="button" aria-haspopup="true" aria-expanded="false">
+                        <span class="label">Sort: @GetSortLabel(sortBy)</span>
+                        <svg viewBox="0 0 24 24"><path d="M7 10l5 5 5-5" /></svg>
+                    </button>
+                    <ul class="dd-menu" role="menu">
+                        <li role="menuitem" data-sort="recent" class="@(sortBy == "recent" ? "active" : "")" @onclick='() => ApplySort("recent")'>Most recent (by ID)</li>
+                        <li role="menuitem" data-sort="code" class="@(sortBy == "code" ? "active" : "")" @onclick='() => ApplySort("code")'>Module code A-Z</li>
+                        <li role="menuitem" data-sort="name" class="@(sortBy == "name" ? "active" : "")" @onclick='() => ApplySort("name")'>Module name A-Z</li>
+                        <li role="menuitem" data-sort="users" class="@(sortBy == "users" ? "active" : "")" @onclick='() => ApplySort("users")'>Most users</li>
+                        <li role="menuitem" data-sort="resources" class="@(sortBy == "resources" ? "active" : "")" @onclick='() => ApplySort("resources")'>Most resources</li>
+                    </ul>
+                </div>
+
+                <!-- Search -->
+                <div class="search">
+                    <svg viewBox="0 0 24 24"><path d="M10.5 3a7.5 7.5 0 015.94 12.18l3.69 3.69-1.41 1.41-3.69-3.69A7.5 7.5 0 1110.5 3zm0 2a5.5 5.5 0 100 11 5.5 5.5 0 000-11z" /></svg>
+                    <input type="search" placeholder="Search modules, codes, descriptions..." @oninput="OnSearchInput" value="@searchQuery" />
+                </div>
+
+                <button class="btn primary" @onclick="ShowAddModuleModal">
+                    <svg viewBox="0 0 24 24"><path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" /></svg>
+                    Add Module
+                </button>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <table class="mm-table">
+                <thead>
+                    <tr>
+                        <th>MODULE</th>
+                        <th>SUBJECT</th>
+                        <th>USERS</th>
+                        <th>RESOURCES</th>
+                        <th>ID</th>
+                        <th class="ta-right">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (isLoading)
+                    {
+                        <tr><td colspan="6" class="text-center">Loading modules...</td></tr>
+                    }
+                    else if (!paginatedModules.Any())
+                    {
+                        <tr><td colspan="6" class="text-center">No modules found</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var module in paginatedModules)
+                        {
+                            <tr data-subject="@module.ModuleDepartment.ToLower()" data-id="@module.ModuleId">
+                                <td>
+                                    <div class="module-cell">
+                                        <div class="icon @module.IconClass">
+                                            <svg viewBox="0 0 24 24">
+                                                @if (module.IconClass == "beaker")
+                                                {
+                                                    <path d="M6 2h12v2H6V2zm3 4h6l1 8.5A4.5 4.5 0 0 1 11.5 19h1A4.5 4.5 0 0 1 8 14.5L9 6z" />
+                                                }
+                                                else if (module.IconClass == "chip")
+                                                {
+                                                    <path d="M9 3h6v2h2a2 2 0 012 2v2h2v6h-2v2a2 2 0 01-2 2h-2v2H9v-2H7a2 2 0 01-2-2v-2H3V9h2V7a2 2 0 012-2h2V3zM7 9v6h10V9H7z" />
+                                                }
+                                                else if (module.IconClass == "gear")
+                                                {
+                                                    <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z" />
+                                                }
+                                                else if (module.IconClass == "briefcase")
+                                                {
+                                                    <path d="M10,2H14A2,2 0 0,1 16,4V6H20A2,2 0 0,1 22,8V19A2,2 0 0,1 20,21H4A2,2 0 0,1 2,19V8A2,2 0 0,1 4,6H8V4A2,2 0 0,1 10,2M14,6V4H10V6H14Z" />
+                                                }
+                                                else
+                                                {
+                                                    <path d="M18 2H8a4 4 0 0 0-4 4v12a4 4 0 0 0 4 4h10V2zM8 4h9v14H8a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                                                }
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <div class="mod-title">@module.ModuleName</div>
+                                            <div class="muted">@module.ModuleCode • @module.ModuleDescription</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge @module.SubjectBadgeClass">@module.ModuleDepartment</span></td>
+                                <td>@module.UserCount</td>
+                                <td>@module.ResourceCount</td>
+                                <td>Module #@module.ModuleId</td>
+                                <td class="ta-right">
+                                    <button class="btn ghost edit" @onclick="() => ShowEditModuleModal(module)">Edit</button>
+                                    <button class="btn danger delete" @onclick="() => ShowDeleteConfirmation(module)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1)
+        {
+            <div class="pagination">
+                <button class="btn ghost" @onclick="() => GoToPage(currentPage - 1)" disabled="@(currentPage <= 1)">
+                    Previous
+                </button>
+
+                @for (int i = Math.Max(1, currentPage - 2); i <= Math.Min(totalPages, currentPage + 2); i++)
+                {
+                    <button class="btn @(i == currentPage ? "primary" : "ghost")" @onclick="() => GoToPage(i)">
+                        @i
+                    </button>
+                }
+
+                <button class="btn ghost" @onclick="() => GoToPage(currentPage + 1)" disabled="@(currentPage >= totalPages)">
+                    Next
+                </button>
+
+                <span class="pagination-info">Page @currentPage of @totalPages</span>
+            </div>
+        }
+    </main>
+
+    <!-- Add/Edit Module modal -->
+    @if (showModuleModal)
+    {
+        <div class="mm-modal open">
+            <div class="scrim" @onclick="CloseModuleModal"></div>
+            <div class="mm-dialog">
+                <div class="mm-head">
+                    <h3>@(editingModule == null ? "Add Module" : "Edit Module")</h3>
+                    <button class="mm-close" @onclick="CloseModuleModal">✕</button>
+                </div>
+
+                <form @onsubmit="SaveModule" class="mm-form">
+                    <label>
+                        Module Name <span class="req">*</span>
+                        <input @bind="moduleForm.ModuleName" required />
+                        @if (!string.IsNullOrEmpty(moduleErrors.ModuleName))
+                        {
+                            <div class="error-message">@moduleErrors.ModuleName</div>
+                        }
+                    </label>
+
+                    <div class="grid">
+                        <label>
+                            Code <span class="req">*</span>
+                            <input @bind="moduleForm.ModuleCode" required maxlength="12"
+                                   pattern="[A-Za-z]{2,}\d{2,}"
+                                   title="Use a code like MTH101"
+                                   placeholder="e.g. MTH101" />
+                            @if (!string.IsNullOrEmpty(moduleErrors.ModuleCode))
+                            {
+                                <div class="error-message">@moduleErrors.ModuleCode</div>
+                            }
+                        </label>
+
+                    </div>
+
+                    <label>
+                        Description <span class="req">*</span>
+                        <textarea @bind="moduleForm.ModuleDescription" rows="3" placeholder="Short description" required></textarea>
+                        @if (!string.IsNullOrEmpty(moduleErrors.ModuleDescription))
+                        {
+                            <div class="error-message">@moduleErrors.ModuleDescription</div>
+                        }
+                    </label>
+
+                    @if (!string.IsNullOrEmpty(moduleGeneralError))
+                    {
+                        <div class="error-message">@moduleGeneralError</div>
+                    }
+
+                    <div class="mm-actions-row">
+                        <button type="submit" class="btn primary" disabled="@isSaving">
+                            @if (isSaving)
+                            {
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <span>Save</span>
+                            }
+                        </button>
+                        <button type="button" class="btn ghost" @onclick="CloseModuleModal">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    <!-- Delete Confirmation Modal -->
+    @if (moduleToDelete != null)
+    {
+        <div class="mm-modal open">
+            <div class="scrim" @onclick="() => moduleToDelete = null"></div>
+            <div class="mm-dialog">
+                <div class="mm-head">
+                    <h3>Delete Module</h3>
+                    <button class="mm-close" @onclick="() => moduleToDelete = null">✕</button>
+                </div>
+                <div class="mm-form">
+                    <p>Are you sure you want to delete <strong>@moduleToDelete.ModuleName</strong>?</p>
+                    <div class="warning-box">
+                        <strong>⚠️ Warning:</strong> This will permanently delete:
+                        <ul>
+                            <li>The module itself</li>
+                            <li>All student enrollments (@moduleToDelete.UserCount students)</li>
+                            <li>All tutor assignments (@moduleToDelete.TutorCount tutors)</li>
+                            <li>All topics and resources (@moduleToDelete.ResourceCount items)</li>
+                            <li>All related sessions and bookings</li>
+                        </ul>
+                        <strong>This action cannot be undone!</strong>
+                    </div>
+                </div>
+                <div class="mm-actions-row">
+                    <button class="btn ghost" @onclick="() => moduleToDelete = null">Cancel</button>
+                    <button class="btn danger" @onclick="DeleteModule" disabled="@isDeleting">
+                        @if (isDeleting)
+                        {
+                            <span>Deleting...</span>
+                        }
+                        else
+                        {
+                            <span>Delete Module</span>
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ModuleDto> allModules = new();
+    private List<ModuleDto> filteredModules = new();
+    private List<ModuleDto> paginatedModules = new();
+    private string searchQuery = "";
+    private string sortBy = "recent";
+    private string filterDepartment = "";
+    private bool isLoading = true;
+    private bool navOpen = false;
+
+    // Pagination
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages = 0;
+
+    // Modal state
+    private bool showModuleModal = false;
+    private ModuleDto? editingModule = null;
+    private ModuleDto? moduleToDelete = null;
+    private bool isSaving = false;
+    private bool isDeleting = false;
+
+    // Form data
+    private CreateModuleRequest moduleForm = new();
+    private string moduleGeneralError = "";
+    private ModuleErrors moduleErrors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadModulesAsync();
+    }
+
+    private async Task LoadModulesAsync()
+    {
+        Console.WriteLine("🔍 LoadModulesAsync called");
+        try
+        {
+            isLoading = true;
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                Console.WriteLine("❌ No authentication token found for loading modules");
+                return;
+            }
+
+            Console.WriteLine("✅ Authentication token found for loading modules");
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            Console.WriteLine("🔍 Making GET request to /api/admin/modules");
+            var response = await Http.GetAsync("/api/admin/modules");
+            Console.WriteLine($"🔍 GET response status: {response.StatusCode}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"🔍 Response content length: {content.Length}");
+                Console.WriteLine($"🔍 Response content preview: {content.Substring(0, Math.Min(200, content.Length))}...");
+
+                allModules = JsonSerializer.Deserialize<List<ModuleDto>>(content, new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    }) ?? new List<ModuleDto>();
+
+                Console.WriteLine($"✅ Loaded {allModules.Count} modules");
+                ApplyFiltersAndPagination();
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"❌ Error loading modules: {response.StatusCode} - {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Exception loading modules: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyFiltersAndPagination()
+    {
+        // Apply search filter
+        var filtered = allModules.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filtered = filtered.Where(m =>
+                m.ModuleName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                m.ModuleCode.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                m.ModuleDescription.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+        }
+
+        // Apply department filter
+        if (!string.IsNullOrWhiteSpace(filterDepartment))
+        {
+            filtered = filtered.Where(m => m.ModuleDepartment == filterDepartment);
+        }
+
+        // Apply sorting
+        filtered = sortBy switch
+        {
+            "code" => filtered.OrderBy(m => m.ModuleCode),
+            "name" => filtered.OrderBy(m => m.ModuleName),
+            "users" => filtered.OrderByDescending(m => m.UserCount),
+            "resources" => filtered.OrderByDescending(m => m.ResourceCount),
+            _ => filtered.OrderByDescending(m => m.ModuleId) // Most recent by ID
+        };
+
+        filteredModules = filtered.ToList();
+
+        // Calculate pagination
+        totalPages = (int)Math.Ceiling((double)filteredModules.Count / pageSize);
+        currentPage = Math.Max(1, Math.Min(currentPage, totalPages));
+
+        // Get paginated results
+        var skip = (currentPage - 1) * pageSize;
+        paginatedModules = filteredModules.Skip(skip).Take(pageSize).ToList();
+
+        StateHasChanged();
+    }
+
+    private void OnSearchInput(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? "";
+        currentPage = 1; // Reset to first page
+        ApplyFiltersAndPagination();
+    }
+
+    private void ApplyFilter(string department)
+    {
+        filterDepartment = department;
+        currentPage = 1; // Reset to first page
+        ApplyFiltersAndPagination();
+    }
+
+    private void ApplySort(string sort)
+    {
+        sortBy = sort;
+        currentPage = 1; // Reset to first page
+        ApplyFiltersAndPagination();
+    }
+
+    private void GoToPage(int page)
+    {
+        if (page >= 1 && page <= totalPages)
+        {
+            currentPage = page;
+            ApplyFiltersAndPagination();
+        }
+    }
+
+    private string GetSortLabel(string sort)
+    {
+        return sort switch
+        {
+            "code" => "Module code A-Z",
+            "name" => "Module name A-Z",
+            "users" => "Most users",
+            "resources" => "Most resources",
+            _ => "Most recent (by ID)"
+        };
+    }
+
+    private void ShowAddModuleModal()
+    {
+        editingModule = null;
+        moduleForm = new CreateModuleRequest();
+        moduleGeneralError = "";
+        moduleErrors = new ModuleErrors();
+        showModuleModal = true;
+    }
+
+    private void ShowEditModuleModal(ModuleDto module)
+    {
+        editingModule = module;
+        moduleForm = new CreateModuleRequest
+            {
+                ModuleCode = module.ModuleCode,
+                ModuleName = module.ModuleName,
+                ModuleDescription = module.ModuleDescription
+            };
+        moduleGeneralError = "";
+        moduleErrors = new ModuleErrors();
+        showModuleModal = true;
+    }
+
+    private void CloseModuleModal()
+    {
+        showModuleModal = false;
+        editingModule = null;
+        moduleForm = new CreateModuleRequest();
+        moduleGeneralError = "";
+        moduleErrors = new ModuleErrors();
+    }
+
+    private async Task SaveModule()
+    {
+        if (isSaving) return;
+
+        // Clear previous errors
+        moduleGeneralError = "";
+        moduleErrors = new ModuleErrors();
+
+        // Validate form
+        if (!ValidateModuleForm())
+        {
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            Console.WriteLine($"🔍 HandleModuleSubmit called - Editing: {editingModule != null}");
+            Console.WriteLine($"🔍 Module form data: {System.Text.Json.JsonSerializer.Serialize(moduleForm)}");
+
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token))
+            {
+                Console.WriteLine("❌ No authentication token found");
+                moduleGeneralError = "Authentication token not found. Please log in.";
+                return;
+            }
+
+            Console.WriteLine("✅ Authentication token found");
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            HttpResponseMessage response;
+            if (editingModule == null)
+            {
+                // Create new module
+                Console.WriteLine("🔍 Creating new module...");
+                response = await Http.PostAsJsonAsync("/api/admin/modules", moduleForm);
+                Console.WriteLine($"🔍 POST response status: {response.StatusCode}");
+            }
+            else
+            {
+                // Update existing module
+                Console.WriteLine($"🔍 Updating module {editingModule.ModuleId}...");
+                var updateRequest = new UpdateModuleRequest
+                    {
+                        ModuleCode = moduleForm.ModuleCode,
+                        ModuleName = moduleForm.ModuleName,
+                        ModuleDescription = moduleForm.ModuleDescription
+                    };
+                response = await Http.PutAsJsonAsync($"/api/admin/modules/{editingModule.ModuleId}", updateRequest);
+                Console.WriteLine($"🔍 PUT response status: {response.StatusCode}");
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("✅ Module operation successful");
+                var responseContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"🔍 Response content: {responseContent}");
+                await JS.InvokeVoidAsync("alert", $"Module {(editingModule == null ? "created" : "updated")} successfully!");
+                CloseModuleModal();
+                await LoadModulesAsync(); // Refresh the module list
+            }
+            else
+            {
+                Console.WriteLine($"❌ Module operation failed with status: {response.StatusCode}");
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"🔍 Error content: {errorContent}");
+
+                var errorResult = JsonSerializer.Deserialize<JsonElement>(errorContent);
+
+                if (errorResult.TryGetProperty("error", out var errorElement))
+                {
+                    moduleGeneralError = errorElement.GetString() ?? "Failed to save module";
+                }
+                else
+                {
+                    moduleGeneralError = "Failed to save module";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            moduleGeneralError = $"Error saving module: {ex.Message}";
+            Console.WriteLine($"Error saving module: {ex.Message}");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private bool ValidateModuleForm()
+    {
+        bool isValid = true;
+
+        // Module name validation
+        if (string.IsNullOrWhiteSpace(moduleForm.ModuleName))
+        {
+            moduleErrors.ModuleName = "Module name is required";
+            isValid = false;
+        }
+
+        // Module code validation
+        if (string.IsNullOrWhiteSpace(moduleForm.ModuleCode))
+        {
+            moduleErrors.ModuleCode = "Module code is required";
+            isValid = false;
+        }
+        else if (!System.Text.RegularExpressions.Regex.IsMatch(moduleForm.ModuleCode, @"^[A-Za-z]{2,}\d{2,}$"))
+        {
+            moduleErrors.ModuleCode = "Module code must be in format like MTH101 (2+ letters followed by 2+ digits)";
+            isValid = false;
+        }
+        else if (allModules.Any(m => m.ModuleCode.Equals(moduleForm.ModuleCode, StringComparison.OrdinalIgnoreCase) && m.ModuleId != editingModule?.ModuleId))
+        {
+            moduleErrors.ModuleCode = "A module with this code already exists";
+            isValid = false;
+        }
+
+        // Description validation
+        if (string.IsNullOrWhiteSpace(moduleForm.ModuleDescription))
+        {
+            moduleErrors.ModuleDescription = "Module description is required";
+            isValid = false;
+        }
+
+
+        return isValid;
+    }
+
+    private void ShowDeleteConfirmation(ModuleDto module)
+    {
+        moduleToDelete = module;
+    }
+
+    private async Task DeleteModule()
+    {
+        if (moduleToDelete == null || isDeleting) return;
+
+        isDeleting = true;
+
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+            if (string.IsNullOrEmpty(token)) return;
+
+            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.DeleteAsync($"/api/admin/modules/{moduleToDelete.ModuleId}");
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", $"Module {moduleToDelete.ModuleName} has been deleted successfully.");
+                moduleToDelete = null;
+                await LoadModulesAsync(); // Refresh
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Failed to delete module: {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error deleting module: {ex.Message}");
+        }
+        finally
+        {
+            isDeleting = false;
+        }
+    }
+
+    private void ToggleNav()
+    {
+        navOpen = !navOpen;
+    }
+
+    public class ModuleErrors
+    {
+        public string ModuleName { get; set; } = "";
+        public string ModuleCode { get; set; } = "";
+        public string ModuleDescription { get; set; } = "";
+    }
+}

@@ -1,0 +1,814 @@
+﻿@page "/tutor/availability"
+@inject IJSRuntime JS
+@inject HttpClient Http
+@using Tutorly.Shared
+@using System.Text.Json
+
+<PageTitle>Availability | Tutorly</PageTitle>
+
+<div id="page-availability" class="av-root">
+    <!-- ===== NAVBAR ===== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="taToggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/tutor/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                </a>
+            </div>
+
+            <nav class="db-nav">
+                <a class="db-nav__link" href="/tutor/dashboard">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 4l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+                    <span>Home</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" aria-current="page" href="/tutor/availability">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg>
+                    <span>Availability</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/queue">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/resources">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4zM8 4v16" /></svg>
+                    <span>Resources</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/messages">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/analytics">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg>
+                    <span>Analytics</span>
+                </a>
+                <a class="db-nav__link" href="/tutorforum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12a4 4 0 0 1-4 4H9l-4 3V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4z" />
+                        <path d="M7 14H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2" />
+                    </svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/tutorsessiondetails">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span>
+                </a>
+            </nav>
+
+            <div class="db-actions" id="taActionsBar">
+                <div class="search-wrap" id="taSearchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="taBtnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="taSearchInput" type="text" placeholder="Search…">
+                </div>
+
+                <div class="notify-host">
+                    <button class="db-iconbtn" aria-label="Notifications" id="btnNotify">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5" />
+                            <path d="M10 21a2 2 0 0 0 4 0" />
+                        </svg>
+                    </button>
+
+                    <div class="notify-panel soft-panel" id="panelNotify" role="menu" aria-label="Notifications">
+                        <div class="dropdown__head">Notifications</div>
+
+                        <div class="note-row">
+                            <div class="note-icon cal">📅</div>
+                            <div>
+                                <div class="note-title">Session starts soon</div>
+                                <div class="note-sub">Algebra Basics at 5:00 PM.</div>
+                            </div>
+                        </div>
+
+                        <div class="note-row">
+                            <div class="note-icon star">⭐</div>
+                            <div>
+                                <div class="note-title">New rating</div>
+                                <div class="note-sub">You received a 5★ from Alex.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Profile button + popover -->
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=4" alt="Profile" />
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#modalPhoto">
+                                <div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalSettings">
+                                <div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalBadges">
+                                <div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-action="logout">
+                                <div class="pop__row"><div class="pop__icon">🚪</div><div><div class="pop__title">Logout</div><div class="pop__text">Sign out of your account.</div></div></div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== BODY ===== -->
+    <div class="av-wrap">
+        <section class="av-card">
+            <h2 class="av-title">Set Your Availability</h2>
+            <p class="av-sub">Select the times when you're available to help students</p>
+
+            <div class="av-banner">
+                <div class="av-i">i</div>
+                <div>Your availability is set in <strong>@LocalTz</strong>. All times displayed are in your local time zone.</div>
+            </div>
+
+            <div class="av-grid">
+                <div class="av-grid__head"></div>
+                @foreach (var d in Days)
+                {
+                    <div class="av-grid__head">@d.Label</div>
+                }
+
+                @for (int r = 0; r < RowCount; r++)
+                {
+                    var start = StartHour.Add(TimeSpan.FromHours(r));
+                    <div class="av-grid__time">@FormatTime(start)</div>
+
+                    @foreach (var d in Days)
+                    {
+                        var busy = HasSlot(d.Day, start, TimeSpan.FromHours(1));
+                        <button class="av-cell @(busy ? "is-busy" : null)"
+                                @onclick="() => ToggleCell(d.Day, start)"
+                                title="@(busy ? "Click to clear this hour" : "Click to mark available")">
+                        </button>
+                    }
+                }
+            </div>
+
+            <div class="av-editor">
+                <div class="av-row">
+                    <div class="av-col">
+                        <label class="av-label">Module</label>
+                        <select class="av-in" @bind="SelectedModuleId">
+                            <option value="">All Modules</option>
+                            @foreach (var module in AvailableModules)
+                            {
+                                <option value="@module.ModuleId">@module.ModuleCode - @module.ModuleName</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="av-col">
+                        <label class="av-label">Start Time</label>
+                        <select class="av-in" @bind="StartSelect">
+                            @foreach (var t in TimeOptions)
+                            {
+                                <option value="@t">@t</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="av-col">
+                        <label class="av-label">End Time</label>
+                        <select class="av-in" @bind="EndSelect">
+                            @foreach (var t in TimeOptions)
+                            {
+                                <option value="@t">@t</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="av-days">
+                    <div class="av-label">Days</div>
+                    <div class="av-daychips">
+                        @foreach (var d in Days)
+                        {
+                            var on = SelectedDays.Contains(d.Day);
+                            <button type="button" class="av-chip @(on ? "on" : null)" @onclick="() => ToggleDay(d.Day)">@d.Label</button>
+                        }
+                    </div>
+                </div>
+
+                <div class="av-actions">
+                    <button class="btn btn--ghost" @onclick="AddSlot">Add Slot</button>
+                    <button class="btn btn--primary" @onclick="Save">Save Availability</button>
+                    <!-- NEW: open Exceptions modal -->
+                    <button type="button" class="btn" id="btnExceptions">Manage Exceptions</button>
+                </div>
+
+                @if (SavedAt is not null)
+                {
+                    <div class="av-saved">Saved @SavedAt.Value.ToString("h:mm tt")</div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <!-- ===== MODALS ===== -->
+    <div class="modal" id="modalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+            <div class="modal__head"><span id="modalPhotoTitle">Change Photo</span><button class="btn btn--ghost" data-close="modalPhoto">✕</button></div>
+            <div class="modal__body">
+                <div class="photo-row">
+                    <img id="photoPreview" src="https://i.pravatar.cc/80?img=4" alt="Preview">
+                    <div>
+                        <input type="file" id="photoInput" accept="image/*">
+                        <div class="muted" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__foot"><button class="btn" data-close="modalPhoto">Cancel</button><button class="btn btn--primary" id="savePhotoBtn">Save</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle">
+            <div class="modal__head"><span id="modalSettingsTitle">Profile Settings</span><button class="btn btn--ghost" data-close="modalSettings">✕</button></div>
+            <div class="modal__body">
+                <div class="field"><label for="firstName">First name</label><input id="firstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label for="lastName">Last name</label><input id="lastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label for="degree">Degree</label>
+                    <select id="degree"><option value="">Select…</option><option>BComp</option><option>BIT</option><option>DIT</option><option>Other</option></select>
+                </div>
+                <div class="muted">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot"><button class="btn" data-close="modalSettings">Cancel</button><button class="btn btn--primary" id="saveSettingsBtn">Save</button></div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalBadgesTitle">
+            <div class="modal__head"><span id="modalBadgesTitle">Your Achievements</span><button class="btn btn--ghost" data-close="modalBadges">✕</button></div>
+            <div class="modal__body">
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>Active Learner</strong> — asked 10+ questions this week</li>
+                    <li><strong>Helper</strong> — answered 3 peer questions</li>
+                    <li><strong>On Track</strong> — met your weekly goal</li>
+                </ul>
+            </div>
+            <div class="modal__foot"><button class="btn btn--primary" data-close="modalBadges">Nice!</button></div>
+        </div>
+    </div>
+
+    <!-- NEW: Exceptions modal (moved content from section into modal) -->
+    <div class="modal" id="modalExceptions" aria-hidden="true">
+        <div class="modal__card modal__card--lg" role="dialog" aria-modal="true" aria-labelledby="modalExceptionsTitle">
+            <div class="modal__head"><span id="modalExceptionsTitle">Availability Exceptions</span><button class="btn btn--ghost" data-close="modalExceptions">✕</button></div>
+            <div class="modal__body">
+                <p class="muted" style="margin-top:0">Add blackout dates or one-off available times</p>
+
+                <div class="av-editor" style="padding:0">
+                    <div class="av-row">
+                        <div class="av-col">
+                            <label class="av-label">Date</label>
+                            <input type="date" class="av-in" @bind="newException.ExceptionDate" />
+                        </div>
+                        <div class="av-col" style="display:flex;align-items:flex-end">
+                            <label class="av-label" style="display:flex;gap:8px;align-items:center;">
+                                <input type="checkbox" @bind="newException.IsAvailable" />
+                                Available (uncheck for blackout)
+                            </label>
+                        </div>
+                    </div>
+
+                    @if (newException.IsAvailable)
+                    {
+                        <div class="av-row">
+                            <div class="av-col">
+                                <label class="av-label">Start Time</label>
+                                <input type="time" class="av-in" value="@newException.StartTimeString" @onchange="@((ChangeEventArgs e) => newException.StartTimeString = e.Value?.ToString() ?? "09:00")" />
+                            </div>
+                            <div class="av-col">
+                                <label class="av-label">End Time</label>
+                                <input type="time" class="av-in" value="@newException.EndTimeString" @onchange="@((ChangeEventArgs e) => newException.EndTimeString = e.Value?.ToString() ?? "10:00")" />
+                            </div>
+                        </div>
+                    }
+
+                    <div class="av-row">
+                        <div class="av-col" style="min-width:320px">
+                            <label class="av-label">Reason (optional)</label>
+                            <input type="text" class="av-in" @bind="newException.Reason" placeholder="e.g., Holiday, Personal appointment" />
+                        </div>
+                    </div>
+
+                    <div class="av-actions">
+                        <button class="btn btn--primary" @onclick="AddException">Add Exception</button>
+                    </div>
+                </div>
+
+                @if (exceptions.Any())
+                {
+                    <div class="av-exceptions">
+                        <h3>Current Exceptions</h3>
+                        @foreach (var exception in exceptions)
+                        {
+                            <div class="av-exception">
+                                <div class="av-exception-info">
+                                    <strong>@exception.ExceptionDate.ToString("MMM dd, yyyy")</strong>
+                                    @if (exception.IsAvailable)
+                                    {
+                                        <span>Available: @exception.StartTime - @exception.EndTime</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="av-blackout">Blackout</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(exception.Reason))
+                                    {
+                                        <span class="av-reason">(@exception.Reason)</span>
+                                    }
+                                </div>
+                                <button class="btn btn--ghost btn--sm" @onclick="@(() => DeleteException(exception.ExceptionId ?? Guid.Empty))">Delete</button>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+            <div class="modal__foot">
+                <button class="btn btn--primary" data-close="modalExceptions">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    record DayVM(string Label, DayOfWeek Day);
+
+    static readonly TimeSpan StartHour = new(9, 0, 0);
+    static readonly TimeSpan EndHour = new(18, 0, 0);
+    int RowCount => (int)(EndHour - StartHour).TotalHours;
+
+    string LocalTz => TimeZoneInfo.Local.Id;
+    string FormatTime(TimeSpan t) => DateTime.Today.Add(t).ToString("h:mm tt");
+
+    readonly DayVM[] Days = new[] {
+        new DayVM("Mon", DayOfWeek.Monday),
+        new DayVM("Tue", DayOfWeek.Tuesday),
+        new DayVM("Wed", DayOfWeek.Wednesday),
+        new DayVM("Thu", DayOfWeek.Thursday),
+        new DayVM("Fri", DayOfWeek.Friday),
+        new DayVM("Sat", DayOfWeek.Saturday),
+        new DayVM("Sun", DayOfWeek.Sunday)
+    };
+
+    class Slot { public DayOfWeek Day { get; set; } public TimeSpan Start { get; set; } public TimeSpan End { get; set; } }
+    List<Slot> Slots = new();
+
+    string[] TimeOptions = BuildTimes(6, 22, 30);
+    string StartSelect = "9:00 AM";
+    string EndSelect = "10:00 AM";
+
+    HashSet<DayOfWeek> SelectedDays = new(new[] { DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Thursday });
+    DateTime? SavedAt;
+
+    // New backend integration properties
+    private List<AvailabilityBlockDto> availabilityBlocks = new();
+    private List<AvailabilityExceptionDto> exceptions = new();
+    private int currentTutorId = 1; // Will be set from auth context
+    private List<Module> AvailableModules = new();
+    private int? SelectedModuleId = null;
+
+    private AvailabilityExceptionDto newException = new()
+    {
+        ExceptionDate = DateTime.Today,
+        IsAvailable = false,
+        StartTimeString = "09:00",
+        EndTimeString = "10:00"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get tutor ID from auth context
+        try
+        {
+            var profile = await Http.GetFromJsonAsync<UnifiedSessionDto>("/api/profile/me");
+            if (profile?.Profile?.TutorId != null)
+            {
+                currentTutorId = profile.Profile.TutorId.Value;
+                Console.WriteLine($"Loaded tutor ID: {currentTutorId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tutor profile: {ex.Message}");
+        }
+
+        // Load from localStorage (existing functionality)
+        try
+        {
+            var json = await JS.InvokeAsync<string>("taLocalGet", "tutor_availability");
+            if (!string.IsNullOrWhiteSpace(json))
+            {
+                var list = System.Text.Json.JsonSerializer.Deserialize<List<Slot>>(json);
+                if (list is not null) Slots = list;
+            }
+        }
+        catch { }
+
+        // Load from backend (new functionality)
+        await LoadTutorModules();
+        await LoadAvailabilityFromBackend();
+        await LoadExceptionsFromBackend();
+    }
+
+    private async Task LoadTutorModules()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<Module>>($"/api/module/tutor/{currentTutorId}");
+            if (response != null)
+            {
+                AvailableModules = response;
+                Console.WriteLine($"Loaded {AvailableModules.Count} modules for tutor {currentTutorId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tutor modules: {ex.Message}");
+        }
+    }
+
+    private async Task LoadAvailabilityFromBackend()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<AvailabilityBlockDto>>($"/api/availability/tutor/{currentTutorId}");
+            if (response != null)
+            {
+                availabilityBlocks = response;
+                // Convert backend data to local Slots for display
+                ConvertBackendToSlots();
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error loading availability: {ex.Message}");
+        }
+    }
+
+    private async Task LoadExceptionsFromBackend()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<List<AvailabilityExceptionDto>>($"/api/availability/tutor/{currentTutorId}/exceptions");
+            if (response != null)
+            {
+                exceptions = response;
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error loading exceptions: {ex.Message}");
+        }
+    }
+
+    private void ConvertBackendToSlots()
+    {
+        Slots.Clear();
+        foreach (var block in availabilityBlocks)
+        {
+            var dayOfWeek = (DayOfWeek)block.DayOfWeek;
+            var start = TimeSpan.Parse(block.StartTime);
+            var end = TimeSpan.Parse(block.EndTime);
+
+            Slots.Add(new Slot { Day = dayOfWeek, Start = start, End = end });
+        }
+    }
+
+    private void ConvertSlotsToBackend()
+    {
+        availabilityBlocks.Clear();
+        foreach (var slot in Slots)
+        {
+            availabilityBlocks.Add(new AvailabilityBlockDto
+            {
+                AvailabilityId = Guid.NewGuid(),
+                TutorId = currentTutorId,
+                ModuleId = SelectedModuleId,
+                DayOfWeek = (int)slot.Day,
+                StartTime = slot.Start.ToString(@"hh\:mm"),
+                EndTime = slot.End.ToString(@"hh\:mm"),
+                IsRecurring = true,
+                EffectiveFrom = DateTime.Today,
+                Timezone = "Africa/Johannesburg"
+            });
+        }
+    }
+
+    static string[] BuildTimes(int fromHour, int toHour, int stepMins)
+    {
+        var list = new List<string>();
+        var t = new TimeSpan(fromHour, 0, 0);
+        var end = new TimeSpan(toHour, 0, 0);
+        while (t <= end) { list.Add(DateTime.Today.Add(t).ToString("h:mm tt")); t = t.Add(TimeSpan.FromMinutes(stepMins)); }
+        return list.ToArray();
+    }
+
+    static TimeSpan ParseTime(string label) => DateTime.Parse(label).TimeOfDay;
+    static bool Overlaps(TimeSpan s1, TimeSpan e1, TimeSpan s2, TimeSpan e2) => s1 < e2 && s2 < e1;
+
+    bool HasSlot(DayOfWeek day, TimeSpan start, TimeSpan span)
+        => Slots.Any(s => s.Day == day && Overlaps(s.Start, s.End, start, start.Add(span)));
+
+    void ToggleCell(DayOfWeek day, TimeSpan start)
+    {
+        var end = start.Add(TimeSpan.FromHours(1));
+        var hit = Slots.FirstOrDefault(s => s.Day == day && Overlaps(s.Start, s.End, start, end));
+        if (hit is not null) Slots.Remove(hit); else Slots.Add(new Slot { Day = day, Start = start, End = end });
+    }
+
+    void ToggleDay(DayOfWeek d) { if (!SelectedDays.Add(d)) SelectedDays.Remove(d); }
+
+    void AddSlot()
+    {
+        var s = ParseTime(StartSelect); var e = ParseTime(EndSelect); if (e <= s) return;
+        foreach (var d in SelectedDays)
+        {
+            Slots.RemoveAll(x => x.Day == d && Overlaps(x.Start, x.End, s, e));
+            Slots.Add(new Slot { Day = d, Start = s, End = e });
+        }
+    }
+
+    async Task Save()
+    {
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(Slots);
+            await JS.InvokeVoidAsync("taLocalSet", "tutor_availability", json);
+
+            ConvertSlotsToBackend();
+            var request = new
+            {
+                TutorId = currentTutorId,
+                AvailabilityBlocks = availabilityBlocks
+            };
+
+            var response = await Http.PostAsJsonAsync("/api/availability/tutor", request);
+            if (response.IsSuccessStatusCode)
+            {
+                SavedAt = DateTime.Now;
+                await JS.InvokeVoidAsync("alert", "Availability saved successfully!");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to save availability to server");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error saving availability: {ex.Message}");
+        }
+    }
+
+    private async Task AddException()
+    {
+        try
+        {
+            newException.TutorId = currentTutorId;
+            newException.StartTime = newException.StartTimeString;
+            newException.EndTime = newException.EndTimeString;
+
+            var response = await Http.PostAsJsonAsync("/api/availability/tutor/exception", newException);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadExceptionsFromBackend();
+                newException = new AvailabilityExceptionDto
+                {
+                    ExceptionDate = DateTime.Today,
+                    IsAvailable = false,
+                    StartTimeString = "09:00",
+                    EndTimeString = "10:00"
+                };
+                StateHasChanged();
+                await JS.InvokeVoidAsync("alert", "Exception added successfully!");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to add exception");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error adding exception: {ex.Message}");
+        }
+    }
+
+    private async Task DeleteException(Guid exceptionId)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"/api/availability/tutor/exception/{exceptionId}");
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadExceptionsFromBackend();
+                StateHasChanged();
+                await JS.InvokeVoidAsync("alert", "Exception deleted successfully!");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to delete exception");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error deleting exception: {ex.Message}");
+        }
+    }
+}
+
+<script>
+    // Theme + search
+    (function(){
+      try{ const theme=localStorage.getItem('theme'); if(theme==='dark'){ document.documentElement.classList.add('theme-dark'); } }catch(_){}
+      const sw=document.getElementById('taSearchWrap'), sb=document.getElementById('taBtnSearch'), si=document.getElementById('taSearchInput');
+      sb?.addEventListener('click',e=>{e.preventDefault();const o=sw.classList.toggle('open'); if(o){si?.focus();}});
+    })();
+    function taToggleTheme(){
+      const dark=document.documentElement.classList.toggle('theme-dark');
+      try{ localStorage.setItem('theme', dark ? 'dark' : 'light'); }catch(_){}
+    }
+    window.taLocalGet=(k)=>localStorage.getItem(k);
+    window.taLocalSet=(k,v)=>localStorage.setItem(k,v);
+
+    // ===== Profile + modal wiring (scoped) =====
+    (function profileUX(){
+      const root = document.getElementById('page-availability');
+      const avatarImg = document.getElementById('avatarImg');
+      const popProfile = document.getElementById('popProfile');
+      const btnProfile = document.getElementById('btnProfile');
+      const actionsBar = document.getElementById('taActionsBar');
+          // refs
+    const btnNotify   = document.getElementById('btnNotify');
+    const panelNotify = document.getElementById('panelNotify');
+
+    // toggle open/close
+    btnNotify?.addEventListener('click',(e)=>{
+      e.preventDefault();
+      const open = panelNotify.classList.toggle('show');
+      if (open) popProfile.classList.remove('show'); // never overlap
+    });
+
+    // close when clicking anywhere outside the actions bar
+    document.addEventListener('click',(e)=>{
+      const within = e.target.closest('#taActionsBar');
+      if(!within){
+        panelNotify?.classList.remove('show');
+        popProfile.classList.remove('show');
+        btnProfile?.setAttribute('aria-expanded','false');
+      }
+    });
+
+
+      // open Exceptions modal
+      const btnExc = root.querySelector('#btnExceptions');
+      btnExc?.addEventListener('click', ()=> {
+        root.querySelector('#modalExceptions')?.classList.add('show');
+      });
+
+      // profile popover
+      btnProfile?.addEventListener('click',(e)=>{
+        e.preventDefault();
+        const s = popProfile.classList.toggle('show');
+        btnProfile.setAttribute('aria-expanded', s ? 'true' : 'false');
+      });
+      document.addEventListener('click',(e)=>{
+        const within = e.target.closest('#taActionsBar');
+        if(!within){ popProfile.classList.remove('show'); btnProfile?.setAttribute('aria-expanded','false'); }
+      });
+
+      // open other modals
+      root.querySelectorAll('#popProfile .clickable[data-target]').forEach(li=>{
+        li.addEventListener('click',()=>{
+          const sel = li.getAttribute('data-target');
+          if(sel){ root.querySelector(sel)?.classList.add('show'); popProfile.classList.remove('show'); }
+        });
+      });
+
+      // logout
+      popProfile.querySelector('[data-action="logout"]')?.addEventListener('click',()=>{
+        try{
+          localStorage.removeItem('profile.photo');
+          localStorage.removeItem('profile.first');
+          localStorage.removeItem('profile.last');
+          localStorage.removeItem('profile.degree');
+        }catch(_){}
+        window.location.href = '/login';
+      });
+
+      // modal close (ESC, backdrop, buttons)
+      root.querySelectorAll('.modal').forEach(m=>{
+        m.addEventListener('click',(e)=>{ if(e.target===m) m.classList.remove('show'); });
+      });
+      root.querySelectorAll('[data-close]').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          const id = btn.getAttribute('data-close');
+          root.querySelector('#'+id)?.classList.remove('show');
+        });
+      });
+      document.addEventListener('keydown',(e)=>{
+        if(e.key==='Escape'){ root.querySelectorAll('.modal.show').forEach(m=>m.classList.remove('show')); }
+      });
+
+      // photo preview + save
+      const photoInput = root.querySelector('#photoInput');
+      const photoPreview = root.querySelector('#photoPreview');
+      root.querySelector('#savePhotoBtn')?.addEventListener('click',()=>{
+        try{ localStorage.setItem('profile.photo', photoPreview.src); avatarImg.src = photoPreview.src; }catch(_){}
+        root.querySelector('#modalPhoto')?.classList.remove('show');
+      });
+      photoInput?.addEventListener('change',()=>{
+        const f = photoInput.files?.[0]; if(!f) return;
+        const r = new FileReader(); r.onload=()=>{ photoPreview.src = r.result; }; r.readAsDataURL(f);
+      });
+
+      // settings save / load
+      const firstName = root.querySelector('#firstName');
+      const lastName  = root.querySelector('#lastName');
+      const degree    = root.querySelector('#degree');
+      root.querySelector('#saveSettingsBtn')?.addEventListener('click',()=>{
+        try{
+          localStorage.setItem('profile.first', firstName.value.trim());
+          localStorage.setItem('profile.last',  lastName.value.trim());
+          localStorage.setItem('profile.degree', degree.value);
+        }catch(_){}
+        root.querySelector('#modalSettings')?.classList.remove('show');
+      });
+
+      // load persisted
+      (function load(){
+        try{
+          const p = localStorage.getItem('profile.photo');
+          if(p){ avatarImg.src=p; const prev = root.querySelector('#photoPreview'); if(prev) prev.src=p; }
+          if(firstName) firstName.value = localStorage.getItem('profile.first') || '';
+          if(lastName)  lastName.value  = localStorage.getItem('profile.last')  || '';
+          if(degree)    degree.value    = localStorage.getItem('profile.degree')|| '';
+        }catch(_){}
+      })();
+    })();
+</script>
+
+<style>
+    /* Additional styles for exceptions section */
+    .av-exceptions {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--db-border)
+    }
+
+        .av-exceptions h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+            color: var(--db-text)
+        }
+
+    .av-exception {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid var(--db-border);
+        border-radius: 6px;
+        margin-bottom: 10px;
+        background: var(--db-bg)
+    }
+
+    .av-exception-info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px
+    }
+
+        .av-exception-info strong {
+            color: var(--db-text)
+        }
+
+    .av-blackout {
+        color: #dc3545;
+        font-weight: 600
+    }
+
+    .av-reason {
+        color: var(--db-muted);
+        font-style: italic;
+        font-size: 14px
+    }
+
+    .btn--sm {
+        padding: 4px 8px;
+        font-size: 12px
+    }
+</style>

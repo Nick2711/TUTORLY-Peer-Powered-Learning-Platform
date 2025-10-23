@@ -1,0 +1,1301 @@
+﻿@page "/mymodules"
+@inject IJSRuntime JS
+@inject ResourceService ResourceService
+@inject JwtHttpClient Http
+@inject NavigationManager Nav
+@using Tutorly.Shared
+@using Tutorly.Client.Services
+@using System.Text.Json
+
+<PageTitle>My Modules</PageTitle>
+
+
+<!-- ============ NAVBAR (identical to dashboard, with My Modules) ============ -->
+<header class="db-topbar">
+    <div class="db-topbar__inner">
+        <div class="db-topbar__left">
+            <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+            </button>
+            <a class="db-brand" href="/dashboard">
+                <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                <span class="db-brand__text">Tutorly</span>
+            </a>
+        </div>
+
+        <nav class="db-nav" id="mainNav">
+            <a class="db-nav__link" href="/dashboard" data-tab="home">
+                <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg><span>Home</span>
+            </a>
+            <a class="db-nav__link" href="/modules" data-tab="modules">
+                <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z" /></svg><span>Modules</span>
+            </a>
+            <a class="db-nav__link" href="/forum" data-tab="forum">
+                <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /></svg><span>Forum</span>
+            </a>
+            <a class="db-nav__link" href="/calendar/overview" data-tab="meetings">
+                <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg><span>Meetings</span>
+            </a>
+            <a class="db-nav__link" href="/messages" data-tab="messages">
+                <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg><span>Messages</span>
+            </a>
+            <a class="db-nav__link db-nav__link--active" href="/mymodules" data-tab="mymodules">
+                <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 4h18M3 10h18M3 16h18" /></svg><span>My Modules</span>
+            </a>
+        </nav>
+
+        <div class="db-actions" id="actionsBar">
+            <div class="search-wrap" id="searchWrap">
+                <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                </button>
+                <input id="searchInput" type="text" placeholder="Search…">
+            </div>
+            <div style="position:relative">
+                <button class="db-iconbtn" aria-haspopup="true" aria-expanded="false" id="btnNotif">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                </button>
+                <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                    <div class="pop__head">Notifications</div>
+                    <ul class="pop__list">
+                        <li class="pop__item"><div class="pop__row"><div class="pop__icon">🎓</div><div><div class="pop__title">New badge unlocked</div><div class="pop__text">You earned “Active Learner”.</div></div></div></li>
+                        <li class="pop__item"><div class="pop__row"><div class="pop__icon">💬</div><div><div class="pop__title">Reply from Anouk</div><div class="pop__text">She commented on your code review thread.</div></div></div></li>
+                    </ul>
+                </div>
+            </div>
+            <div style="position:relative">
+                <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                    <img id="avatarImg" src="https://i.pravatar.cc/40?img=3" alt="Profile" />
+                </button>
+                <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:320px">
+                    <div class="pop__head">My Profile</div>
+                    <ul class="pop__list">
+                        <li class="pop__item clickable" data-target="#modalPhoto">
+                            <div class="pop__row">
+                                <div class="pop__icon">🖼️</div>
+                                <div>
+                                    <div class="pop__title">Change Photo</div>
+                                    <div class="pop__text">Upload a new profile picture.</div>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="pop__item clickable" data-target="#modalSettings">
+                            <div class="pop__row">
+                                <div class="pop__icon">⚙️</div>
+                                <div>
+                                    <div class="pop__title">Settings</div>
+                                    <div class="pop__text">Manage account and preferences.</div>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="pop__item clickable" data-target="#modalAchievements">
+                            <div class="pop__row">
+                                <div class="pop__icon">🏆</div>
+                                <div>
+                                    <div class="pop__title">Achievements</div>
+                                    <div class="pop__text">See all earned badges.</div>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="pop__item" id="btnLogout">
+                            <div class="pop__row">
+                                <div class="pop__icon">🚪</div>
+                                <div>
+                                    <div class="pop__title">Logout</div>
+                                    <div class="pop__text">Sign out of your account.</div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="mm-wrap">
+    <h1 class="mm-title" id="mmTitle">My Modules</h1>
+
+    <div class="mm-grid">
+        <!-- PROGRESS -->
+        <section class="mm-card">
+            <div class="mm-head">
+                <span>Study Progress</span>
+                <span class="week-pill" id="mmWeek">0 of 1 Tasks</span>
+            </div>
+            <div class="mm-body">
+                <div class="ring-wrap">
+                    <div class="ring-box">
+                        <canvas id="mmCircle" width="150" height="150"></canvas>
+                        <div class="ring-label" id="ringPct">0%</div>
+                    </div>
+                </div>
+                <div class="bar-label">Completed <span style="float:right" id="mmWeeks">0/1 Tasks</span></div>
+                <div class="mm-bar"><span id="mmFill" class="mm-fill" style="width:0%"></span></div>
+            </div>
+        </section>
+
+        <!-- UPCOMING -->
+        <section class="mm-card">
+            <div class="mm-head">Upcoming Sessions</div>
+            <ul class="mm-list" id="sessList"></ul>
+            <div class="mm-body" style="padding-top:0">
+                <a class="mm-link" href="/calendar/overview">View all sessions</a>
+            </div>
+        </section>
+
+        <!-- QUICK ACTIONS -->
+        <section class="mm-card">
+            <div class="mm-head">Quick Actions</div>
+            <div class="qa-grid">
+                <button id="qaMsg" class="qa @(IsCreatingChat ? "disabled" : "")" type="button" title="Message tutor" @onclick="CreateOrOpenTutorChat" disabled="@IsCreatingChat">
+                    <span class="ico">💬</span><span class="txt">Message<br />tutor</span>
+                </button>
+                <button id="qaSched" class="qa" type="button" title="Schedule session">
+                    <span class="ico">📅</span><span class="txt">Schedule<br />Session</span>
+                </button>
+                <button id="qaFollow" class="qa" type="button" title="Follow / Following">
+                    <span class="ico" id="followIco">🔖</span><span class="txt" id="followTxt">Follow</span>
+                </button>
+                <!-- NEW: Rate Tutor -->
+                <button id="qaRate" class="qa" type="button" title="Rate your tutor">
+                    <span class="ico">⭐</span><span class="txt">Rate<br />Tutor</span>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- STUDY CHECKLIST -->
+    <section class="mm-card mm-section">
+        <div class="mm-head">
+            <span>Study Checklist</span>
+            <button class="btn" id="btnAddItem">+ Add Item</button>
+        </div>
+        <ul class="mm-list" id="checkList"></ul>
+    </section>
+
+    <!-- TUTOR RESOURCES -->
+    <section class="mm-card mm-section">
+        <div class="mm-head">
+            <span>Tutor Resources</span>
+            <button class="btn" @onclick="RefreshResources" disabled="@IsLoadingResources">
+                @if (IsLoadingResources)
+                {
+                    <span>Loading...</span>
+                }
+                else
+                {
+                    <span>Refresh</span>
+                }
+            </button>
+        </div>
+        @if (IsLoadingResources)
+        {
+            <div class="mm-body" style="color:var(--mm-muted)">Loading tutor resources...</div>
+        }
+        else if (!TutorResources.Any())
+        {
+            <div class="mm-body" style="color:var(--mm-muted)">No tutor uploads yet.</div>
+        }
+        else
+        {
+            <ul class="res-list">
+                @foreach (var resource in TutorResources.Take(10)) // Show first 10 resources
+                {
+                    <li class="res-item">
+                        <div class="res-ico @(GetResourceTypeClass(resource.ContentType))">
+                            @resource.FileIcon
+                        </div>
+                        <div>
+                            <div style="font-weight:800">@resource.ResourceName</div>
+                            <div class="mm-due">
+                                @resource.ContentType • @resource.FileSizeFormatted •
+                                Uploaded @resource.CreatedAt.ToString("MMM dd, yyyy")
+                                @if (!string.IsNullOrEmpty(resource.ModuleCode))
+                                {
+                                    <span> • @resource.ModuleCode</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="res-action">
+                            <a href="@ResourceService.GetResourceDownloadUrl(resource.ResourceId)" download>Download</a>
+                        </div>
+                    </li>
+                }
+            </ul>
+            @if (TutorResources.Count > 10)
+            {
+                <div class="mm-body" style="padding-top:0">
+                    <a href="#" class="mm-link">View all @TutorResources.Count resources</a>
+                </div>
+            }
+        }
+    </section>
+
+    <!-- RECENT DISCUSSIONS -->
+    <section class="mm-card mm-section">
+        <div class="mm-head" style="gap:10px">
+            <span>Recent Discussions</span>
+            <div style="display:flex;gap:8px">
+                <button class="btn-chip @(IsLoadingForumPosts ? "disabled" : "")" style="font-size:12px" @onclick="RefreshForumPosts" disabled="@IsLoadingForumPosts">
+                    @if (IsLoadingForumPosts)
+                    {
+                        <span>Loading...</span>
+                    }
+                    else
+                    {
+                        <span>Refresh</span>
+                    }
+                </button>
+            </div>
+        </div>
+
+        @if (IsLoadingForumPosts)
+        {
+            <div class="mm-body" style="color:var(--mm-muted)">Loading recent discussions...</div>
+        }
+        else if (!RecentForumPosts.Any())
+        {
+            <div class="mm-body" style="color:var(--mm-muted)">No recent discussions found for this module.</div>
+        }
+        else
+        {
+            <div id="discList">
+                @foreach (var post in RecentForumPosts.Take(5))
+                {
+                    <div class="disc-row" @onclick="@(() => NavigateToForum(post.ForumPostsId))">
+                        <div class="disc-avatar">
+                            <img src="https://i.pravatar.cc/44?img=@(post.CreatedByStudentId ?? 1)" alt="@post.AuthorName">
+                        </div>
+                        <div>
+                            <div style="font-weight:800">@post.AuthorName</div>
+                            <div class="mm-due">@post.Summary</div>
+                        </div>
+                        <div class="disc-meta">@post.TimeAgo</div>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="mm-body" style="padding-top:0">
+            <a href="/forum" class="mm-link">View all Discussions</a>
+        </div>
+    </section>
+</div>
+
+<!-- Add Item Modal -->
+<div class="modal" id="addModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+        <div class="modal-h"><span id="addTitle">Add checklist item</span><button class="btn" id="btnCloseAdd">✕</button></div>
+        <div class="modal-b">
+            <div class="field"><label for="itemText" style="font-weight:800">What do you need to do?</label><input id="itemText" type="text" placeholder="e.g., Complete Practice Problems"></div>
+            <div class="field"><label for="itemDue" style="font-weight:800">Due date (optional)</label><input id="itemDue" type="date"></div>
+        </div>
+        <div class="modal-f"><button class="btn" id="btnCancelAdd">Cancel</button><button class="btn btn--prim" id="btnSaveAdd">Add</button></div>
+    </div>
+</div>
+
+<!-- NEW: Rate Tutor Modal -->
+<div class="modal" id="modalRateTutor" aria-hidden="true">
+    <div class="modal-card rate-card" role="dialog" aria-modal="true" aria-labelledby="rateTitle">
+        <div class="modal-h">
+            <span id="rateTitle">Rate your tutor</span>
+            <button class="btn" data-close="#modalRateTutor">✕</button>
+        </div>
+        <div class="modal-b">
+            <div class="rate-hero">
+                <div class="rate-badge">⭐</div>
+                <div class="rate-sub">How was your recent help session?</div>
+            </div>
+
+            <div class="stars" id="rateStars" aria-label="Star rating" role="radiogroup">
+                <button class="star" data-value="1" aria-label="1 star" role="radio">★</button>
+                <button class="star" data-value="2" aria-label="2 stars" role="radio">★</button>
+                <button class="star" data-value="3" aria-label="3 stars" role="radio">★</button>
+                <button class="star" data-value="4" aria-label="4 stars" role="radio">★</button>
+                <button class="star" data-value="5" aria-label="5 stars" role="radio">★</button>
+            </div>
+            <div class="rate-label"><span id="rateValue">Select a rating</span></div>
+
+            <div class="field">
+                <label for="rateNotes" style="font-weight:800">Optional feedback</label>
+                <textarea id="rateNotes" class="rate-notes" rows="3" placeholder="What went well? Anything to improve?"></textarea>
+            </div>
+
+            <div class="rate-success" id="rateSuccess" aria-hidden="true">
+                <div class="check">✓</div>
+                <div class="msg">Thanks for the feedback!</div>
+            </div>
+        </div>
+        <div class="modal-f">
+            <button class="btn" data-close="#modalRateTutor">Cancel</button>
+            <button class="btn btn--prim" id="btnRateSubmit">Submit rating</button>
+        </div>
+    </div>
+</div>
+
+<!-- Profile: Change Photo -->
+<div class="modal" id="modalPhoto" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="photoTitle">
+        <div class="modal-h">
+            <span id="photoTitle">Change Photo</span>
+            <button class="btn" data-close="#modalPhoto">✕</button>
+        </div>
+        <div class="modal-b">
+            <div style="display:flex;gap:12px;align-items:center">
+                <img id="profilePreview" src="https://i.pravatar.cc/72?img=3" alt="Preview" style="width:64px;height:64px;border-radius:50%;">
+                <input id="profileFile" type="file" accept="image/png,image/jpeg">
+            </div>
+            <div class="mm-due" style="margin-top:8px">PNG/JPG up to ~2MB works best.</div>
+        </div>
+        <div class="modal-f">
+            <button class="btn" data-close="#modalPhoto">Cancel</button>
+            <button class="btn btn--prim" id="btnPhotoSave">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Profile: Settings -->
+<div class="modal" id="modalSettings" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <div class="modal-h">
+            <span id="settingsTitle">Profile Settings</span>
+            <button class="btn" data-close="#modalSettings">✕</button>
+        </div>
+        <div class="modal-b">
+            <div class="field">
+                <label style="font-weight:800" for="setFirst">First name</label>
+                <input id="setFirst" type="text" placeholder="Jane">
+            </div>
+            <div class="field">
+                <label style="font-weight:800" for="setLast">Last name</label>
+                <input id="setLast" type="text" placeholder="Doe">
+            </div>
+            <div class="field">
+                <label style="font-weight:800" for="setDegree">Degree</label>
+                <select id="setDegree">
+                    <option value="">Select...</option>
+                    <option>BIT</option>
+                    <option>BEng</option>
+                    <option>Dip IT</option>
+                </select>
+            </div>
+            <div class="mm-due">These preferences are stored locally on this browser.</div>
+        </div>
+        <div class="modal-f">
+            <button class="btn" data-close="#modalSettings">Cancel</button>
+            <button class="btn btn--prim" id="btnSettingsSave">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Profile: Achievements -->
+<div class="modal" id="modalAchievements" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="achTitle">
+        <div class="modal-h">
+            <span id="achTitle">Your Achievements</span>
+            <button class="btn" data-close="#modalAchievements">✕</button>
+        </div>
+        <div class="modal-b">
+            <div style="font-weight:800">Active Learner</div>
+            <div class="mm-due">— asked 10+ questions this week</div>
+            <div style="height:10px"></div>
+            <div style="font-weight:800">Helper</div>
+            <div class="mm-due">— answered 3 peer questions</div>
+            <div style="height:10px"></div>
+            <div style="font-weight:800">On Track</div>
+            <div class="mm-due">— met your weekly goal</div>
+        </div>
+        <div class="modal-f">
+            <button class="btn btn--prim" data-close="#modalAchievements">Nice!</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    /* ====== NAVBAR BEHAVIOR (same as dashboard) ====== */
+    (function initTheme() {
+        try { if (localStorage.getItem('theme') === 'dark') { document.documentElement.classList.add('theme-dark'); } } catch (_) { }
+    })();
+    document.getElementById('themeToggle')?.addEventListener('click', () => {
+        const el = document.documentElement; const dark = el.classList.toggle('theme-dark');
+        try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (_) { }
+    });
+
+    (function wireNav() {
+        const nav = document.getElementById('mainNav'); if (!nav) return;
+        nav.addEventListener('click', (e) => {
+            const a = e.target.closest('a'); if (!a) return;
+            const href = (a.getAttribute('href') || '').trim();
+            [...nav.querySelectorAll('a')].forEach(x => x.classList.remove('db-nav__link--active'));
+            a.classList.add('db-nav__link--active');
+            if (href === '' || href === '#') { e.preventDefault(); }
+        }, { passive: false });
+    })();
+
+    (function wireActions() {
+        const searchWrap = document.getElementById('searchWrap');
+        const searchBtn = document.getElementById('btnSearch');
+        const searchInput = document.getElementById('searchInput');
+        const btnNotif = document.getElementById('btnNotif');
+        const popNotif = document.getElementById('popNotif');
+        const btnProfile = document.getElementById('btnProfile');
+        const popProfile = document.getElementById('popProfile');
+
+        function closeAll() { searchWrap?.classList.remove('open'); popNotif?.classList.remove('show'); popProfile?.classList.remove('show'); }
+        searchBtn?.addEventListener('click', (e) => { e.preventDefault(); const open = searchWrap.classList.toggle('open'); if (open) searchInput.focus(); popNotif.classList.remove('show'); popProfile.classList.remove('show'); });
+        btnNotif?.addEventListener('click', (e) => { e.preventDefault(); const show = popNotif.classList.toggle('show'); if (show) { popProfile.classList.remove('show'); searchWrap.classList.remove('open'); } });
+        btnProfile?.addEventListener('click', (e) => { e.preventDefault(); const show = popProfile.classList.toggle('show'); if (show) { popNotif.classList.remove('show'); searchWrap.classList.remove('open'); } });
+        document.addEventListener('click', (e) => { const within = e.target.closest('#actionsBar'); const left = e.target.closest('.db-topbar__left'); if (!(within || left)) closeAll(); });
+    })();
+
+    /* ====== MY MODULES PAGE LOGIC ====== */
+    (function () {
+        const moduleKeys = ['mymod.currentModule', 'selected.module', 'modules.selected', 'dashboard.selectedModule'];
+        let currentModule = 'PRG281'; // Default fallback
+        for (const k of moduleKeys) { const v = localStorage.getItem(k); if (v) { currentModule = v; break; } }
+        try { localStorage.setItem('mymod.currentModule', currentModule); } catch (_) { }
+        document.getElementById('mmTitle').textContent = `My Modules — ${currentModule}`;
+
+        // Rating variables - will be set from C# code in global window scope
+        // These are accessed via window.currentTutorId, window.currentStudentId, window.currentModuleId
+
+        // Calculate progress based on Study Checklist
+        function calculateProgress() {
+            const checklist = readJSON(localStorage.getItem(`mymod.checklist:${currentModule}`)) || [];
+            if (checklist.length === 0) {
+                return { completed: 0, total: 1, percentage: 0 }; // Show 0% when no tasks
+            }
+
+            const completedTasks = checklist.filter(task => task.done).length;
+            const totalTasks = checklist.length;
+            const percentage = Math.round((completedTasks / totalTasks) * 100);
+
+            return { completed: completedTasks, total: totalTasks, percentage };
+        }
+
+        const progress = calculateProgress();
+        document.getElementById('mmWeek').textContent = `${progress.completed} of ${progress.total} Tasks`;
+        document.getElementById('mmWeeks').textContent = `${progress.completed}/${progress.total} Tasks`;
+        document.getElementById('ringPct').textContent = `${progress.percentage}%`;
+        document.getElementById('mmFill').style.width = `${progress.percentage}%`;
+
+        // Circle ring (reacts to theme)
+        const canvas = document.getElementById('mmCircle'); const ctx = canvas.getContext('2d');
+        function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+        function drawRing() {
+            const progress = calculateProgress();
+            const W = canvas.width, H = canvas.height, cx = W / 2, cy = H / 2, rOuter = 60, rInner = 46, start = -Math.PI / 2, end = start + (progress.percentage / 100) * Math.PI * 2;
+            ctx.clearRect(0, 0, W, H);
+            const isDark = document.documentElement.classList.contains('theme-dark');
+            const track = css('--mm-track') || '#e8edf3';
+            const violet = css('--mm-violet') || '#6f6af8';
+            const inner = isDark ? '#0e141a' : '#f8fafc';
+            ctx.beginPath(); ctx.arc(cx, cy, (rInner + rOuter) / 2, 0, Math.PI * 2); ctx.lineWidth = rOuter - rInner; ctx.strokeStyle = track; ctx.lineCap = 'round'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx, cy, (rInner + rOuter) / 2, start, end); ctx.lineWidth = rOuter - rInner; ctx.strokeStyle = violet; ctx.lineCap = 'round'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(cx, cy, rInner - 3, 0, Math.PI * 2); ctx.fillStyle = inner; ctx.fill();
+        }
+        drawRing();
+        new MutationObserver(drawRing).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        window.addEventListener('storage', (e) => { if (e.key === 'theme') setTimeout(drawRing, 0); });
+
+        // Upcoming
+        const sessions = [{ title: 'Knapsack Review', meta: 'With Marcus M. • Today at 4:00 PM', id: 'A1' }, { title: 'Code Review', meta: 'With Anouk V. • Today at 6:00 PM', id: 'A2' }, { title: 'Query Review', meta: 'With Viljoen S. • Tomorrow at 1:00 PM', id: 'A3' }];
+        const sessEl = document.getElementById('sessList');
+        sessions.forEach(s => { const li = document.createElement('li'); li.className = 'mm-row'; li.innerHTML = `<div><div style="font-weight:800">${esc(s.title)}</div><div class="meta">${esc(s.meta)}</div></div><a class="btn-chip" href="/calendar/session/${encodeURIComponent(s.id)}">Details</a>`; sessEl.appendChild(li); });
+
+        // Quick actions
+
+
+        document.getElementById('qaSched').addEventListener('click', () => window.location.href = '/calendar/overview');
+        // REPLACED: Urgent help → open rate modal
+        const btnRate = document.getElementById('qaRate');
+        const rateModal = document.getElementById('modalRateTutor');
+        btnRate?.addEventListener('click', () => rateModal.classList.add('show'));
+        const followBtn = document.getElementById('qaFollow'), followTxt = document.getElementById('followTxt'), followIco = document.getElementById('followIco');
+        const followKey = `mymod.follow:${currentModule}`; let following = localStorage.getItem(followKey) === '1';
+        function setFollow(on) { following = !!on; followBtn.classList.toggle('following', on); followTxt.textContent = on ? 'Following' : 'Follow'; followIco.textContent = on ? '✅' : '🔖'; try { localStorage.setItem(followKey, on ? '1' : '0'); } catch (_) { } }
+        setFollow(following); followBtn.addEventListener('click', () => setFollow(!following));
+
+
+
+        // Checklist
+        const clKey = `mymod.checklist:${currentModule}`;
+
+        // Function to reset checklist (can be called from console: window.resetMyModulesChecklist())
+        window.resetMyModulesChecklist = function () {
+            try {
+                localStorage.removeItem(clKey);
+                checklist = resetChecklist();
+                renderCL();
+                updateProgress();
+                console.log('Checklist reset! Progress updated.');
+            } catch (e) {
+                console.error('Failed to reset checklist:', e);
+            }
+        };
+
+        let checklist = readJSON(localStorage.getItem(clKey)) || [
+            { id: id(), text: 'Create a task that needs to be done!', due: '', done: false },
+        ];
+        const listEl = document.getElementById('checkList');
+        function saveCL() { try { localStorage.setItem(clKey, JSON.stringify(checklist)); } catch (_) { } }
+        function renderCL() {
+            listEl.innerHTML = ''; checklist.forEach(item => {
+                const li = document.createElement('li'); li.className = 'mm-row mm-row--check';
+                const due = item.done ? 'Done' : (item.due || 'No due date');
+                li.innerHTML = `<input class="mm-check" type="checkbox" ${item.done ? 'checked' : ''}><div><div class="${item.done ? 'mm-done' : ''}" style="font-weight:700">${esc(item.text)}</div><div class="mm-due">${esc(due)}</div></div><button class="btn">Remove</button>`;
+                const cb = li.querySelector('.mm-check'); cb.addEventListener('change', () => { item.done = cb.checked; saveCL(); renderCL(); updateProgress(); });
+                li.querySelector('.btn').addEventListener('click', () => { checklist = checklist.filter(x => x.id !== item.id); saveCL(); renderCL(); updateProgress(); });
+                listEl.appendChild(li);
+            });
+        }
+        renderCL();
+
+        // Add-item modal
+        const modal = document.getElementById('addModal'); const show = () => modal.classList.add('show'); const hide = () => modal.classList.remove('show');
+        document.getElementById('btnAddItem').addEventListener('click', show);
+        document.getElementById('btnCancelAdd').addEventListener('click', hide);
+        document.getElementById('btnCloseAdd').addEventListener('click', hide);
+        modal.addEventListener('click', e => { if (e.target === modal) hide(); });
+        document.getElementById('btnSaveAdd').addEventListener('click', () => { const txt = document.getElementById('itemText').value.trim(); const dueRaw = document.getElementById('itemDue').value.trim(); if (!txt) { document.getElementById('itemText').focus(); return; } const due = dueRaw ? new Date(dueRaw).toLocaleDateString() : ''; checklist.unshift({ id: id(), text: txt, due, done: false }); saveCL(); renderCL(); updateProgress(); hide(); document.getElementById('itemText').value = ''; document.getElementById('itemDue').value = ''; });
+
+
+        function applyProgress(p) {
+            document.getElementById('mmWeek').textContent = `${p.completed} of ${p.total} Tasks`;
+            document.getElementById('mmWeeks').textContent = `${p.completed}/${p.total} Tasks`;
+            document.getElementById('ringPct').textContent = `${p.percentage}%`;
+            requestAnimationFrame(() => {
+                document.getElementById('mmFill').style.width = p.percentage + '%';
+            });
+        }
+
+        // call this whenever checklist changes
+        function updateProgress() {
+            const p = calculateProgress();
+            applyProgress(p);
+            drawRing(); // keep your ring in sync
+        }
+
+        // === Rate Tutor logic ===
+        (function () {
+            const starsWrap = document.getElementById('rateStars');
+            const stars = Array.from(starsWrap.querySelectorAll('.star'));
+            const valueLabel = document.getElementById('rateValue');
+            const notes = document.getElementById('rateNotes');
+            const submitBtn = document.getElementById('btnRateSubmit');
+            const success = document.getElementById('rateSuccess');
+            let selected = 0;
+
+            function fill(n) {
+                stars.forEach((s, i) => {
+                    s.classList.toggle('filled', i < n);
+                    s.setAttribute('aria-checked', i < n ? 'true' : 'false');
+                });
+            }
+            function label(n) {
+                valueLabel.textContent = n === 0 ? 'Select a rating' : `${n} ${n === 1 ? 'star' : 'stars'}`;
+            }
+
+            stars.forEach(s => {
+                s.addEventListener('mouseenter', () => { const n = +s.dataset.value; fill(n); label(n); });
+                s.addEventListener('mouseleave', () => { fill(selected); label(selected); });
+                s.addEventListener('click', () => { selected = +s.dataset.value; starsWrap.classList.add('bounce'); setTimeout(() => starsWrap.classList.remove('bounce'), 350); fill(selected); label(selected); });
+            });
+
+            submitBtn.addEventListener('click', async () => {
+                if (selected === 0) { starsWrap.classList.add('shake'); setTimeout(() => starsWrap.classList.remove('shake'), 400); return; }
+
+                // Validate that all required IDs are set
+                if (!window.currentTutorId || !window.currentStudentId || !window.currentModuleId) {
+                    alert('Error: Missing required information. Please wait a moment for the page to load completely, then try again.');
+                    console.error('DEBUG: Missing IDs - TutorId:', window.currentTutorId, 'StudentId:', window.currentStudentId, 'ModuleId:', window.currentModuleId);
+                    return;
+                }
+
+                submitBtn.disabled = true; submitBtn.textContent = 'Submitting…';
+
+                // Best-effort API call. Safe if endpoint does not exist.
+                try {
+                    const ratingData = {
+                        tutorId: window.currentTutorId,
+                        studentId: window.currentStudentId,
+                        moduleId: window.currentModuleId,
+                        rating: selected,
+                        notes: notes.value
+                    };
+                    console.log('DEBUG: Sending rating data:', ratingData);
+                    console.log('DEBUG: Current values - TutorId:', window.currentTutorId, 'StudentId:', window.currentStudentId, 'ModuleId:', window.currentModuleId);
+
+                    const response = await fetch('/api/rating/rate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(ratingData)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('DEBUG: Rating API error:', response.status, errorText);
+                        alert(`Rating submission failed: ${response.status} - ${errorText}`);
+                    } else {
+                        const responseData = await response.json();
+                        console.log('DEBUG: Rating submitted successfully:', responseData);
+                        alert('Rating submitted successfully!');
+                    }
+                } catch (ex) {
+                    console.error('DEBUG: Rating submission error:', ex);
+                    alert(`Rating submission error: ${ex.message}`);
+                }
+
+                // Show success micro-animation and close shortly after
+                success.removeAttribute('aria-hidden');
+                success.classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('modalRateTutor').classList.remove('show');
+                    success.classList.remove('show');
+                    success.setAttribute('aria-hidden', 'true');
+                    submitBtn.disabled = false; submitBtn.textContent = 'Submit rating';
+                    notes.value = ''; selected = 0; fill(0); label(0);
+                }, 900);
+            });
+        })();
+
+        // utils
+        function esc(s) { return (s ?? '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+        function readJSON(v) { try { return v ? JSON.parse(v) : null } catch (_) { return null } }
+        function id() { try { return crypto.randomUUID() } catch (_) { return 'id-' + Math.random().toString(36).slice(2) } }
+    })();
+    function applyProgress(p) {
+        document.getElementById('mmWeek').textContent = `${p.completed} of ${p.total} Tasks`;
+        document.getElementById('mmWeeks').textContent = `${p.completed}/${p.total} Tasks`;
+        document.getElementById('ringPct').textContent = `${p.percentage}%`;
+        // ensure the width is applied after the element is laid out
+        requestAnimationFrame(() => {
+            document.getElementById('mmFill').style.width = p.percentage + '%';
+        });
+    }
+
+    /// close via any element with [data-close]
+    document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const selector = btn.getAttribute('data-close');
+            const el = selector ? document.querySelector(selector) : btn.closest('.modal');
+            el?.classList.remove('show');
+        });
+    });
+
+    /// close when clicking backdrop (for both add + rate modals)
+    [document.getElementById('modalRateTutor'), document.getElementById('addModal')]
+        .forEach(mod => mod?.addEventListener('click', (e) => {
+            if (e.target === mod) mod.classList.remove('show');
+        }));
+
+    // ----- Profile menu actions (open modals) -----
+    document.querySelectorAll('#popProfile .clickable').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const target = item.getAttribute('data-target');
+            if (!target) return;
+            document.querySelector(target)?.classList.add('show');
+            // close the popover so it matches the screenshots
+            document.getElementById('popProfile')?.classList.remove('show');
+        });
+    });
+
+    // Close buttons for any modal using data-close
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-close]');
+        if (!btn) return;
+        const sel = btn.getAttribute('data-close');
+        document.querySelector(sel)?.classList.remove('show');
+    });
+
+    // Clicking the dim area closes the modal
+    document.querySelectorAll('.modal').forEach(m => {
+        m.addEventListener('click', e => {
+            if (e.target === m) m.classList.remove('show');
+        });
+    });
+
+    // ----- Change Photo -----
+    (function () {
+        const file = document.getElementById('profileFile');
+        const preview = document.getElementById('profilePreview');
+        const save = document.getElementById('btnPhotoSave');
+        const avatar = document.getElementById('avatarImg');
+
+        // live preview
+        file?.addEventListener('change', () => {
+            const f = file.files?.[0];
+            if (!f) return;
+            const reader = new FileReader();
+            reader.onload = e => { preview.src = e.target.result; };
+            reader.readAsDataURL(f);
+        });
+
+        // “Save” = persist to localStorage (best-effort) and update avatar
+        save?.addEventListener('click', () => {
+            try {
+                const src = preview.src;
+                if (src && src.startsWith('data:')) {
+                    localStorage.setItem('profile.avatar', src);
+                    if (avatar) avatar.src = src;
+                }
+            } catch (_) { }
+            document.getElementById('modalPhoto')?.classList.remove('show');
+        });
+
+        // load stored avatar on page load
+        try {
+            const stored = localStorage.getItem('profile.avatar');
+            if (stored) { preview.src = stored; if (avatar) avatar.src = stored; }
+        } catch (_) { }
+    })();
+
+    // ----- Settings -----
+    (function () {
+        const first = document.getElementById('setFirst');
+        const last = document.getElementById('setLast');
+        const deg = document.getElementById('setDegree');
+        const save = document.getElementById('btnSettingsSave');
+
+        // load stored values
+        try {
+            first.value = localStorage.getItem('profile.first') || '';
+            last.value = localStorage.getItem('profile.last') || '';
+            deg.value = localStorage.getItem('profile.degree') || '';
+        } catch (_) { }
+
+        save?.addEventListener('click', () => {
+            try {
+                localStorage.setItem('profile.first', first.value || '');
+                localStorage.setItem('profile.last', last.value || '');
+                localStorage.setItem('profile.degree', deg.value || '');
+            } catch (_) { }
+            document.getElementById('modalSettings')?.classList.remove('show');
+        });
+    })();
+
+    // ----- Logout -----
+    document.getElementById('btnLogout')?.addEventListener('click', async () => {
+        try {
+            // Best-effort API logout if your backend exposes it:
+            fetch('/api/auth/logout', { method: 'POST' }).catch(() => { });
+        } catch (_) { }
+
+        // Clear common auth caches
+        try {
+            localStorage.removeItem('token');
+            localStorage.removeItem('auth');
+            localStorage.removeItem('persist:auth');
+            sessionStorage.clear();
+        } catch (_) { }
+
+        // Navigate to login
+        window.location.href = '/login';
+    });
+
+
+
+</script>
+
+@code {
+
+    // Get student ID from authentication context
+    private int CurrentStudentId = 0;
+
+    private List<Resource> TutorResources = new();
+    private bool IsLoadingResources = true;
+    private string CurrentModuleCode = ""; // empty string - no fallback
+
+    // Forum posts properties
+    private List<PostDto> RecentForumPosts = new();
+    private bool IsLoadingForumPosts = true;
+    private int? CurrentModuleId = null;
+
+    // Tutor chat properties
+    private List<TutorSummary> ModuleTutors = new();
+    private bool IsLoadingTutors = false;
+    private bool IsCreatingChat = false;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetCurrentStudentId();
+        Console.WriteLine($"DEBUG: OnInitializedAsync - CurrentStudentId: {CurrentStudentId}");
+        await LoadCurrentModuleCode();
+        await LoadTutorResources();
+        await LoadRecentForumPosts();
+        await GetTutorsForCurrentModule();
+    }
+
+    private async Task GetCurrentStudentId()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<dynamic>("/api/profile/me");
+            if (response != null)
+            {
+                // Extract student ID from the profile response
+                var studentIdProperty = response.GetProperty("Profile").GetProperty("StudentId");
+                CurrentStudentId = studentIdProperty.GetInt32();
+                Console.WriteLine($"DEBUG: Got student ID from profile: {CurrentStudentId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting student ID: {ex.Message}");
+            CurrentStudentId = 601282; // Fallback
+        }
+    }
+
+    private async Task LoadCurrentModuleCode()
+    {
+        try
+        {
+            Console.WriteLine("Loading current module code for student...");
+
+            // Get student's modules with tutors (this includes module codes)
+            var studentModulesWithTutors = await Http.GetFromJsonAsync<List<StudentModuleTutor>>($"api/student/{CurrentStudentId}/modules-with-tutors");
+
+            if (studentModulesWithTutors != null && studentModulesWithTutors.Any())
+            {
+                // Get the first module's code and find its ID
+                var firstModule = studentModulesWithTutors.First();
+                CurrentModuleCode = firstModule.ModuleCode;
+
+                // Get module ID from the module code
+                var modules = await Http.GetFromJsonAsync<List<Module>>("api/moduleapi");
+                if (modules != null)
+                {
+                    var module = modules.FirstOrDefault(m => m.ModuleCode == CurrentModuleCode);
+                    if (module != null)
+                    {
+                        CurrentModuleId = module.ModuleId;
+                        Console.WriteLine($"Loaded current module: {CurrentModuleCode} (ID: {CurrentModuleId})");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Module with code {CurrentModuleCode} not found in module list");
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("No modules found for student, using default PRG281");
+                // Keep the default value
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading current module code: {ex.Message}");
+            // Keep the default value
+        }
+    }
+
+    private async Task LoadTutorResources()
+    {
+        try
+        {
+            IsLoadingResources = true;
+            // Load resources grouped by module
+            var resourcesByModule = await ResourceService.GetTutorResourcesByModuleForStudentAsync(CurrentStudentId);
+
+            TutorResources.Clear();
+
+            // Extract all resources from all modules
+            foreach (var moduleEntry in resourcesByModule)
+            {
+                try
+                {
+                    // Convert the module data to JsonElement first
+                    var moduleJson = System.Text.Json.JsonSerializer.Serialize(moduleEntry.Value);
+                    var moduleData = System.Text.Json.JsonElement.Parse(moduleJson);
+                    
+                    if (moduleData.TryGetProperty("resources", out var resourcesElement))
+                    {
+                        var options = new System.Text.Json.JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true,
+                            PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
+                        };
+                        var resources = System.Text.Json.JsonSerializer.Deserialize<List<Resource>>(resourcesElement.GetRawText(), options);
+                        if (resources != null)
+                        {
+                            // Debug: Log the first resource's date
+                            if (resources.Any())
+                            {
+                                var firstResource = resources.First();
+                                Console.WriteLine($"DEBUG: Frontend - First resource CreatedAt: {firstResource.CreatedAt}");
+                                Console.WriteLine($"DEBUG: Frontend - First resource CreatedAt Kind: {firstResource.CreatedAt.Kind}");
+                                Console.WriteLine($"DEBUG: Frontend - First resource CreatedAt Ticks: {firstResource.CreatedAt.Ticks}");
+                                
+                                // Debug: Check the raw JSON for the date
+                                var rawJson = resourcesElement.GetRawText();
+                                Console.WriteLine($"DEBUG: Frontend - Raw JSON: {rawJson}");
+                            }
+                            
+                            TutorResources.AddRange(resources);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error parsing module {moduleEntry.Key}: {ex.Message}");
+                }
+            }
+
+            Console.WriteLine($"Loaded {TutorResources.Count} tutor resources");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tutor resources: {ex.Message}");
+            TutorResources = new List<Resource>();
+        }
+        finally
+        {
+            IsLoadingResources = false;
+            StateHasChanged();
+        }
+    }
+
+    private void RefreshResources()
+    {
+        _ = LoadTutorResources();
+    }
+
+    private async Task LoadRecentForumPosts()
+    {
+        try
+        {
+            IsLoadingForumPosts = true;
+            Console.WriteLine($"Loading recent forum posts for module: {CurrentModuleCode}");
+
+            if (CurrentModuleId == null)
+            {
+                await GetModuleIdByCode();
+            }
+
+            if (CurrentModuleId.HasValue)
+            {
+                var filter = new PostFilterDto
+                    {
+                        ModuleId = CurrentModuleId.Value,
+                        PageSize = 5, // Show only 5 recent posts
+                        SortBy = "new"
+                    };
+
+                var postsResponse = await Http.GetFromJsonAsync<ApiResponse<List<PostDto>>>(
+                    $"api/forum/posts/recent?ModuleId={CurrentModuleId.Value}&PageSize=5&SortBy=new");
+
+                if (postsResponse?.Success == true && postsResponse.Data != null)
+                {
+                    RecentForumPosts = postsResponse.Data;
+                    Console.WriteLine($"Loaded {RecentForumPosts.Count} recent forum posts");
+                }
+                else
+                {
+                    Console.WriteLine("No forum posts found or API call failed");
+                    RecentForumPosts = new List<PostDto>();
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not determine module ID, skipping forum posts");
+                RecentForumPosts = new List<PostDto>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading recent forum posts: {ex.Message}");
+            RecentForumPosts = new List<PostDto>();
+        }
+        finally
+        {
+            IsLoadingForumPosts = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetModuleIdByCode()
+    {
+        try
+        {
+            var modules = await Http.GetFromJsonAsync<List<Module>>("api/moduleapi");
+            if (modules != null)
+            {
+                var module = modules.FirstOrDefault(m =>
+                    m.ModuleCode.Equals(CurrentModuleCode, StringComparison.OrdinalIgnoreCase));
+
+                if (module != null)
+                {
+                    CurrentModuleId = module.ModuleId;
+                    Console.WriteLine($"Found module ID {CurrentModuleId} for code {CurrentModuleCode}");
+                }
+                else
+                {
+                    Console.WriteLine($"Module with code {CurrentModuleCode} not found");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error getting module ID: {ex.Message}");
+        }
+    }
+
+    private void RefreshForumPosts()
+    {
+        _ = LoadRecentForumPosts();
+    }
+
+    private void NavigateToForum(int postId)
+    {
+        Nav.NavigateTo($"/forum/thread?postId={postId}");
+    }
+
+    private async Task ValidateTutorExists(int tutorId)
+    {
+        try
+        {
+            Console.WriteLine($"DEBUG: Validating tutor ID {tutorId} exists in database");
+
+            // Try to get tutor rating summary to validate existence
+            // This will return a valid response even if no ratings exist, but will fail if tutor doesn't exist
+            var ratingSummary = await Http.GetFromJsonAsync<TutorRatingSummaryDto>($"/api/rating/tutor/{tutorId}/summary");
+
+            if (ratingSummary != null)
+            {
+                Console.WriteLine($"DEBUG: Tutor {tutorId} exists and is valid for rating");
+            }
+            else
+            {
+                Console.WriteLine($"DEBUG: Tutor {tutorId} not found in database - rating will fail");
+                await JS.InvokeVoidAsync("alert", $"Warning: Tutor ID {tutorId} not found in database. Rating submission may fail.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Error validating tutor {tutorId}: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Error validating tutor: {ex.Message}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task VerifyRatingVariables()
+    {
+        try
+        {
+            var tutorId = ModuleTutors.FirstOrDefault()?.Tutor_Id ?? 0;
+            Console.WriteLine($"DEBUG: VerifyRatingVariables - TutorId: {tutorId}, StudentId: {CurrentStudentId}, ModuleId: {CurrentModuleId}");
+
+            if (tutorId > 0 && CurrentStudentId > 0 && CurrentModuleId.HasValue)
+            {
+                await JS.InvokeVoidAsync("eval", $"window.currentTutorId = {tutorId};");
+                await JS.InvokeVoidAsync("eval", $"window.currentStudentId = {CurrentStudentId};");
+                await JS.InvokeVoidAsync("eval", $"window.currentModuleId = {CurrentModuleId.Value};");
+                Console.WriteLine($"DEBUG: Re-set rating variables - TutorId: {tutorId}, StudentId: {CurrentStudentId}, ModuleId: {CurrentModuleId.Value}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"DEBUG: Error verifying rating variables: {ex.Message}");
+        }
+    }
+
+    private async Task GetTutorsForCurrentModule()
+    {
+        try
+        {
+            IsLoadingTutors = true;
+            Console.WriteLine($"Loading tutors for module: {CurrentModuleCode}");
+
+            if (CurrentModuleId == null)
+            {
+                await GetModuleIdByCode();
+            }
+
+            if (CurrentModuleId.HasValue)
+            {
+                var tutors = await Http.GetFromJsonAsync<List<TutorSummary>>(
+                    $"api/module/{CurrentModuleId.Value}/tutors");
+
+                if (tutors != null)
+                {
+                    ModuleTutors = tutors;
+                    Console.WriteLine($"Loaded {ModuleTutors.Count} tutors for module {CurrentModuleCode}");
+
+                    // Debug: Show all available tutors
+                    foreach (var tutor in ModuleTutors)
+                    {
+                        Console.WriteLine($"DEBUG: Available tutor - ID: {tutor.Tutor_Id}, Name: {tutor.Full_Name}, Role: {tutor.Role}");
+                    }
+
+                    // Update JavaScript variables for rating functionality
+                    if (ModuleTutors.Any())
+                    {
+                        var tutorId = ModuleTutors.First().Tutor_Id;
+                        await JS.InvokeVoidAsync("eval", $"window.currentTutorId = {tutorId};");
+                        await JS.InvokeVoidAsync("eval", $"window.currentStudentId = {CurrentStudentId};");
+                        await JS.InvokeVoidAsync("eval", $"window.currentModuleId = {CurrentModuleId ?? 1};");
+                        Console.WriteLine($"DEBUG: Updated rating variables - TutorId: {tutorId}, StudentId: {CurrentStudentId}, ModuleId: {CurrentModuleId ?? 1}");
+
+                        // Validate that the tutor exists in the database
+                        await ValidateTutorExists(tutorId);
+
+                        // Trigger a re-render to ensure the variables are properly set
+                        StateHasChanged();
+                    }
+                }
+                else
+                {
+                    ModuleTutors = new List<TutorSummary>();
+                    Console.WriteLine("No tutors found for this module");
+
+                    // Clear the JavaScript variables since no tutors are available
+                    await JS.InvokeVoidAsync("eval", "window.currentTutorId = null;");
+                    await JS.InvokeVoidAsync("eval", "window.currentStudentId = null;");
+                    await JS.InvokeVoidAsync("eval", "window.currentModuleId = null;");
+                    Console.WriteLine("DEBUG: Cleared rating variables - no tutors available");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Could not determine module ID for tutors");
+                ModuleTutors = new List<TutorSummary>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading tutors: {ex.Message}");
+            ModuleTutors = new List<TutorSummary>();
+        }
+        finally
+        {
+            IsLoadingTutors = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CreateOrOpenTutorChat()
+    {
+        try
+        {
+            IsCreatingChat = true;
+            Console.WriteLine("Starting tutor chat creation/opening process");
+
+            if (ModuleTutors.Any() == false)
+            {
+                await GetTutorsForCurrentModule();
+            }
+
+            if (!ModuleTutors.Any())
+            {
+                Console.WriteLine("No tutors available for this module");
+                // Show a message to the user that no tutors are available
+                return;
+            }
+
+            // For now, use the first available tutor
+            // In a real implementation, you might want to show a selection dialog
+            var tutor = ModuleTutors.First();
+            Console.WriteLine($"Creating/opening chat with tutor: {tutor.Full_Name} (TutorId: {tutor.Tutor_Id}, UserId: {tutor.UserId})");
+
+            // Create a direct conversation with the tutor using the UserId
+            var createDto = new CreateConversationDto
+                {
+                    Type = ConversationType.Direct,
+                    OtherUserId = tutor.UserId,
+                    InitialMessage = $"Hi! I need help with {CurrentModuleCode}."
+                };
+
+            Console.WriteLine($"Sending CreateConversationDto: Type={createDto.Type}, OtherUserId='{createDto.OtherUserId}', InitialMessage='{createDto.InitialMessage}'");
+
+            var response = await Http.PostAsJsonAsync("/api/messaging/conversations/direct", createDto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ApiResponse<ConversationDto>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    Console.WriteLine($"Successfully created/opened conversation {result.Data.ConversationId} with tutor");
+
+                    // Navigate to messages page with the conversation open
+                    Nav.NavigateTo($"/messages?conversationId={result.Data.ConversationId}");
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to create conversation: {result?.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"HTTP error creating conversation: {response.StatusCode}");
+
+                // Try to get the error message from the response
+                try
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Error response content: {errorContent}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Could not read error response: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating/opening tutor chat: {ex.Message}");
+        }
+        finally
+        {
+            IsCreatingChat = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetResourceTypeClass(string contentType)
+    {
+        return contentType.ToLower() switch
+        {
+            var ct when ct.Contains("pdf") => "pdf",
+            var ct when ct.Contains("video") => "video",
+            var ct when ct.Contains("image") => "image",
+            var ct when ct.Contains("word") || ct.Contains("document") => "document",
+            var ct when ct.Contains("excel") || ct.Contains("spreadsheet") => "spreadsheet",
+            var ct when ct.Contains("powerpoint") || ct.Contains("presentation") => "presentation",
+            _ => "file"
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Don't set variables here - they will be set after data loading completes
+        if (firstRender)
+        {
+            Console.WriteLine($"DEBUG: OnAfterRender - Data loading in progress, variables will be set after completion");
+        }
+    }
+}
+
+<style>
+    .qa.disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+        .qa.disabled:hover {
+            transform: none;
+        }
+</style>

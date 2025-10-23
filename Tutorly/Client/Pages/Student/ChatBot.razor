@@ -1,0 +1,774 @@
+﻿@page "/chatbotpage"
+@using Tutorly.Client.Services
+@using Tutorly.Shared
+@* Put ChatBot.css in wwwroot/css and keep the link below *@
+<link rel="stylesheet" href="css/ChatBot.css" />
+@inject JwtHttpClient Http
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Tutorly Chatbot</PageTitle>
+
+<div id="page-chatbot" class="cb-root">
+    <!-- Top bar (Back + title + actions) -->
+    <header class="cb-topbar">
+        <button type="button" class="cb-back" onclick="history.back()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6" /></svg>
+            <span>Back</span>
+        </button>
+
+        <div class="cb-title">
+            <div class="cb-title__main">Tutorly Chatbot</div>
+            <div class="cb-title__sub">Ask anything about coursework, study plans, or quick explanations.</div>
+        </div>
+
+        <div class="cb-actions">
+            <button id="btnNewChat" type="button" class="cb-btn cb-btn--primary">New chat</button>
+
+            <button id="btnToggleTheme" type="button" class="cb-toggle" title="Toggle theme" aria-label="Toggle theme">
+                <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main layout -->
+    <div class="cb-wrap">
+        <!-- Sidebar: Chat history -->
+        <aside class="cb-sidebar">
+            <div class="cb-side-head">
+                <div class="cb-side-title">History</div>
+                <button id="btnClearHistory" type="button" class="cb-link">Clear</button>
+            </div>
+            <ul id="historyList" class="cb-history">
+                <!-- filled by JS -->
+            </ul>
+        </aside>
+
+        <!-- Chat area -->
+        <main class="cb-main">
+            <div class="cb-card">
+                <!-- quick suggestions -->
+                <div class="cb-suggestions" id="suggestionRow">
+                    <button type="button" class="cb-chip" data-suggest="How do I book a tutor session?">Book a tutor</button>
+                    <button type="button" class="cb-chip" data-suggest="How do I access my modules?">My modules</button>
+                    <button type="button" class="cb-chip" data-suggest="How do I join a study room?">Join study room</button>
+                    <button type="button" class="cb-chip" data-suggest="How do I post in the forum?">Forum help</button>
+                </div>
+
+                <!-- stream -->
+                <div id="chatScroll" class="cb-body">
+                    <div id="emptyState" class="cb-empty">
+                        <svg class="cb-empty__icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.5" />
+                        </svg>
+                        <h3>How can I help?</h3>
+                        <p>Try asking about booking tutors, accessing modules, or study rooms. Click the suggestions above to get started!</p>
+                    </div>
+                    <div id="chatStream" class="cb-stream"></div>
+                </div>
+
+                <!-- composer -->
+                <div class="cb-input">
+                    <div class="cb-input-row">
+                        <!-- Happy Monkey avatar -->
+                        <div id="monkeyAvatar" class="cb-monkey" title="Tutorly Monkey">
+                            <!-- Inline SVG avatar (two faces: happy / thinking) -->
+                            <svg viewBox="0 0 100 100" aria-hidden="true">
+                                <!-- Ears -->
+                                <circle cx="22" cy="48" r="14" class="mk-ear" />
+                                <circle cx="78" cy="48" r="14" class="mk-ear" />
+                                <!-- Head -->
+                                <circle cx="50" cy="52" r="32" class="mk-head" />
+                                <!-- Face patch -->
+                                <ellipse cx="50" cy="60" rx="22" ry="18" class="mk-face" />
+                                <!-- HAPPY -->
+                                <g class="mk-happy">
+                                    <circle cx="40" cy="50" r="3.5" class="mk-eye" />
+                                    <circle cx="60" cy="50" r="3.5" class="mk-eye" />
+                                    <path d="M38 65 q12 10 24 0" class="mk-mouth" />
+                                </g>
+                                <!-- THINKING -->
+                                <g class="mk-thinking">
+                                    <circle cx="40" cy="50" r="3.5" class="mk-eye" />
+                                    <circle cx="60" cy="50" r="3.5" class="mk-eye" />
+                                    <path d="M40 66 q10 -6 20 0" class="mk-mouth-think" />
+                                    <!-- little thought bubble -->
+                                    <circle cx="78" cy="20" r="6" class="mk-bubble" />
+                                    <circle cx="69" cy="26" r="3.6" class="mk-bubble mk-b2" />
+                                    <circle cx="63" cy="31" r="2.4" class="mk-bubble mk-b3" />
+                                </g>
+                            </svg>
+                        </div>
+
+                        <!-- Upload / resources menu -->
+                        <div class="cb-attach">
+                            <button id="btnAttach" type="button" class="cb-attachbtn" title="Add photos & files" aria-haspopup="true" aria-expanded="false">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.44 11.05 12 20.5a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19A3.5 3.5 0 1 1 19.83 7L9.41 17.41" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+                            </button>
+
+                            <div id="attachMenu" class="cb-attach-menu" role="menu" aria-label="Add attachments">
+                                <button type="button" class="cb-att-item" data-kind="files">
+                                    <span class="cb-att-icon">📎</span>
+                                    <span>Add photos & files</span>
+                                </button>
+                                <button type="button" class="cb-att-item" data-kind="gdrive">
+                                    <span class="cb-att-icon">🟩</span>
+                                    <span>Add from Google Drive</span>
+                                </button>
+                                <div class="cb-att-sep"></div>
+                                <button type="button" class="cb-att-item" data-kind="research">
+                                    <span class="cb-att-icon">🔎</span>
+                                    <span>Deep research</span>
+                                </button>
+                                <button type="button" class="cb-att-item" data-kind="image">
+                                    <span class="cb-att-icon">🎨</span>
+                                    <span>Create image</span>
+                                </button>
+                                <button type="button" class="cb-att-item" data-kind="agent">
+                                    <span class="cb-att-icon">🤖</span>
+                                    <span>Agent mode</span>
+                                </button>
+                                <button type="button" class="cb-att-item" data-kind="sources">
+                                    <span class="cb-att-icon">🧩</span>
+                                    <span>Add sources</span>
+                                </button>
+                                <div class="cb-att-more">
+                                    <button type="button" class="cb-att-item" data-kind="more">
+                                        <span class="cb-att-icon">⋯</span>
+                                        <span>More</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- hidden inputs -->
+                            <input type="file" id="fileAny" multiple hidden />
+                            <input type="file" id="fileImages" accept="image/*" multiple hidden />
+                            <input type="file" id="fileDocs" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden />
+                        </div>
+
+                        <textarea id="chatInput" rows="1" placeholder="Type your question…" class="cb-textarea"></textarea>
+                    </div>
+
+                    <div class="cb-input__foot">
+                        <span class="cb-hint">Press <strong>Enter</strong> to send · <strong>Shift+Enter</strong> for a new line</span>
+                        <div class="cb-input__actions">
+                            <button id="btnEscalate" type="button" class="cb-btn cb-btn--escalate" title="Escalate to tutor or admin">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                                <span>Escalate</span>
+                            </button>
+                            <button id="btnSend" type="button" class="cb-btn cb-btn--send">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+                                <span>Send</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    (function () {
+        // ===== Theme (persisted) =====
+        try {
+            const saved = localStorage.getItem('cb.theme');
+            if (saved === 'dark') document.documentElement.classList.add('theme-dark');
+        } catch (e) {}
+        const themeBtn = document.getElementById('btnToggleTheme');
+        themeBtn && themeBtn.addEventListener('click', function () {
+            const isDark = document.documentElement.classList.toggle('theme-dark');
+            try { localStorage.setItem('cb.theme', isDark ? 'dark' : 'light'); } catch (e) {}
+        });
+
+        // ===== Basic in-browser chat store =====
+        const STORAGE = 'cb.sessions';
+        const ACTIVE = 'cb.active';
+        let sessions = {};
+        let activeId = null;
+
+        const historyList = document.getElementById('historyList');
+        const chatStream  = document.getElementById('chatStream');
+        theEmpty = document.getElementById('emptyState');
+        const emptyState  = theEmpty; // keep variable name you used
+        const input       = document.getElementById('chatInput');
+        const sendBtn     = document.getElementById('btnSend');
+        const newBtn      = document.getElementById('btnNewChat');
+        const clearBtn    = document.getElementById('btnClearHistory');
+        const suggRow     = document.getElementById('suggestionRow');
+        const monkey      = document.getElementById('monkeyAvatar');
+
+        function setMonkeyState(state) {
+            if (!monkey) return;
+            if (state === 'thinking') monkey.classList.add('thinking');
+            else monkey.classList.remove('thinking');
+        }
+
+        function setSendButtonThinking(isThinking) {
+            if (!sendBtn) return;
+            if (isThinking) {
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7" fill="none" stroke="currentColor" stroke-width="2" /></svg><span>Thinking...</span>';
+                sendBtn.classList.add('thinking');
+            } else {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2 11 13M22 2 15 22l-4-9-9-4 20-7" fill="none" stroke="currentColor" stroke-width="2" /></svg><span>Send</span>';
+                sendBtn.classList.remove('thinking');
+            }
+        }
+
+        function uid() { return 'c' + Math.random().toString(36).slice(2) + Date.now().toString(36); }
+        function persist() {
+            try {
+                localStorage.setItem(STORAGE, JSON.stringify(sessions));
+                localStorage.setItem(ACTIVE, activeId || '');
+            } catch (e) {}
+        }
+        function load() {
+            try {
+                const raw = localStorage.getItem(STORAGE);
+                sessions = raw ? JSON.parse(raw) || {} : {};
+                activeId = localStorage.getItem(ACTIVE);
+            } catch (e) { sessions = {}; activeId = null; }
+            if (!activeId) createNewChat(); else { renderHistory(); open(activeId); }
+        }
+
+        function createNewChat() {
+            const id = uid();
+            sessions[id] = { id, created: Date.now(), title: 'New chat', items: [] };
+            activeId = id;
+            persist();
+            renderHistory();
+            renderStream();
+            input && input.focus();
+            resetTextareaHeight();
+            setMonkeyState('happy');
+            
+            // Load welcome message for new chat
+            DotNet.invokeMethodAsync('Tutorly.Client', 'LoadWelcomeMessageForNewChatAsync')
+                .catch(error => {
+                    console.error('Error loading welcome message:', error);
+                });
+        }
+        function setTitleFromFirstUserMessage(id) {
+            const s = sessions[id]; if (!s) return;
+            const first = s.items.find(x => x.role === 'user');
+            if (first) { s.title = first.content.slice(0, 60); persist(); renderHistory(); }
+        }
+
+        // ===== History UI =====
+        function renderHistory() {
+            historyList.innerHTML = '';
+            const ids = Object.keys(sessions).sort((a, b) => sessions[b].created - sessions[a].created);
+            if (ids.length === 0) {
+                const li = document.createElement('li'); li.className = 'cb-empty-side'; li.textContent = 'No chats yet';
+                historyList.appendChild(li); return;
+            }
+            ids.forEach(id => {
+                const s = sessions[id];
+                const li = document.createElement('li');
+                li.className = 'cb-history-item' + (id === activeId ? ' active' : '');
+                li.innerHTML =
+                    '<button class="cb-history-btn" data-id="' + id + '">' + escapeHtml(s.title || 'New chat') + '</button>' +
+                    '<button class="cb-del" title="Delete" data-id="' + id + '">×</button>';
+                historyList.appendChild(li);
+            });
+        }
+        historyList.addEventListener('click', function (e) {
+            const del = e.target.closest('.cb-del');
+            if (del) {
+                const id = del.getAttribute('data-id');
+                delete sessions[id];
+                if (activeId === id) {
+                    activeId = null;
+                    // Find the next available chat to show
+                    const remainingIds = Object.keys(sessions).sort((a, b) => sessions[b].created - sessions[a].created);
+                    if (remainingIds.length > 0) {
+                        activeId = remainingIds[0]; // Show the most recent remaining chat
+                    }
+                }
+                persist(); 
+                renderHistory();
+                if (!activeId) {
+                    createNewChat();
+                } else {
+                    open(activeId);
+                }
+                return;
+            }
+            const btn = e.target.closest('.cb-history-btn');
+            if (!btn) return;
+            open(btn.getAttribute('data-id'));
+        });
+
+        function open(id) { activeId = id; persist(); renderHistory(); renderStream(); resetTextareaHeight(); setMonkeyState('happy'); }
+
+        // ===== Chat stream =====
+        function renderStream() {
+            const s = sessions[activeId];
+            chatStream.innerHTML = '';
+            if (!s || !s.items || s.items.length === 0) {
+                emptyState.style.display = 'flex';
+                return;
+            }
+            emptyState.style.display = 'none';
+            s.items.forEach(m => appendBubble(m.role, m.content));
+            scrollToBottom();
+        }
+        function appendBubble(role, content) {
+            const row = document.createElement('div');
+            row.className = 'cb-row ' + (role === 'user' ? 'me' : 'bot');
+            const escapedContent = escapeHtml(content);
+            const formattedContent = escapedContent.replace(/\n/g, '<br>');
+            row.innerHTML = '<div class="cb-bubble">' + linkify(formattedContent) + '</div>';
+            chatStream.appendChild(row);
+        }
+        function scrollToBottom() {
+            const sc = document.getElementById('chatScroll');
+            sc.scrollTop = sc.scrollHeight;
+        }
+
+        // ===== Textarea autosize =====
+        const MAX_H = 180;       // keep in sync with CSS
+        const MIN_H = 42;
+
+        function autoSizeTextarea() {
+            if (!input) return;
+            input.style.height = 'auto';
+            input.style.overflowY = 'hidden';
+            const next = Math.min(input.scrollHeight, MAX_H);
+            input.style.height = next + 'px';
+            if (input.scrollHeight > MAX_H) input.style.overflowY = 'auto';
+        }
+        function resetTextareaHeight() {
+            if (!input) return;
+            input.value = input.value || '';
+            input.style.height = MIN_H + 'px';
+            input.style.overflowY = 'hidden';
+        }
+        input.addEventListener('input', autoSizeTextarea);
+        window.addEventListener('resize', autoSizeTextarea);
+
+        // ===== Send / suggestions =====
+        function sendMessage() {
+            const text = (input.value || '').trim();
+            if (!text) return;
+            const s = sessions[activeId]; if (!s) return;
+
+            // Check if already processing
+            if (sendBtn.disabled) return;
+
+            // user message
+            s.items.push({ role: 'user', content: text });
+            appendBubble('user', text);
+            emptyState.style.display = 'none';
+            input.value = '';
+            resetTextareaHeight();
+            setTitleFromFirstUserMessage(activeId);
+            persist();
+            scrollToBottom();
+
+            // Set thinking state
+            setMonkeyState('thinking');
+            setSendButtonThinking(true);
+
+            // Call C# backend service
+            DotNet.invokeMethodAsync('Tutorly.Client', 'SendMessageToBackendAsync', text)
+                .catch(error => {
+                    console.error('Error calling backend:', error);
+                    const errorReply = 'Sorry, I encountered an error. Please try again.';
+                    s.items.push({ role: 'assistant', content: errorReply });
+                    appendBubble('assistant', errorReply);
+                    persist();
+                    scrollToBottom();
+                    setMonkeyState('happy');
+                    setSendButtonThinking(false);
+                });
+        }
+
+        // Function to add bot response from C# backend
+        window.addBotResponse = function(response) {
+            const s = sessions[activeId]; if (!s) return;
+            s.items.push({ role: 'assistant', content: response });
+            appendBubble('assistant', response);
+            emptyState.style.display = 'none'; // Hide empty state when bot responds
+            persist();
+            scrollToBottom();
+            setMonkeyState('happy');
+            setSendButtonThinking(false); // Reset send button state
+        };
+
+        // Function to check chatbot status
+        window.checkChatbotStatus = async function() {
+            try {
+                const response = await fetch('/api/ChatBot/status');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error checking chatbot status:', error);
+                return { Success: false, Data: { IsReady: false, Status: 'Unknown' } };
+            }
+        };
+
+        // Function to handle smart escalation response
+        window.handleSmartEscalation = function(escalationData) {
+            const s = sessions[activeId]; if (!s) return;
+            
+            // Add escalation notification
+            const escalationMessage = `Your question has been automatically escalated to a human tutor because I wasn't confident in my response.\n\n` +
+                `Escalation Reason: ${escalationData.escalationReason}\n\n` +
+                `A tutor will respond to your query shortly. You'll receive a notification when they reply.`;
+            
+            s.items.push({ role: 'assistant', content: escalationMessage });
+            appendBubble('assistant', escalationMessage);
+            emptyState.style.display = 'none';
+            persist();
+            scrollToBottom();
+            setMonkeyState('happy');
+            setSendButtonThinking(false); // Reset send button state
+        };
+
+        // Function to set input value from suggestions
+        window.setInputValue = function(value) {
+            if (input) {
+                input.value = value + ' ';
+                input.focus();
+                autoSizeTextarea();
+            }
+        };
+
+        // Function to check if there are existing messages in current chat
+        window.hasExistingMessages = function() {
+            if (!activeId || !sessions[activeId]) {
+                return false;
+            }
+            const s = sessions[activeId];
+            return s.items && s.items.length > 0;
+        };
+
+        // Escalation functionality
+        function escalateQuery() {
+            const text = (input.value || '').trim();
+            if (!text) {
+                alert('Please enter a question to escalate.');
+                return;
+            }
+
+            if (confirm('Are you sure you want to escalate this query to a tutor or administrator?')) {
+                setMonkeyState('thinking');
+                setSendButtonThinking(true);
+                
+                // Call C# backend escalation service
+                DotNet.invokeMethodAsync('Tutorly.Client', 'EscalateQueryAsync', text)
+                    .then(response => {
+                        if (response && response.success) {
+                            // Add escalation message to chat
+                            const s = sessions[activeId]; if (!s) return;
+                            s.items.push({ role: 'assistant', content: response.message });
+                            appendBubble('assistant', response.message);
+                            emptyState.style.display = 'none';
+                            persist();
+                            scrollToBottom();
+                        } else {
+                            const errorMessage = response?.message || 'Failed to escalate query. Please try again.';
+                            s.items.push({ role: 'assistant', content: errorMessage });
+                            appendBubble('assistant', errorMessage);
+                            persist();
+                            scrollToBottom();
+                        }
+                        setMonkeyState('happy');
+                        setSendButtonThinking(false);
+                    })
+                    .catch(error => {
+                        console.error('Error escalating query:', error);
+                        const errorReply = 'Sorry, I encountered an error while escalating your query. Please try again.';
+                        const s = sessions[activeId]; if (!s) return;
+                        s.items.push({ role: 'assistant', content: errorReply });
+                        appendBubble('assistant', errorReply);
+                        persist();
+                        scrollToBottom();
+                        setMonkeyState('happy');
+                        setSendButtonThinking(false);
+                    });
+            }
+        }
+
+        const escalateBtn = document.getElementById('btnEscalate');
+        sendBtn.addEventListener('click', sendMessage);
+        escalateBtn.addEventListener('click', escalateQuery);
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        });
+        newBtn.addEventListener('click', createNewChat);
+        clearBtn.addEventListener('click', function () {
+            if (confirm('Clear all chat history?')) { sessions = {}; activeId = null; persist(); renderHistory(); createNewChat(); }
+        });
+        suggRow.addEventListener('click', function (e) {
+            const b = e.target.closest('button'); if (!b) return;
+            const t = b.getAttribute('data-suggest') || b.textContent || '';
+            input.value = t + ' ';
+            input.focus();
+            autoSizeTextarea();
+        });
+
+
+
+        // ===== helpers =====
+        function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, function (m) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]); }); }
+        function linkify(s) { return s.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>'); }
+
+        // boot
+        load();
+        autoSizeTextarea();
+        setMonkeyState('happy');
+    })();
+</script>
+
+@code {
+    private bool _isInitialized = false;
+    private bool _isLoading = false;
+    private string _currentMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentInstance = this;
+        // Initialize the ChatBot service when the page loads
+        await InitializeChatBotAsync();
+    }
+
+    private async Task InitializeChatBotAsync()
+    {
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+            
+            // Initialize the chatbot service
+            var response = await Http.PostAsJsonAsync("api/ChatBot/initialize", new { });
+            _isInitialized = response.IsSuccessStatusCode;
+            
+            if (_isInitialized)
+            {
+                Console.WriteLine("ChatBot service initialized successfully");
+                
+                await LoadWelcomeMessageAsync();
+            }
+            else
+            {
+                Console.WriteLine("Failed to initialize ChatBot service");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error initializing ChatBot: {ex.Message}");
+            _isInitialized = false;
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadWelcomeMessageAsync()
+    {
+        try
+        {
+            // Check if new chat
+            var hasExistingMessages = await JSRuntime.InvokeAsync<bool>("hasExistingMessages");
+            Console.WriteLine($"Has existing messages: {hasExistingMessages}");
+            
+            if (hasExistingMessages == false)
+            {
+                Console.WriteLine("Loading welcome message for new chat");
+                var response = await Http.GetAsync("api/ChatBot/welcome");
+                if (response.IsSuccessStatusCode)
+                {
+                    var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+                    if (apiResponse?.Success == true && !string.IsNullOrEmpty(apiResponse.Data))
+                    {
+                        Console.WriteLine("Displaying welcome message");
+                        await JSRuntime.InvokeVoidAsync("addBotResponse", apiResponse.Data);
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine("existing messages found");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading welcome message: {ex.Message}");
+        }
+    }
+
+    private static ChatBot? _currentInstance;
+
+    [JSInvokable]
+    public static async Task<bool> CheckChatbotStatusAsync()
+    {
+        try
+        {
+            var response = await _currentInstance.Http.GetAsync("api/ChatBot/status");
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+                if (apiResponse?.Success == true && apiResponse.Data != null)
+                {
+                    // Extract IsReady from the response data
+                    var data = apiResponse.Data.ToString();
+                    return data.Contains("\"IsReady\":true");
+                }
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error checking chatbot status: {ex.Message}");
+            return false;
+        }
+    }
+
+    [JSInvokable]
+    public static async Task SendMessageToBackendAsync(string message)
+    {
+        if (_currentInstance == null || _currentInstance._isInitialized == false || string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        try
+        {
+            var request = new ChatBotRequest
+            {
+                Message = message,
+                MaxDocuments = 3
+            };
+
+            var response = await _currentInstance.Http.PostAsJsonAsync("api/ChatBot/chat", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<ChatBotResponse>>();
+                
+                if (apiResponse?.Success == true && apiResponse.Data != null)
+                {
+                    await _currentInstance.JSRuntime.InvokeVoidAsync("addBotResponse", apiResponse.Data.Response);
+                    
+                    // Handle smart escalation if triggered
+                    if (apiResponse.Data.ShouldEscalate)
+                    {
+                        var escalationData = new
+                        {
+                            confidenceScore = apiResponse.Data.ConfidenceScore,
+                            escalationReason = apiResponse.Data.EscalationReason ?? "Low confidence response",
+                            faqSuggestions = apiResponse.Data.FaqSuggestions
+                        };
+                        await _currentInstance.JSRuntime.InvokeVoidAsync("handleSmartEscalation", escalationData);
+                    }
+                }
+                else
+                {
+                    var errorMessage = apiResponse?.Message ?? "Failed to get response from ChatBot";
+                    await _currentInstance.JSRuntime.InvokeVoidAsync("addBotResponse", $"Error: {errorMessage}");
+                }
+            }
+            else
+            {
+                await _currentInstance.JSRuntime.InvokeVoidAsync("addBotResponse", $"Error: API returned {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending message: {ex.Message}");
+            await _currentInstance.JSRuntime.InvokeVoidAsync("addBotResponse", "Error: Failed to communicate with ChatBot service");
+        }
+    }
+
+    [JSInvokable]
+    public static async Task<object> EscalateQueryAsync(string query)
+    {
+        if (_currentInstance == null || _currentInstance._isInitialized == false || string.IsNullOrWhiteSpace(query))
+        {
+            return new { success = false, message = "ChatBot not initialized or query is empty" };
+        }
+
+        try
+        {
+            var request = new EscalationRequestDto
+            {
+                Query = query,
+                EscalationType = EscalationType.Admin // Will be determined by backend
+            };
+
+            var response = await _currentInstance.Http.PostAsJsonAsync("api/ChatBot/escalate", request);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<EscalationResponseDto>>();
+                
+                if (apiResponse?.Success == true && apiResponse.Data != null)
+                {
+                    return new { 
+                        success = true, 
+                        message = apiResponse.Data.Message,
+                        escalationType = apiResponse.Data.EscalationType.ToString()
+                    };
+                }
+                else
+                {
+                    var errorMessage = apiResponse?.Message ?? "Failed to escalate query";
+                    return new { success = false, message = errorMessage };
+                }
+            }
+            else
+            {
+                return new { success = false, message = $"API returned {response.StatusCode}" };
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error escalating query: {ex.Message}");
+            return new { success = false, message = "Failed to escalate query. Please try again." };
+        }
+    }
+
+    [JSInvokable]
+    public static async Task LoadWelcomeMessageForNewChatAsync()
+    {
+        if (_currentInstance == null || _currentInstance._isInitialized == false)
+        {
+            return;
+        }
+
+        try
+        {
+            var response = await _currentInstance.Http.GetAsync("api/ChatBot/welcome");
+            if (response.IsSuccessStatusCode)
+            {
+                var apiResponse = await response.Content.ReadFromJsonAsync<ApiResponse<string>>();
+                if (apiResponse?.Success == true && !string.IsNullOrEmpty(apiResponse.Data))
+                {
+                    await _currentInstance.JSRuntime.InvokeVoidAsync("addBotResponse", apiResponse.Data);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading welcome message for new chat: {ex.Message}");
+        }
+    }
+
+    private async Task HandleSuggestionClickAsync(string suggestion)
+    {
+        await JSRuntime.InvokeVoidAsync("setInputValue", suggestion);
+    }
+}

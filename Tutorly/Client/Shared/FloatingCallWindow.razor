@@ -1,0 +1,121 @@
+﻿@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+@if (ActiveCall != null)
+{
+    <div class="floating-call"
+         id="floatingCall"
+         style="left: @Left; top: @Top;"
+         @onmousedown="StartDrag">
+        <div class="floating-call__header">
+            <span>@ActiveCall.RoomName</span>
+            <button @onclick="Minimize" class="btn-minimize">_</button>
+        </div>
+        <div class="floating-call__content @(IsMinimized ? "minimized" : "")">
+            <div class="floating-call__video" id="miniVideoContainer">
+                <!-- Video will be rendered here via JS -->
+            </div>
+            <div class="floating-call__controls">
+                <button @onclick="ToggleMute" class="btn-control @(IsMuted ? "muted" : "")" title="@(IsMuted ? "Unmute" : "Mute")">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        @if (IsMuted)
+                        {
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                            <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6" />
+                            <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23" />
+                        }
+                        else
+                        {
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        }
+                    </svg>
+                </button>
+                <button @onclick="ToggleVideo" class="btn-control @(IsVideoOff ? "off" : "")" title="@(IsVideoOff ? "Turn on video" : "Turn off video")">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        @if (IsVideoOff)
+                        {
+                            <line x1="1" y1="1" x2="23" y2="23" />
+                            <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2m5.66 0H14a2 2 0 0 1 2 2v3.34l1 1L23 7v10" />
+                        }
+                        else
+                        {
+                            <polygon points="23 7 16 12 23 17 23 7" />
+                            <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                        }
+                    </svg>
+                </button>
+                <button @onclick="RejoinFullRoom" class="btn-expand" title="Rejoin full room">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                    </svg>
+                    Rejoin
+                </button>
+                <button @onclick="LeaveCall" class="btn-leave" title="Leave call">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16,17 21,12 16,7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                    Leave
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public CallStateDto? ActiveCall { get; set; }
+    [Parameter] public EventCallback OnLeaveCall { get; set; }
+
+    private bool IsMinimized = false;
+    private bool IsMuted = false;
+    private bool IsVideoOff = false;
+    private string Left = "20px";
+    private string Top = "80px";
+    private bool IsDragging = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && ActiveCall != null)
+        {
+            await JS.InvokeVoidAsync("makeDraggable", "floatingCall");
+        }
+    }
+
+    private void Minimize()
+    {
+        IsMinimized = !IsMinimized;
+    }
+
+    private async Task ToggleMute()
+    {
+        IsMuted = !IsMuted;
+        await JS.InvokeVoidAsync("toggleAudio");
+    }
+
+    private async Task ToggleVideo()
+    {
+        IsVideoOff = !IsVideoOff;
+        await JS.InvokeVoidAsync("toggleVideo");
+    }
+
+    private void RejoinFullRoom()
+    {
+        if (ActiveCall != null)
+        {
+            Navigation.NavigateTo($"/calendar/session/{ActiveCall.RoomId}");
+        }
+    }
+
+    private async Task LeaveCall()
+    {
+        await OnLeaveCall.InvokeAsync();
+    }
+
+    private void StartDrag(MouseEventArgs e)
+    {
+        IsDragging = true;
+        // Dragging logic is handled by JavaScript
+    }
+}

@@ -1,0 +1,1121 @@
+﻿/* =======================
+   GAMIFICATION (scoped)
+   ======================= */
+#gamification-page {
+    --g-bg: #f7fafc;
+    --g-surface: #fff;
+    --g-text: #0b1220;
+    --g-muted: #667085;
+    --g-border: #e5e7eb;
+    --g-accent: #7ac043;
+    --g-accent-600: #66a838;
+    --g-coin: #f59e0b;
+    --g-shadow: 0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);
+    background: var(--g-bg);
+    color: var(--g-text);
+    padding: 18px 22px 40px;
+    font: 15px/1.45 system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+    /* Head / profile */
+    #gamification-page .g-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 6px auto 18px;
+        max-width: 1100px
+    }
+
+    #gamification-page .g-profile {
+        display: flex;
+        gap: 12px;
+        align-items: center
+    }
+
+    #gamification-page .g-avatar {
+        position: relative;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        border: 3px solid #e6f2e6;
+        overflow: hidden;
+        background-size: cover;
+        background-position: center
+    }
+
+        #gamification-page .g-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            position: relative;
+            z-index: 2
+        }
+
+    #gamification-page .g-level-badge {
+        position: absolute;
+        right: -6px;
+        bottom: -6px;
+        background: var(--g-accent);
+        color: #05370a;
+        border-radius: 10px;
+        font-weight: 900;
+        font-size: 12px;
+        padding: 2px 6px;
+        border: 1px solid #4aa329;
+        z-index: 4
+    }
+
+    #gamification-page .g-pmeta .g-name {
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        gap: 8px
+    }
+
+    #gamification-page .g-name-badge {
+        font-size: 12px;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 999px;
+        background: #eef6ff;
+        color: #0b3a68;
+        border: 1px solid #d7e8ff
+    }
+
+    #gamification-page .g-xprow {
+        margin-top: 6px
+    }
+
+    #gamification-page .g-progress {
+        height: 10px;
+        background: #f1f5f9;
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid var(--g-border)
+    }
+
+    #gamification-page .g-progress__bar {
+        height: 100%;
+        background: linear-gradient(90deg,#86efac,#7ac043)
+    }
+
+    #gamification-page .g-xpmeta {
+        font-size: 12px;
+        color: var(--g-muted);
+        margin-top: 6px
+    }
+
+    #gamification-page .g-wallet {
+        display: flex;
+        gap: 10px;
+        align-items: center
+    }
+
+    #gamification-page .g-coin {
+        background: #fff7ed;
+        border: 1px solid #ffedd5;
+        color: #7c2d12;
+        padding: 6px 10px;
+        border-radius: 10px;
+        font-weight: 800
+    }
+
+    /* Buttons */
+    #gamification-page .g-btn {
+        padding: 9px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--g-border);
+        background: #fff;
+        font-weight: 800;
+        cursor: pointer;
+        transition: .15s transform,.15s box-shadow
+    }
+
+        #gamification-page .g-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--g-shadow)
+        }
+
+    #gamification-page .g-btn--primary {
+        background: var(--g-accent);
+        border-color: var(--g-accent);
+        color: #073b0a
+    }
+
+    #gamification-page .g-btn--ghost {
+        background: transparent
+    }
+
+    #gamification-page .g-btn--small {
+        padding: 6px 10px;
+        font-size: 12px
+    }
+
+    /* Cards / grid */
+    #gamification-page .g-card {
+        background: var(--g-surface);
+        border: 1px solid var(--g-border);
+        border-radius: 14px;
+        box-shadow: var(--g-shadow);
+        margin: 12px auto;
+        max-width: 1100px
+    }
+
+    #gamification-page .g-card__head {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--g-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between
+    }
+
+        #gamification-page .g-card__head h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 900
+        }
+
+    #gamification-page .g-hint {
+        color: var(--g-muted);
+        font-size: 12px
+    }
+
+    #gamification-page .g-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 14px
+    }
+
+    #gamification-page .g-grid {
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 18px;
+        max-width: 1100px;
+        margin: 0 auto
+    }
+
+@media (max-width:900px) {
+    #gamification-page .g-grid {
+        grid-template-columns: 1fr
+    }
+}
+
+/* Lists */
+#gamification-page .g-list {
+    margin: 0;
+    padding: 12px 16px 4px
+}
+
+    #gamification-page .g-list li {
+        margin: 0 0 6px 18px
+    }
+
+/* Shop */
+#gamification-page .g-shop {
+    padding: 8px 14px 14px
+}
+
+    #gamification-page .g-shop h4 {
+        margin: 6px 0 10px
+    }
+
+#gamification-page .g-shop-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit,minmax(220px,1fr))
+}
+
+#gamification-page .g-shop-item {
+    border: 1px solid var(--g-border);
+    border-radius: 12px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 10px;
+    align-items: center
+}
+
+    #gamification-page .g-shop-item.is-owned {
+        background: #f8fff3
+    }
+
+#gamification-page .g-shop-art {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px dashed var(--g-border);
+    background: #f8fafc
+}
+
+#gamification-page .g-shop-title {
+    font-weight: 900
+}
+
+#gamification-page .g-shop-req {
+    font-size: 12px;
+    color: var(--g-muted)
+}
+
+/* cosmetic previews for shop tiles */
+#gamification-page .c-frame-bronze {
+    outline: 3px solid #cd7f32
+}
+
+#gamification-page .c-frame-gold {
+    outline: 3px solid #f59e0b
+}
+
+#gamification-page .c-bg-grid {
+    background-image: linear-gradient(#f8fafc 0 0)
+}
+
+#gamification-page .c-bg-stars {
+    background-image: linear-gradient(#0b1220,#1e293b)
+}
+
+/* Streaks */
+#gamification-page .g-streaks {
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap
+}
+
+#gamification-page .g-streak-box {
+    background: #eef6ff;
+    color: #0b3a68;
+    border: 1px solid #d7e8ff;
+    border-radius: 12px;
+    padding: 10px 14px
+}
+
+#gamification-page .g-streak-count {
+    font-weight: 900
+}
+
+#gamification-page .g-streak-best {
+    font-size: 12px
+}
+
+/* Leaderboards */
+#gamification-page .g-lb-privacy {
+    padding: 10px 14px
+}
+
+#gamification-page .g-lb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(260px,1fr));
+    gap: 10px;
+    padding: 10px 14px 18px
+}
+
+#gamification-page .g-lb {
+    border: 1px solid var(--g-border);
+    border-radius: 12px;
+    padding: 10px
+}
+
+#gamification-page .g-lb-title {
+    font-weight: 900;
+    margin-bottom: 8px
+}
+
+#gamification-page .g-lb ol {
+    margin: 0;
+    padding-left: 18px
+}
+
+#gamification-page .g-lb li {
+    display: flex;
+    justify-content: space-between
+}
+
+    #gamification-page .g-lb li.me {
+        color: #065f46;
+        font-weight: 900
+    }
+
+/* Toggle switch */
+#gamification-page .g-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    cursor: pointer
+}
+
+    #gamification-page .g-switch input {
+        appearance: none;
+        width: 34px;
+        height: 20px;
+        border-radius: 999px;
+        background: #e5e7eb;
+        position: relative;
+        outline: none
+    }
+
+        #gamification-page .g-switch input:checked {
+            background: var(--g-accent)
+        }
+
+        #gamification-page .g-switch input::after {
+            content: "";
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            transition: .15s
+        }
+
+        #gamification-page .g-switch input:checked::after {
+            transform: translateX(14px)
+        }
+
+/* Achievements modal */
+#gamification-page .g-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999
+}
+
+    #gamification-page .g-modal.show {
+        display: flex
+    }
+
+#gamification-page .g-modal__card {
+    width: min(960px,95vw);
+    background: var(--g-surface);
+    color: var(--g-text);
+    border: 1px solid var(--g-border);
+    border-radius: 14px;
+    box-shadow: var(--g-shadow);
+    overflow: hidden
+}
+
+#gamification-page .g-modal__head {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--g-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
+#gamification-page .g-modal__body {
+    padding: 14px;
+    max-height: 70vh;
+    overflow-y: auto;
+    overscroll-behavior: contain
+}
+
+#gamification-page .g-modal__foot {
+    padding: 12px 14px;
+    border-top: 1px solid var(--g-border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    background: rgba(0,0,0,.02)
+}
+
+/* Platinum */
+#gamification-page .g-platinum {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    align-items: center;
+    border: 1px solid var(--g-border);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 12px;
+    background: #f8fafc
+}
+
+#gamification-page .g-platinum-title {
+    font-weight: 900;
+    font-size: 16px
+}
+
+/* Achievement tiles */
+#gamification-page .g-ach-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit,minmax(250px,1fr))
+}
+
+#gamification-page .g-ach {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px;
+    border: 1px solid var(--g-border);
+    border-radius: 12px;
+    padding: 10px;
+    align-items: center
+}
+
+#gamification-page .g-ach-title {
+    font-weight: 900
+}
+
+#gamification-page .g-ach-desc {
+    color: var(--g-muted);
+    font-size: 12px
+}
+
+/* Trophy colors */
+#gamification-page .trophy {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    color: #fff
+}
+
+#gamification-page .trophy--bronze {
+    background: #cd7f32
+}
+
+#gamification-page .trophy--silver {
+    background: #a6b1b7
+}
+
+#gamification-page .trophy--gold {
+    background: #f59e0b
+}
+
+#gamification-page .trophy--platinum {
+    background: linear-gradient(180deg,#dbeafe,#93c5fd);
+    color: #0b3a68
+}
+
+/* Utilities */
+#gamification-page .g-quest {
+    border: 1px solid var(--g-border);
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 10px
+}
+
+#gamification-page .g-quest-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px
+}
+
+#gamification-page .g-quest-title {
+    font-weight: 900
+}
+
+#gamification-page .g-quest-rew {
+    font-size: 12px;
+    color: var(--g-muted)
+}
+
+/* SECRET: Blue Ring Flame (uses CSS var --flame-url) */
+#gamification-page .frame-flames {
+    position: relative;
+    border: 3px solid transparent;
+    overflow: visible !important
+}
+
+    #gamification-page .frame-flames::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: calc(100% + 28px);
+        height: calc(100% + 28px);
+        transform: translate(-50%,-50%);
+        background: var(--flame-url) center/contain no-repeat;
+        pointer-events: none;
+        z-index: 3;
+        filter: drop-shadow(0 0 8px rgba(90,180,255,.6)) drop-shadow(0 0 16px rgba(0,160,255,.55))
+    }
+
+#gamification-page .g-level-badge {
+    z-index: 4
+}
+
+#gamification-page .c-frame-flames {
+    background: var(--flame-url) center/cover no-repeat;
+    border: 1px solid #bee3f8
+}
+
+/* SECRET POPUP (Konami) + Confetti */
+#gamification-page .egg-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.5);
+    z-index: 10002
+}
+
+    #gamification-page .egg-modal.show {
+        display: flex;
+        animation: egg-fade .2s ease-out
+    }
+
+@keyframes egg-fade {
+    from {
+        opacity: 0
+    }
+
+    to {
+        opacity: 1
+    }
+}
+
+#gamification-page .egg-card {
+    width: min(560px,95vw);
+    background: var(--g-surface);
+    color: var(--g-text);
+    border: 1px solid var(--g-border);
+    border-radius: 16px;
+    box-shadow: var(--g-shadow);
+    overflow: hidden;
+    animation: egg-pop .2s ease-out
+}
+
+@keyframes egg-pop {
+    from {
+        transform: scale(.96);
+        opacity: 0
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1
+    }
+}
+
+#gamification-page .egg-head {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--g-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between
+}
+
+#gamification-page .egg-body {
+    padding: 16px
+}
+
+#gamification-page .egg-foot {
+    padding: 12px 14px;
+    border-top: 1px solid var(--g-border);
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    background: rgba(0,0,0,.02)
+}
+
+#gamification-page .egg-preview {
+    display: grid;
+    place-items: center;
+    padding: 8px 0
+}
+
+/* Confetti from sides */
+.confetti-root {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10003;
+    overflow: hidden
+}
+
+.confetti-piece {
+    position: absolute;
+    background: currentColor;
+    color: hsl(var(--h,0) 100% 50%);
+    --h: calc(360 * var(--rand,0));
+    border-radius: 2px
+}
+
+    .confetti-piece:nth-child(5n) {
+        color: #ff4757
+    }
+
+    .confetti-piece:nth-child(5n+1) {
+        color: #ffa502
+    }
+
+    .confetti-piece:nth-child(5n+2) {
+        color: #2ed573
+    }
+
+    .confetti-piece:nth-child(5n+3) {
+        color: #1e90ff
+    }
+
+    .confetti-piece:nth-child(5n+4) {
+        color: #a55eea
+    }
+
+    .confetti-piece.left {
+        left: -10px;
+        animation: confetti-left linear forwards
+    }
+
+    .confetti-piece.right {
+        right: -10px;
+        animation: confetti-right linear forwards
+    }
+
+@keyframes confetti-left {
+    0% {
+        transform: translate(0,0) rotate(0)
+    }
+
+    100% {
+        transform: translate(110vw,100vh) rotate(720deg)
+    }
+}
+
+@keyframes confetti-right {
+    0% {
+        transform: translate(0,0) rotate(0)
+    }
+
+    100% {
+        transform: translate(-110vw,100vh) rotate(-720deg)
+    }
+}
+
+/* FRAMES (static) */
+#gamification-page .g-avatar.frame-bronze {
+    border-color: #cd7f32;
+    box-shadow: 0 0 0 2px rgba(205,127,50,.28), inset 0 0 0 2px rgba(255,255,255,.9);
+}
+
+#gamification-page .g-avatar.frame-gold {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 2px rgba(245,158,11,.28), inset 0 0 0 2px rgba(255,255,255,.9);
+}
+
+/* Subtle hint on the grid avatar background */
+#gamification-page .g-avatar[style*="bg-grid"] {
+    box-shadow: 0 0 0 1px rgba(148,163,184,.35) inset;
+}
+
+/* =======================
+   GAMIFICATION (scoped)
+   ======================= */
+#gamification-page {
+    --g-bg: #f7fafc;
+    --g-surface: #fff;
+    --g-text: #0b1220;
+    --g-muted: #667085;
+    --g-border: #e5e7eb;
+    --g-accent: #7ac043;
+    --g-accent-600: #66a838;
+    --g-coin: #f59e0b;
+    --g-shadow: 0 1px 2px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);
+    background: var(--g-bg);
+    color: var(--g-text);
+    padding: 18px 22px 40px;
+    font: 15px/1.45 system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+    /* …everything else in your CSS stays the same… */
+
+    /* cosmetic previews for shop tiles */
+    #gamification-page .c-frame-bronze {
+        outline: 3px solid #cd7f32
+    }
+
+    #gamification-page .c-frame-gold {
+        outline: 3px solid #f59e0b
+    }
+
+    /* ✅ FORCE the clown image on the small preview square for Study Grid */
+    #gamification-page .g-shop-art.c-bg-grid {
+        background: var(--clown-url) center/cover no-repeat !important;
+    }
+
+    #gamification-page .g-shop-art.c-bg-grid {
+        background: var(--balatro-thumb) center/cover no-repeat !important;
+    }
+
+    #gamification-page .g-shop-art.c-bg-stars {
+        background: var(--stars-url) center/cover no-repeat !important;
+    }
+
+    #gamification-page .g-btn[disabled] {
+        opacity: .55;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+        filter: grayscale(0.2);
+    }
+
+
+    /* Night sky preview (unchanged) */
+    #gamification-page .c-bg-stars {
+        background-image: linear-gradient(#0b1220,#1e293b);
+    }
+    /* =======================
+   PLANT / STREAK VIEW
+   ======================= */
+    #gamification-page .plant-card {
+        overflow: hidden;
+    }
+
+    #gamification-page .plant-wrap {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 20px;
+        padding: 16px;
+        align-items: center;
+    }
+
+@media (max-width: 860px) {
+    #gamification-page .plant-wrap {
+        grid-template-columns: 1fr;
+    }
+}
+
+#gamification-page .plant-ring {
+    --size: 260px;
+    --pct: var(--plant-pct, 0%);
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    position: relative;
+    background: conic-gradient(var(--g-accent) 0 var(--pct), #eef2f7 var(--pct) 360deg);
+    box-shadow: var(--g-shadow);
+    border: 6px solid #fff;
+}
+
+    #gamification-page .plant-ring::before {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 50%;
+        background: #fff;
+        border: 1px solid var(--g-border);
+    }
+
+#gamification-page .plant-stage {
+    z-index: 1;
+    width: 116px;
+    height: 116px;
+    display: grid;
+    place-items: center;
+}
+
+#gamification-page .plant-pot {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56%;
+    height: 28%;
+    background: #8B5E3C;
+    border-radius: 12px 12px 22px 22px / 8px 8px 26px 26px;
+    box-shadow: inset 0 8px 0 rgba(255,255,255,.15);
+}
+
+#gamification-page .plant-meta .plant-title {
+    font-weight: 900;
+    font-size: 18px;
+    margin-bottom: 6px;
+}
+
+#gamification-page .plant-meta .plant-desc {
+    color: var(--g-muted);
+    margin-bottom: 10px;
+}
+
+#gamification-page .plant-badge {
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #ecfeff;
+    color: #155e75;
+    border: 1px solid #cffafe;
+    font-weight: 800;
+    font-size: 12px;
+}
+
+#gamification-page .plant-actions-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+/* Forest */
+#gamification-page .plant-forest {
+    padding: 10px 14px 16px;
+}
+
+#gamification-page .plant-forest-head {
+    border-bottom: 0;
+}
+
+#gamification-page .forest-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 10px;
+    padding-top: 10px;
+}
+
+#gamification-page .forest-chip {
+    border: 1px solid var(--g-border);
+    background: #fff;
+    border-radius: 12px;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    font-weight: 800;
+}
+
+    #gamification-page .forest-chip:hover {
+        box-shadow: var(--g-shadow);
+        transform: translateY(-1px);
+    }
+
+    #gamification-page .forest-chip.is-active {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+    }
+
+#gamification-page .chip-icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+#gamification-page .chip-text {
+    font-size: 13px;
+}
+
+/* =======================
+   PLANT / STREAK VIEW (already in your file)
+   – keep your existing plant styles as-is
+   ======================= */
+
+
+/* =======================
+   FARM BOARD (isometric grid of grown trees)
+   ======================= */
+
+/* Container under the plant, matches card padding rhythm */
+#gamification-page .farm-wrap {
+    padding: 10px 14px 18px;
+}
+
+/* Stage label + hint row in the farm card head (optional) */
+#gamification-page .farm-head {
+    border-bottom: 0;
+}
+
+/* Isometric board */
+#gamification-page .farm-iso {
+    --rows: 6; /* grid rows  */
+    --cols: 6; /* grid cols  */
+    --tile: clamp(42px, 6vw, 64px); /* tile base size, scales responsively */
+    --board-w: calc(var(--cols) * var(--tile));
+    --board-h: calc(var(--rows) * var(--tile));
+    position: relative;
+    width: var(--board-w);
+    height: var(--board-h);
+    margin: 10px auto 0;
+    transform: rotateX(58deg) rotateZ(45deg); /* quick iso look */
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+    /* Subtle “ground” shadow block under the board */
+    #gamification-page .farm-iso::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateZ(-24px);
+        background: linear-gradient(#a07347,#6a462e);
+        border-radius: 6px;
+        box-shadow: 0 18px 30px rgba(0,0,0,.16);
+    }
+
+/* Each tile – positioned with inline CSS variables: style="--r:0; --c:0" */
+#gamification-page .farm-tile {
+    position: absolute;
+    top: calc(var(--r) * var(--tile));
+    left: calc(var(--c) * var(--tile));
+    width: var(--tile);
+    height: var(--tile);
+    border: 1px solid rgba(0,0,0,.06);
+    background: linear-gradient(135deg, #c6f6a8, #b6ec7a) padding-box, /* grass */
+    linear-gradient(0deg, rgba(255,255,255,.35), rgba(255,255,255,0)) border-box;
+    border-radius: 4px;
+    box-shadow: 0 2px 0 rgba(0,0,0,.05) inset, /* faint grid lip */
+    0 0 0 1px rgba(255,255,255,.35) inset;
+    transform-style: preserve-3d;
+}
+
+    /* Optional tiny cross blade details */
+    #gamification-page .farm-tile::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: .15;
+        background: radial-gradient(circle at 25% 25%, #72a344 2px, transparent 3px), radial-gradient(circle at 70% 60%, #72a344 2px, transparent 3px);
+    }
+
+/* = Trees (drawn on top of a tile) ===================== */
+#gamification-page .tree {
+    position: absolute;
+    transform: translate(-50%, -50%) translateZ(12px); /* sits above tile plane */
+    left: 50%;
+    top: 50%;
+    pointer-events: none; /* tiles are static, no clicks needed */
+}
+
+    /* Shared layers for trunk + crown using pseudo elements */
+    #gamification-page .tree::before,
+    #gamification-page .tree::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    /* Trunk */
+    #gamification-page .tree::before {
+        width: calc(var(--tile) * .14);
+        background: #6a4a2f;
+        border-radius: 3px;
+        bottom: calc(var(--tile) * -.02);
+        height: calc(var(--tile) * .28);
+        box-shadow: 0 4px 0 rgba(0,0,0,.08);
+    }
+
+    /* Crown (default size) */
+    #gamification-page .tree::after {
+        bottom: calc(var(--tile) * .20);
+        width: calc(var(--tile) * .44);
+        height: calc(var(--tile) * .44);
+        background: #56b35c;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px rgba(255,255,255,.25) inset, 0 10px 14px rgba(0,0,0,.12);
+    }
+
+/* Sapling (small crown) */
+#gamification-page .tree--sapling::after {
+    width: calc(var(--tile) * .34);
+    height: calc(var(--tile) * .34);
+    bottom: calc(var(--tile) * .18);
+    background: #5fc276;
+}
+
+/* Young tree (medium crown) */
+#gamification-page .tree--young::after {
+    width: calc(var(--tile) * .48);
+    height: calc(var(--tile) * .48);
+    bottom: calc(var(--tile) * .22);
+    background: #4dc177;
+}
+
+/* Mature tree (largest crown + richer color) */
+#gamification-page .tree--mature::after {
+    width: calc(var(--tile) * .56);
+    height: calc(var(--tile) * .56);
+    bottom: calc(var(--tile) * .26);
+    background: #34c187;
+}
+
+/* Sprout marker (when you want a tiny sprout on a tile) */
+#gamification-page .sprout {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-60%) translateZ(8px);
+    width: calc(var(--tile) * .18);
+    height: calc(var(--tile) * .18);
+    border-left: 3px solid #2f855a;
+    border-bottom: 3px solid #2f855a;
+    border-radius: 0 0 0 8px;
+}
+
+/* Responsive scaling for smaller screens */
+@media (max-width: 860px) {
+    #gamification-page .farm-iso {
+        --tile: clamp(34px, 7.5vw, 54px);
+    }
+}
+/* Make trees render upright (cancel the board's isometric rotations) */
+#gamification-page .tree,
+#gamification-page .tree::before,
+#gamification-page .tree::after {
+    transform-style: preserve-3d;
+}
+
+#gamification-page .tree {
+    /* parent board: rotateX(58deg) rotateZ(45deg)
+     -> inverse for child: rotateZ(-45deg) rotateX(-58deg) */
+    transform: translate(-50%, -50%) translateZ(12px) rotateZ(-45deg) rotateX(-58deg);
+    transform-origin: 50% 100%;
+}
+
+    /* Re-center trunk/crown a touch for the new orientation */
+    #gamification-page .tree::before { /* trunk */
+        bottom: calc(var(--tile) * -.02);
+    }
+
+    #gamification-page .tree::after { /* crown */
+        bottom: calc(var(--tile) * .22);
+    }
+
+
+/* Forest pager bar */
+#gamification-page .forest-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 14px 2px;
+}
+
+#gamification-page .forest-pager {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#gamification-page .pager-dots {
+    display: inline-flex;
+    gap: 6px;
+}
+
+    #gamification-page .pager-dots .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        border: 1px solid var(--g-border);
+        background: #eef2f7;
+        cursor: pointer;
+    }
+
+        #gamification-page .pager-dots .dot.is-active {
+            background: var(--g-accent);
+            border-color: var(--g-accent);
+        }

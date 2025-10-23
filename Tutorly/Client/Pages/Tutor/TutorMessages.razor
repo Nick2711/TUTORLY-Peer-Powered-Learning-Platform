@@ -1,0 +1,1405 @@
+﻿@page "/tutor/messages"
+@using Microsoft.JSInterop
+@using Tutorly.Shared
+@using Tutorly.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@inject IJSRuntime JS
+@inject JwtHttpClient Http
+@inject MessagingHubService MessagingHub
+@inject AuthenticationStateProvider AuthStateProvider
+@inject StudyRoomHubService HubService
+@implements IAsyncDisposable
+
+<PageTitle>Tutor Messages | Tutorly</PageTitle>
+
+<div id="page-messages" class="pg-messages">
+    <!-- ================== NAVBAR (Messages active) ================== -->
+    <header class="db-topbar">
+        <div class="db-topbar__inner">
+            <div class="db-topbar__left">
+                <button id="themeToggle" class="db-toggle" title="Toggle theme" aria-label="Toggle theme" onclick="toggleTheme()">
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>
+                </button>
+                <a class="db-brand" href="/tutor/dashboard">
+                    <span class="db-brand__logo"><svg class="db-logo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /></svg></span>
+                    <span class="db-brand__text">Tutorly</span>
+                    <span class="db-brand__badge">Tutor</span>
+                </a>
+            </div>
+
+            <nav class="db-nav" id="mainNav">
+                <a class="db-nav__link" href="/tutor/dashboard" data-tab="home">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5 12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" /></svg>
+                    <span>Dashboard</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/availability" data-tab="availability">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4M16 2v4M3 10h18M5 22h14a2 2 0 0 0 2-2V8H3v12a2 2 0 0 0 2 2z" /></svg>
+                    <span>Availability</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/queue">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h12M4 18h8" /></svg>
+                    <span>Calendar</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/resources" data-tab="resources">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                    <span>Resources</span>
+                </a>
+                <a class="db-nav__link db-nav__link--active" href="/tutor/messages" data-tab="messages" aria-current="page">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a4 4 0 0 1-4 4H9l-4 3v-6H5a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4z" /></svg>
+                    <span>Messages</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/analytics" data-tab="analytics">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18" /><path d="M7 13l3 3 7-7" /></svg>
+                    <span>Analytics</span>
+                </a>
+                <a class="db-nav__link" href="/tutorforum">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <!-- main bubble -->
+                        <path d="M21 12a4 4 0 0 1-4 4H9l-4 3V8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v4z" />
+                        <!-- secondary bubble -->
+                        <path d="M7 14H6a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3h2" />
+                    </svg>
+                    <span>Forum</span>
+                </a>
+                <a class="db-nav__link" href="/tutor/tutorsessiondetails">
+                    <svg class="db-nav__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6v12M6 12h12" /></svg><span>Sessions</span>
+                </a>
+            </nav>
+
+            <div class="db-actions" id="actionsBar">
+                <div class="search-wrap" id="searchWrap">
+                    <button class="db-iconbtn" aria-label="Search" id="btnSearch">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" /></svg>
+                    </button>
+                    <input id="searchInput" type="text" placeholder="Search…">
+                </div>
+                <div style="position:relative">
+                    <button class="db-iconbtn" aria-haspopup="true" aria-expanded="false" id="btnNotif">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18H6l1-1v-5a5 5 0 0 1 10 0v5l1 1h-3Zm-6 0a3 3 0 0 0 6 0" /></svg>
+                    </button>
+                    <div class="pop" id="popNotif" role="menu" aria-label="Notifications">
+                        <div class="pop__head">Notifications</div>
+                        <ul class="pop__list">
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">🎓</div><div><div class="pop__title">New badge unlocked</div><div class="pop__text">You earned “Active Learner”.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">💬</div><div><div class="pop__title">Reply from Anouk</div><div class="pop__text">She commented on your code review thread.</div></div></div></li>
+                            <li class="pop__item"><div class="pop__row"><div class="pop__icon">📅</div><div><div class="pop__title">Session reminder</div><div class="pop__text">Query Review starts tomorrow at 1:00 PM.</div></div></div></li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="position:relative">
+                    <button class="db-avatar" aria-haspopup="true" aria-expanded="false" id="btnProfile">
+                        <img id="avatarImg" src="https://i.pravatar.cc/40?img=3" alt="Profile" />
+                    </button>
+                    <div class="pop" id="popProfile" role="menu" aria-label="Profile menu" style="width:280px">
+                        <div class="pop__head">My Profile</div>
+                        <ul class="pop__list">
+                            <li class="pop__item clickable" data-target="#modalPhoto">
+                                <div class="pop__row"><div class="pop__icon">🖼️</div><div><div class="pop__title">Change Photo</div><div class="pop__text">Upload a new profile picture.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalSettings">
+                                <div class="pop__row"><div class="pop__icon">⚙️</div><div><div class="pop__title">Settings</div><div class="pop__text">Manage account and preferences.</div></div></div>
+                            </li>
+                            <li class="pop__item clickable" data-target="#modalBadges">
+                                <div class="pop__row"><div class="pop__icon">🏆</div><div><div class="pop__title">Achievements</div><div class="pop__text">See all earned badges.</div></div></div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================== MESSAGES ================== -->
+    <div class="ms-wrap">
+        <div class="ms-grid">
+
+            <!-- Sidebar -->
+            <aside class="ms-panel ms-side">
+                <div class="ms-side__search">
+                    <div class="ms-row">
+                        <input id="conversationSearch" class="ms-search-in" type="text" placeholder="Search conversations...">
+                        <button id="btnNewChat" class="ms-addbtn" type="button">+ Chat</button>
+                    </div>
+                </div>
+
+                <!-- New chat popover -->
+                <div class="ms-newchat-pop" id="newChatPop">
+                    <div class="ms-newchat-title">Start a new chat</div>
+                    <input id="newChatSearch" class="ms-nc-input" type="text" placeholder="Search by name or student ID..." />
+
+                    <!-- Search Results -->
+                    <div id="newChatResults" class="ms-nc-results" style="display: none;">
+                        <div class="ms-nc-results-label">Select a person:</div>
+                        <ul id="newChatResultsList" class="ms-nc-list">
+                            <!-- Results populated by JavaScript -->
+                        </ul>
+                    </div>
+
+                    <div class="ms-nc-actions">
+                        <button id="ncCancel" class="ms-btn-ghost" type="button">Cancel</button>
+                    </div>
+                </div>
+
+                <ul class="ms-threads" id="threadList">
+                    <li class="ms-thread ms-thread--active" data-id="mr-johnson" data-name="Mr. Johnson" data-sub="Online" data-avatar="https://i.pravatar.cc/64?img=11">
+                        <button type="button" class="ms-thread__btn">
+                            <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=11" alt=""></span>
+                            <div><div class="ms-tname">Mr. Johnson</div><div class="ms-tprev">How can I help?</div></div>
+                            <div class="ms-tmeta">10:30</div>
+                        </button>
+                    </li>
+                    <li class="ms-thread" data-id="sarah-williams" data-name="Sarah Williams" data-sub="Last seen 2h ago" data-avatar="https://i.pravatar.cc/64?img=5">
+                        <button type="button" class="ms-thread__btn">
+                            <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=5" alt=""></span>
+                            <div><div class="ms-tname">Sarah Williams</div><div class="ms-tprev">Did you finish…</div></div>
+                            <div class="ms-tmeta">Yesterday</div>
+                        </button>
+                    </li>
+                    <li class="ms-thread" data-id="study-group" data-name="Study Group" data-sub="3 members" data-avatar="https://i.pravatar.cc/64?img=7">
+                        <button type="button" class="ms-thread__btn">
+                            <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=7" alt=""></span>
+                            <div><div class="ms-tname">Study Group</div><div class="ms-tprev">Library Room B at 2PM</div></div>
+                            <div class="ms-tmeta">Mon</div>
+                        </button>
+                    </li>
+                    <li class="ms-thread" data-id="dr-smith" data-name="Dr. Smith" data-sub="Offline" data-avatar="https://i.pravatar.cc/64?img=15">
+                        <button type="button" class="ms-thread__btn">
+                            <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=15" alt=""></span>
+                            <div><div class="ms-tname">Dr. Smith</div><div class="ms-tprev">Your essay was…</div></div>
+                            <div class="ms-tmeta">Last week</div>
+                        </button>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Chat -->
+            <section class="ms-panel ms-chat">
+                <div class="ms-chat__head">
+                    <span class="ms-avatar"><img id="chatAvatar" src="https://i.pravatar.cc/64?img=11" alt=""></span>
+                    <div>
+                        <div id="chatTitle" class="ms-chat__title">Mr. Johnson</div>
+                        <div id="chatSub" class="ms-chat__sub">Online</div>
+                    </div>
+                    <div class="ms-chat__actions">
+                        <button class="iconbtn" title="Call" type="button" @onclick="() => InitiateCall(CallType.Audio)">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.81.3 1.6.54 2.36a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.72-1.06a2 2 0 0 1 2.11-.45c.76.24 1.55.42 2.36.54A2 2 0 0 1 22 16.92z" /></svg>
+                        </button>
+                        <button class="iconbtn" title="Video Call" type="button" @onclick="() => InitiateCall(CallType.Video)">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" /></svg>
+                        </button>
+                        <button class="iconbtn" title="More" type="button">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="ms-chat__body" id="chatBody">
+                    <!-- Empty State - shown when no conversation is selected -->
+                    <div class="ms-empty-state" id="emptyState">
+                        <div class="ms-empty-content">
+                            <svg class="ms-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>
+                            <h3 class="ms-empty-title">Select a conversation</h3>
+                            <p class="ms-empty-text">Choose a conversation from the left sidebar to start messaging, or click "+ Chat" to start a new conversation.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ms-chat__input">
+                    <div class="ms-iptwrap">
+                        <div class="attach">
+                            <button class="iconbtn" id="btnAttach" title="Attach file" aria-haspopup="true" aria-expanded="false" type="button">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05 12 20.5a5.5 5.5 0 0 1-7.78-7.78l9.19-9.19A3.5 3.5 0 1 1 19.83 7L9.41 17.41" /></svg>
+                            </button>
+                            <div class="attach-pop" id="attachPop" role="menu" aria-label="Attach">
+                                <button class="att-item" data-kind="image" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg><span>Image</span></button>
+                                <button class="att-item" data-kind="doc" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg><span>Document</span></button>
+                                <button class="att-item" data-kind="video" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z" /><rect x="1" y="5" width="15" height="14" rx="2" /></svg><span>Video</span></button>
+                                <button class="att-item" data-kind="audio" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /></svg><span>Audio</span></button>
+                                <button class="att-item" data-kind="any" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18" /></svg><span>Any file</span></button>
+                                <button class="att-item" data-kind="camera" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><circle cx="12" cy="13" r="4" /></svg><span>Camera</span></button>
+                                <button class="att-item" data-kind="link" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 1 7 0l3 3a5 5 0 0 1-7 7l-1-1" /><path d="M14 11a5 5 0 0 1-7 0L4 8a5 5 0 1 1 7-7l1 1" /></svg><span>Link</span></button>
+                            </div>
+
+                            <!-- hidden inputs -->
+                            <input type="file" id="fileImage" accept="image/*" multiple hidden>
+                            <input type="file" id="fileDoc" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.rtf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple hidden>
+                            <input type="file" id="fileVideo" accept="video/*" multiple hidden>
+                            <input type="file" id="fileAudio" accept="audio/*" multiple hidden>
+                            <input type="file" id="fileAny" multiple hidden>
+                            <input type="file" id="fileCamera" accept="image/*" capture="environment" hidden>
+                        </div>
+
+                        <input id="chatInput" class="ms-ipt" type="text" placeholder="Type a message">
+                        <button id="chatSend" class="ms-sendbtn" type="button">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13" /><path d="M22 2 15 22l-4-9-9-4 20-7z" /></svg>
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <!-- ===== Profile Pack Modals ===== -->
+    <div class="modal" id="modalPhoto" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalPhotoTitle">
+            <div class="modal__head"><span id="modalPhotoTitle">Change Photo</span><button class="btn btn--ghost" data-close="modalPhoto">✕</button></div>
+            <div class="modal__body">
+                <div class="photo-row">
+                    <img id="photoPreview" src="https://i.pravatar.cc/80?img=3" alt="Preview">
+                    <div>
+                        <input type="file" id="photoInput" accept="image/*">
+                        <div class="pop__text" style="margin-top:6px">PNG/JPG up to ~2MB works best.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="modalPhoto">Cancel</button>
+                <button class="btn btn--primary" id="savePhotoBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalSettings" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalSettingsTitle">
+            <div class="modal__head"><span id="modalSettingsTitle">Profile Settings</span><button class="btn btn--ghost" data-close="modalSettings">✕</button></div>
+            <div class="modal__body">
+                <div class="field"><label for="firstName">First name</label><input id="firstName" type="text" placeholder="Jane"></div>
+                <div class="field"><label for="lastName">Last name</label><input id="lastName" type="text" placeholder="Doe"></div>
+                <div class="field">
+                    <label for="degree">Degree</label>
+                    <select id="degree">
+                        <option value="">Select…</option>
+                        <option>BComp</option>
+                        <option>BIT</option>
+                        <option>DIT</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="pop__text">These preferences are stored locally on this browser.</div>
+            </div>
+            <div class="modal__foot">
+                <button class="btn" data-close="modalSettings">Cancel</button>
+                <button class="btn btn--primary" id="saveSettingsBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="modalBadges" aria-hidden="true">
+        <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="modalBadgesTitle">
+            <div class="modal__head"><span id="modalBadgesTitle">Your Achievements</span><button class="btn btn--ghost" data-close="modalBadges">✕</button></div>
+            <div class="modal__body">
+                <ul style="margin:0;padding-left:18px">
+                    <li><strong>Active Learner</strong> — asked 10+ questions this week</li>
+                    <li><strong>Helper</strong> — answered 3 peer questions</li>
+                    <li><strong>On Track</strong> — met your weekly goal</li>
+                </ul>
+            </div>
+            <div class="modal__foot"><button class="btn btn--primary" data-close="modalBadges">Nice!</button></div>
+        </div>
+    </div>
+</div> <!-- /#page-messages -->
+
+<script src="js/messaging-backend-bridge.js"></script>
+<script>
+    /* Theme */
+    (function initTheme() {
+        try { const saved = localStorage.getItem('theme'); if (saved === 'dark') { document.documentElement.classList.add('theme-dark'); } } catch (_) { }
+    })();
+    function toggleTheme() {
+        const el = document.documentElement;
+        const isDark = el.classList.toggle('theme-dark');
+        try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch (_) { }
+    }
+
+    /* Nav */
+    (function wireNav() {
+        const nav = document.getElementById('mainNav');
+        if (!nav) return;
+        nav.addEventListener('click', (e) => {
+            const a = e.target.closest('a'); if (!a) return;
+            const href = (a.getAttribute('href') || '').trim();
+            [...nav.querySelectorAll('a')].forEach(x => x.classList.remove('db-nav__link--active'));
+            a.classList.add('db-nav__link--active');
+            if (href === '' || href === '#') { e.preventDefault(); }
+        }, { passive: false });
+    })();
+
+    /* Actions (search/notifications/profile) */
+    (function wireActions() {
+        const sw = document.getElementById('searchWrap'), sb = document.getElementById('btnSearch'), si = document.getElementById('searchInput');
+        const bn = document.getElementById('btnNotif'), pn = document.getElementById('popNotif');
+        const bp = document.getElementById('btnProfile'), pp = document.getElementById('popProfile');
+        function closeAll() { sw?.classList.remove('open'); pn?.classList.remove('show'); bn?.setAttribute('aria-expanded', 'false'); pp?.classList.remove('show'); bp?.setAttribute('aria-expanded', 'false'); }
+        sb?.addEventListener('click', (e) => { e.preventDefault(); const o = sw.classList.toggle('open'); if (o) { si?.focus(); } pn?.classList.remove('show'); pp?.classList.remove('show'); });
+        bn?.addEventListener('click', (e) => { e.preventDefault(); const s = pn.classList.toggle('show'); bn.setAttribute('aria-expanded', s ? 'true' : 'false'); pp?.classList.remove('show'); sw?.classList.remove('open'); });
+        bp?.addEventListener('click', (e) => { e.preventDefault(); const s = pp.classList.toggle('show'); bp.setAttribute('aria-expanded', s ? 'true' : 'false'); pn?.classList.remove('show'); sw?.classList.remove('open'); });
+        document.addEventListener('click', (e) => { const within = e.target.closest('#actionsBar'); const inLeft = e.target.closest('.db-topbar__left'); if (!(within || inLeft)) closeAll(); });
+    })();
+
+    // ========= PROFILE PACK =========
+    (function initProfilePack() {
+        if (window.__tutorlyProfileInit) return;
+        window.__tutorlyProfileInit = true;
+
+        const $ = s => document.querySelector(s);
+        const $$ = s => Array.from(document.querySelectorAll(s));
+        const avatarImg = $('#avatarImg');
+
+        (function loadPersisted() {
+            try {
+                const p = localStorage.getItem('profile.photo');
+                if (p && avatarImg) { avatarImg.src = p; }
+                const fn = $('#firstName'), ln = $('#lastName'), dg = $('#degree');
+                if (fn) fn.value = localStorage.getItem('profile.first') || '';
+                if (ln) ln.value = localStorage.getItem('profile.last') || '';
+                if (dg) dg.value = localStorage.getItem('profile.degree') || '';
+                const prev = $('#photoPreview');
+                if (prev && p) prev.src = p;
+            } catch (_) { }
+        })();
+
+        $$('#popProfile .clickable').forEach(li => {
+            li.addEventListener('click', () => {
+                const target = li.getAttribute('data-target');
+                if (target) document.querySelector(target)?.classList.add('show');
+                document.getElementById('popProfile')?.classList.remove('show');
+            });
+        });
+
+        $$('.modal').forEach(m => m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('show'); }));
+        $$('[data-close]').forEach(btn => btn.addEventListener('click', () => {
+            const id = btn.getAttribute('data-close'); if (id) document.getElementById(id)?.classList.remove('show');
+        }));
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { $$('.modal.show').forEach(m => m.classList.remove('show')); } });
+
+        const photoInput = $('#photoInput');
+        const photoPreview = $('#photoPreview');
+        $('#savePhotoBtn')?.addEventListener('click', () => {
+            try {
+                if (photoPreview?.src) {
+                    localStorage.setItem('profile.photo', photoPreview.src);
+                    if (avatarImg) avatarImg.src = photoPreview.src;
+                }
+            } catch (_) { }
+            document.getElementById('modalPhoto')?.classList.remove('show');
+        });
+        photoInput?.addEventListener('change', () => {
+            const f = photoInput.files?.[0]; if (!f) return;
+            const r = new FileReader();
+            r.onload = () => { if (photoPreview) photoPreview.src = r.result; };
+            r.readAsDataURL(f);
+        });
+
+        const fn = $('#firstName'), ln = $('#lastName'), dg = $('#degree');
+        $('#saveSettingsBtn')?.addEventListener('click', () => {
+            try {
+                localStorage.setItem('profile.first', fn?.value.trim() || '');
+                localStorage.setItem('profile.last', ln?.value.trim() || '');
+                localStorage.setItem('profile.degree', dg?.value || '');
+            } catch (_) { }
+            document.getElementById('modalSettings')?.classList.remove('show');
+        });
+    })();
+
+    /* ===== Conversations sample ===== */
+    const CONV_HTML = {
+        "mr-johnson": `
+                        <div class="chip-day">Today</div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=11" alt=""></span>
+                          <div class="bubble"><div>Hi there! How can I help you with your math homework today?</div><span class="time">10:30 AM</span></div>
+                        </div>
+                        <div class="msgrow me">
+                          <div class="bubble"><div>Hi Mr. Johnson! I'm stuck on problem 12 from chapter 5.</div><span class="time">10:32 AM</span></div>
+                        </div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=11" alt=""></span>
+                          <div class="bubble"><div>Ah, that's a tricky one. Have you tried using the quadratic formula?</div><span class="time">10:33 AM</span></div>
+                        </div>
+                        <div class="msgrow me">
+                          <div class="bubble"><div>Yes, but I keep getting a negative under the square root.</div><span class="time">10:35 AM</span></div>
+                        </div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=11" alt=""></span>
+                          <div class="bubble"><div>That means there's no real solution. Check if you copied the equation correctly.</div><span class="time">10:36 AM</span></div>
+                        </div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=11" alt=""></span>
+                          <div class="bubble">
+                            <div class="filecard">
+                              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+                              <div><div class="fname">Homework_Solutions.pdf</div><div class="fsize">2.4 MB</div></div>
+                            </div>
+                            <span class="time">10:37 AM</span>
+                          </div>
+                        </div>`,
+        "sarah-williams": `
+                        <div class="chip-day">Yesterday</div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=5" alt=""></span>
+                          <div class="bubble"><div>Did you finish the history assignment?</div><span class="time">3:10 PM</span></div>
+                        </div>
+                        <div class="msgrow me">
+                          <div class="bubble"><div>Almost! I'm polishing the references. Can I send you my outline?</div><span class="time">3:12 PM</span></div>
+                        </div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=5" alt=""></span>
+                          <div class="bubble"><div>Sure, send it here and I’ll add comments.</div><span class="time">3:13 PM</span></div>
+                        </div>`,
+        "study-group": `
+                        <div class="chip-day">Mon</div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=7" alt=""></span>
+                          <div class="bubble"><div>Alex: I'll bring the notes tomorrow.</div><span class="time">5:40 PM</span></div>
+                        </div>
+                        <div class="msgrow me">
+                          <div class="bubble"><div>Great! Can someone book a study room?</div><span class="time">5:42 PM</span></div>
+                        </div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=7" alt=""></span>
+                          <div class="bubble"><div>Sam: Done — Library Room B at 2PM.</div><span class="time">5:45 PM</span></div>
+                        </div>`,
+        "dr-smith": `
+                        <div class="chip-day">Last week</div>
+                        <div class="msgrow">
+                          <span class="ms-avatar"><img src="https://i.pravatar.cc/64?img=15" alt=""></span>
+                          <div class="bubble"><div>Your essay was excellent!</div><span class="time">10:02 AM</span></div>
+                        </div>
+                        <div class="msgrow me">
+                          <div class="bubble"><div>Thank you, Dr. Smith! Appreciate the feedback.</div><span class="time">10:05 AM</span></div>
+                        </div>`
+    };
+
+    /* ===== Messages behaviors (idempotent init) ===== */
+    (function () {
+        const ns = (window.TutorlyMessages = window.TutorlyMessages || {});
+        const ACTIVE_KEY = 'messages.activeId';
+
+        ns.init = function () {
+            // prevent rebinding the SAME DOM elements more than once
+            const root = document.getElementById('page-messages');
+            if (!root) return;
+
+            // Chat body & input
+            const cb = document.getElementById('chatBody');
+            const ipt = document.getElementById('chatInput');
+
+            // First paint / restore active
+            const list = document.getElementById('threadList');
+            if (!list) return;
+
+            if (!list.dataset.wired) {
+                list.dataset.wired = '1';
+                list.addEventListener('click', async (e) => {
+                    const btn = e.target.closest('.ms-thread__btn'); if (!btn) return;
+                    e.preventDefault();
+                    const li = btn.closest('.ms-thread');
+                    const conversationId = parseInt(li.dataset.id);
+
+                    // Load messages from backend if available
+                    if (window.TutorlyMessagingBackend && window._messagesPageDotNetRef) {
+                        try {
+                            await window._messagesPageDotNetRef.invokeMethodAsync('LoadConversationMessages', conversationId);
+                        } catch (ex) {
+                            console.log('Backend load failed, using local:', ex);
+                            openConversation(li); // Fallback
+                        }
+                    } else {
+                        openConversation(li); // Fallback to existing functionality
+                    }
+
+                    // Update UI state
+                    list.querySelectorAll('.ms-thread').forEach(el => el.classList.remove('ms-thread--active'));
+                    li.classList.add('ms-thread--active');
+                    document.getElementById('chatTitle').textContent = li.dataset.name || 'Chat';
+                    document.getElementById('chatSub').textContent = li.dataset.sub || '';
+                    const avatar = li.dataset.avatar || li.querySelector('img')?.src;
+                    if (avatar) document.getElementById('chatAvatar').src = avatar;
+                });
+            }
+
+            // New Chat pop with user search
+            const pop = document.getElementById('newChatPop');
+            const btnNew = document.getElementById('btnNewChat');
+            const ncSearch = document.getElementById('newChatSearch');
+            const ncResults = document.getElementById('newChatResults');
+            const ncResultsList = document.getElementById('newChatResultsList');
+            const ncCancel = document.getElementById('ncCancel');
+            let searchTimeout = null;
+
+            if (btnNew && !btnNew.dataset.wired) {
+                btnNew.dataset.wired = '1';
+                btnNew.addEventListener('click', () => {
+                    pop.classList.toggle('show');
+                    if (pop.classList.contains('show')) {
+                        setTimeout(() => ncSearch.focus(), 0);
+                        ncSearch.value = '';
+                        ncResults.style.display = 'none';
+                        ncResultsList.innerHTML = '';
+                    }
+                });
+            }
+
+            // Conversation search functionality
+            const conversationSearch = document.getElementById('conversationSearch');
+            if (conversationSearch && !conversationSearch.dataset.wired) {
+                conversationSearch.dataset.wired = '1';
+                conversationSearch.addEventListener('input', (e) => {
+                    const query = e.target.value;
+                    console.log('[Messages] Conversation search input:', query);
+
+                    if (window.TutorlyMessagingBackend) {
+                        window.TutorlyMessagingBackend.searchConversations(query);
+                    } else {
+                        console.error('[Messages] TutorlyMessagingBackend not available');
+                    }
+                });
+
+                // Clear search on Escape key
+                conversationSearch.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        conversationSearch.value = '';
+                        if (window.TutorlyMessagingBackend) {
+                            window.TutorlyMessagingBackend.searchConversations('');
+                        }
+                    }
+                });
+            }
+
+            if (ncSearch && !ncSearch.dataset.wired) {
+                ncSearch.dataset.wired = '1';
+                ncSearch.addEventListener('input', async (e) => {
+                    const query = (e.target.value || '').trim();
+
+                    // Clear previous timeout
+                    if (searchTimeout) clearTimeout(searchTimeout);
+
+                    // Hide results if query is too short
+                    if (query.length < 2) {
+                        ncResults.style.display = 'none';
+                        return;
+                    }
+
+                    // Debounce search by 300ms
+                    searchTimeout = setTimeout(async () => {
+                        if (!window.TutorlyMessagingBackend) return;
+
+                        const results = await window.TutorlyMessagingBackend.searchUsers(query);
+
+                        if (results && results.length > 0) {
+                            ncResultsList.innerHTML = '';
+                            results.forEach(user => {
+                                const li = document.createElement('li');
+                                const initials = user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+                                // Show role with proper formatting
+                                let subtitle = '';
+                                if (user.role && user.role.toLowerCase() === 'student') {
+                                    subtitle = user.studentId ? `Student ID: ${user.studentId}` : 'Student';
+                                } else if (user.role && user.role.toLowerCase() === 'tutor') {
+                                    subtitle = user.studentId ? `Tutor ID: ${user.studentId}` : 'Tutor';
+                                } else if (user.role && user.role.toLowerCase() === 'admin') {
+                                    subtitle = user.studentId ? `Admin ID: ${user.studentId}` : 'Admin';
+                                } else if (user.role) {
+                                    subtitle = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+                                }
+
+                                li.innerHTML = `
+                                    <div class="nc-avatar">${initials}</div>
+                                    <div class="nc-info">
+                                      <div class="nc-name">${escapeHtml(user.fullName)}</div>
+                                      <div class="nc-role">${escapeHtml(subtitle)}</div>
+                                    </div>
+                                  `;
+
+                                li.addEventListener('click', async () => {
+                                    // Create conversation with this user
+                                    const conv = await window.TutorlyMessagingBackend.createDirectConversation(user.userId, user.fullName);
+                                    if (conv) {
+                                        // Close popup
+                                        pop.classList.remove('show');
+                                        ncSearch.value = '';
+                                        ncResults.style.display = 'none';
+
+                                        // Reload conversations to show the new one
+                                        if (window._messagesPageDotNetRef) {
+                                            const convs = await window._messagesPageDotNetRef.invokeMethodAsync('LoadConversationMessages', conv.conversationId);
+                                        }
+                                    }
+                                });
+
+                                ncResultsList.appendChild(li);
+                            });
+                            ncResults.style.display = 'block';
+                        } else {
+                            ncResultsList.innerHTML = '<li style="padding: 10px; color: var(--db-text-muted);">No users found</li>';
+                            ncResults.style.display = 'block';
+                        }
+                    }, 300);
+                });
+            }
+
+            if (ncCancel && !ncCancel.dataset.wired) {
+                ncCancel.dataset.wired = '1';
+                ncCancel.addEventListener('click', () => {
+                    pop.classList.remove('show');
+                    ncSearch.value = '';
+                    ncResults.style.display = 'none';
+                });
+            }
+
+            if (!root.dataset.ncOutside) {
+                root.dataset.ncOutside = '1';
+                document.addEventListener('click', (e) => {
+                    const inSide = e.target.closest('.ms-side');
+                    const inPop = e.target.closest('#newChatPop');
+                    const isBtn = e.target.closest('#btnNewChat');
+                    if (inSide && !inPop && !isBtn) {
+                        pop.classList.remove('show');
+                        ncSearch.value = '';
+                        ncResults.style.display = 'none';
+                    }
+                });
+            }
+
+            // Send
+            const sendBtn = document.getElementById('chatSend');
+            if (sendBtn && !sendBtn.dataset.wired) {
+                sendBtn.dataset.wired = '1';
+                sendBtn.addEventListener('click', async () => {
+                    const val = (ipt?.value || '').trim();
+                    if (!val) return;
+
+                    // Try backend first
+                    if (window.TutorlyMessagingBackend && window._messagesPageDotNetRef) {
+                        try {
+                            const sent = await window.TutorlyMessagingBackend.sendMessage(val);
+                            if (sent && ipt) {
+                                ipt.value = ''; // Message will appear via SignalR
+                                return;
+                            }
+                        } catch (ex) {
+                            console.log('Backend send failed:', ex);
+                        }
+                    }
+
+                    // Fallback to local rendering
+                    addTextBubble(val);
+                });
+            }
+            if (ipt && !ipt.dataset.wired) {
+                ipt.dataset.wired = '1';
+                ipt.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); sendBtn.click(); } });
+            }
+
+            // Attachments
+            const btnAtt = document.getElementById('btnAttach');
+            const popAtt = document.getElementById('attachPop');
+            if (btnAtt && !btnAtt.dataset.wired) {
+                btnAtt.dataset.wired = '1';
+                btnAtt.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const open = popAtt.classList.toggle('show');
+                    btnAtt.setAttribute('aria-expanded', open ? 'true' : 'false');
+                });
+            }
+            if (!root.dataset.attOutside) {
+                root.dataset.attOutside = '1';
+                document.addEventListener('click', (e) => { const within = e.target.closest('.attach'); if (!within) popAtt.classList.remove('show'); });
+            }
+
+            const fileImage = document.getElementById('fileImage');
+            const fileDoc = document.getElementById('fileDoc');
+            const fileVideo = document.getElementById('fileVideo');
+            const fileAudio = document.getElementById('fileAudio');
+            const fileAny = document.getElementById('fileAny');
+            const fileCamera = document.getElementById('fileCamera');
+
+            const ap = document.getElementById('attachPop');
+            if (ap && !ap.dataset.wired) {
+                ap.dataset.wired = '1';
+                ap.addEventListener('click', (e) => {
+                    const btn = e.target.closest('.att-item'); if (!btn) return;
+                    const k = btn.getAttribute('data-kind');
+                    if (k === 'image') fileImage.click();
+                    else if (k === 'doc') fileDoc.click();
+                    else if (k === 'video') fileVideo.click();
+                    else if (k === 'audio') fileAudio.click();
+                    else if (k === 'any') fileAny.click();
+                    else if (k === 'camera') fileCamera.click();
+                    else if (k === 'link') {
+                        const url = prompt('Paste a link to share:');
+                        if (url && url.trim()) { addLinkBubble(url.trim()); }
+                    }
+                    ap.classList.remove('show');
+                });
+            }
+
+            fileImage?.addEventListener('change', () => handleFiles(fileImage.files, 'image'), { once: true });
+            fileCamera?.addEventListener('change', () => handleFiles(fileCamera.files, 'image'), { once: true });
+            fileDoc?.addEventListener('change', () => handleFiles(fileDoc.files, 'doc'), { once: true });
+            fileVideo?.addEventListener('change', () => handleFiles(fileVideo.files, 'video'), { once: true });
+            fileAudio?.addEventListener('change', () => handleFiles(fileAudio.files, 'audio'), { once: true });
+            fileAny?.addEventListener('change', () => handleFiles(fileAny.files, 'any'), { once: true });
+
+            // Initial conversation (restore last opened)
+            const stored = (localStorage.getItem(ACTIVE_KEY) || '').trim();
+            const liStored = stored ? list.querySelector(`.ms-thread[data-id="${stored}"]`) : null;
+            openConversation(liStored || list.querySelector('.ms-thread.ms-thread--active') || list.querySelector('.ms-thread'));
+
+            function openConversation(li) {
+                if (!li) return;
+                list.querySelectorAll('.ms-thread').forEach(el => el.classList.remove('ms-thread--active'));
+                li.classList.add('ms-thread--active');
+                const id = li.dataset.id;
+                const name = li.dataset.name || li.querySelector('.ms-tname')?.textContent?.trim() || 'Chat';
+                const sub = li.dataset.sub || '';
+                const avatar = li.dataset.avatar || li.querySelector('img')?.src || '';
+
+                document.getElementById('chatTitle').textContent = name;
+                document.getElementById('chatSub').textContent = sub;
+                const img = document.getElementById('chatAvatar'); if (avatar) img.src = avatar;
+
+                if (cb) { cb.innerHTML = CONV_HTML[id] || `<div class="chip-day">Today</div>`; cb.scrollTop = cb.scrollHeight; }
+                try { localStorage.setItem(ACTIVE_KEY, id || ''); } catch (_) { }
+            }
+
+            function addTextBubble(text) {
+                if (!cb) return;
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const wrap = document.createElement('div');
+                wrap.className = 'msgrow me';
+                wrap.innerHTML = `<div class="bubble"><div>${escapeHtml(text)}</div><span class="time">${time}</span></div>`;
+                cb.appendChild(wrap);
+                if (ipt) ipt.value = '';
+                cb.scrollTop = cb.scrollHeight;
+            }
+
+            function handleFiles(files, kind) {
+                if (!files || !files.length || !cb) return;
+                [...files].forEach(f => {
+                    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const row = document.createElement('div');
+                    row.className = 'msgrow me';
+                    if (kind === 'image') {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                            row.innerHTML = `<div class="bubble"><div class="imgwrap"><img class="imgbubble" src="${reader.result}" alt=""></div>
+                                  <div class="filecard" style="margin-top:6px">
+                                    <svg viewBox='0 0 24 24' width='18' height='18' fill='none' stroke='currentColor' stroke-width='2'>
+                                      <rect x='3' y='3' width='18' height='18' rx='2'/><circle cx='8.5' cy='8.5' r='1.5'/><path d='M21 15l-5-5L5 21'/>
+                                    </svg>
+                                    <div><div class='fname'>${escapeHtml(f.name)}</div><div class='fsize'>${humanSize(f.size)}</div></div>
+                                  </div><span class="time">${time}</span></div>`;
+                            cb.appendChild(row); cb.scrollTop = cb.scrollHeight;
+                        };
+                        reader.readAsDataURL(f);
+                    } else {
+                        const icon = (kind === 'video') ? `<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>` :
+                            (kind === 'audio') ? `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/>` :
+                                `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>`;
+                        row.innerHTML = `<div class="bubble"><div class="filecard">
+                                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">${icon}</svg>
+                                  <div><div class="fname">${escapeHtml(f.name)}</div><div class="fsize">${humanSize(f.size)}</div></div>
+                                </div><span class="time">${time}</span></div>`;
+                        cb.appendChild(row); cb.scrollTop = cb.scrollHeight;
+                    }
+                });
+            }
+
+            function addLinkBubble(url) {
+                if (!cb) return;
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const row = document.createElement('div');
+                row.className = 'msgrow me';
+                const safe = escapeHtml(url);
+                row.innerHTML = `<div class="bubble"><div><strong>Link:</strong> <a href="${safe}" target="_blank" rel="noopener">${safe}</a></div><span class="time">${time}</span></div>`;
+                cb.appendChild(row); cb.scrollTop = cb.scrollHeight;
+            }
+
+            function humanSize(bytes) {
+                if (!bytes && bytes !== 0) return '';
+                const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+                let i = 0; let n = bytes;
+                while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+                return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
+            }
+            function escapeHtml(s) { return (s || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+        };
+
+        // run now (first render)
+        ns.init();
+    })();
+</script>
+
+@code {
+    private DotNetObjectReference<TutorMessages>? _dotnetRef;
+    private List<ConversationDto> _conversations = new();
+    private int? _activeConversationId = null;
+    private string? _currentUserId = null;
+    private bool _isLoadingConversations = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _dotnetRef = DotNetObjectReference.Create(this);
+
+            // Get current user ID from the API (more reliable than claims)
+            try
+            {
+                // Get the raw JSON response
+                var response = await Http.GetAsync("/api/auth/me");
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[Messages] API Response: {responseJson.Substring(0, Math.Min(300, responseJson.Length))}...");
+
+                    var doc = System.Text.Json.JsonDocument.Parse(responseJson);
+                    var root = doc.RootElement;
+
+                    // Try to get userId from user.id (UnifiedSessionDto structure)
+                    if (root.TryGetProperty("user", out System.Text.Json.JsonElement userElement))
+                    {
+                        if (userElement.TryGetProperty("id", out System.Text.Json.JsonElement userIdProp))
+                        {
+                            _currentUserId = userIdProp.GetString();
+                            Console.WriteLine($"[Messages] ✓ Found User ID in user.id: {_currentUserId}");
+                        }
+                    }
+
+                    // Fallback: try profile.userId
+                    if (string.IsNullOrEmpty(_currentUserId))
+                    {
+                        if (root.TryGetProperty("profile", out System.Text.Json.JsonElement profileElement))
+                        {
+                            if (profileElement.TryGetProperty("userId", out System.Text.Json.JsonElement profileUserIdProp))
+                            {
+                                _currentUserId = profileUserIdProp.GetString();
+                                Console.WriteLine($"[Messages] ✓ Found User ID in profile.userId: {_currentUserId}");
+                            }
+                        }
+                    }
+
+                    Console.WriteLine($"[Messages] ✓ Final User ID from API: {_currentUserId}");
+                }
+                else
+                {
+                    Console.WriteLine($"[Messages] ✗ Auth API returned: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Messages] Could not get user ID from API: {ex.Message}");
+
+                // Fallback: Try to get from authentication state
+                try
+                {
+                    var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                    var user = authState.User;
+                    if (user.Identity?.IsAuthenticated == true)
+                    {
+                        _currentUserId = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                                      ?? user.FindFirst("sub")?.Value
+                                      ?? user.FindFirst("userId")?.Value;
+                        Console.WriteLine($"[Messages] Fallback - User ID from claims: {_currentUserId}");
+                    }
+                }
+                catch (Exception claimEx)
+                {
+                    Console.WriteLine($"[Messages] Fallback also failed: {claimEx.Message}");
+                }
+            }
+
+            // Connect SignalR
+            try
+            {
+                await MessagingHub.StartAsync();
+                MessagingHub.OnMessageReceived += HandleNewMessage;
+                Console.WriteLine("SignalR connected for messaging");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SignalR connection failed: {ex.Message}");
+            }
+
+            // Initialize bridge BEFORE loading conversations
+            await InitializeBridgeAfterUserId();
+
+            // Load conversations from backend
+            await LoadConversationsAsync();
+
+            // Update UI with conversations after both bridge and conversations are ready
+            await UpdateUIWithConversations();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Messages init error: {ex.Message}");
+        }
+    }
+
+    private async Task InitializeBridgeAfterUserId()
+    {
+        if (_dotnetRef != null && !string.IsNullOrEmpty(_currentUserId))
+        {
+            // Wait for bridge to load with retry mechanism
+            bool bridgeLoaded = false;
+            for (int i = 0; i < 10; i++) // Try for up to 1 second
+            {
+                try
+                {
+                    var exists = await JS.InvokeAsync<bool>("eval", "typeof TutorlyMessagingBackend !== 'undefined'");
+                    if (exists)
+                    {
+                        bridgeLoaded = true;
+                        break;
+                    }
+                }
+                catch { }
+                await Task.Delay(100); // Wait 100ms before retry
+            }
+
+            if (bridgeLoaded)
+            {
+                // Initialize backend bridge with user ID
+                try
+                {
+                    Console.WriteLine($"[Messages] Initializing bridge with User ID: '{_currentUserId}'");
+                    await JS.InvokeVoidAsync("TutorlyMessagingBackend.init", _currentUserId);
+                    Console.WriteLine($"[Messages] ✓ Backend bridge initialized successfully");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Messages] ✗ Backend bridge init FAILED: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[Messages] Backend bridge failed to load after retries");
+            }
+        }
+    }
+
+    private async Task UpdateUIWithConversations()
+    {
+        if (_conversations != null && _conversations.Count > 0 && !string.IsNullOrEmpty(_currentUserId))
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("TutorlyMessagingBackend.loadConversations", _conversations, _currentUserId);
+                Console.WriteLine($"[Messages] ✓ Updated UI with {_conversations.Count} conversations (userId: {_currentUserId})");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Messages] ✗ Failed to update UI: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("[Messages] No conversations to display or user ID missing");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _dotnetRef != null)
+        {
+            // Store dotnet reference globally for JavaScript access - MUST pass the object directly, NOT serialize it!
+            try
+            {
+                await JS.InvokeVoidAsync("eval", "window.setMessagesPageDotNetRef = function(ref) { window._messagesPageDotNetRef = ref; }");
+                await JS.InvokeVoidAsync("window.setMessagesPageDotNetRef", _dotnetRef);
+                Console.WriteLine("[Messages] ✓ DotNetObjectReference set to window._messagesPageDotNetRef");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Messages] ✗ Failed to register DotNetObjectReference: {ex.Message}");
+            }
+
+            // Bridge initialization is now handled in OnInitializedAsync() after user ID is retrieved
+            // Just show loading state if bridge is available
+            try
+            {
+                var exists = await JS.InvokeAsync<bool>("eval", "typeof TutorlyMessagingBackend !== 'undefined'");
+                if (exists)
+                {
+                    await JS.InvokeVoidAsync("TutorlyMessagingBackend.showLoadingState");
+                }
+            }
+            catch { }
+        }
+
+        // Call the existing JavaScript initializer every render
+        await JS.InvokeVoidAsync("TutorlyMessages.init");
+    }
+
+    private async Task LoadConversationsAsync()
+    {
+        try
+        {
+            _isLoadingConversations = true;
+            Console.WriteLine("[LoadConversationsAsync] Starting to load conversations...");
+
+            var response = await Http.GetFromJsonAsync<ServiceResult<List<ConversationDto>>>(
+                "/api/messaging/conversations?pageSize=50"
+            );
+
+            Console.WriteLine($"[LoadConversationsAsync] Response received - Success: {response?.Success}");
+
+            if (response?.Success == true && response?.Data != null)
+            {
+                _conversations = response.Data;
+                Console.WriteLine($"[LoadConversationsAsync] ✓ Loaded {_conversations.Count} conversations from backend");
+
+                // Debug: Log conversation details
+                foreach (var conv in _conversations)
+                {
+                    Console.WriteLine($"  - Conversation {conv.ConversationId}: Type={conv.ConversationType}, Participants={conv.Participants?.Count ?? 0}");
+                    if (conv.Participants != null)
+                    {
+                        foreach (var p in conv.Participants)
+                        {
+                            Console.WriteLine($"    • Participant: {p.UserId} - {p.FullName}");
+                        }
+                    }
+                }
+
+                // Store conversations but don't update UI yet - wait for bridge initialization
+                Console.WriteLine($"[LoadConversationsAsync] ✓ Loaded {_conversations.Count} conversations, waiting for bridge initialization...");
+            }
+            else
+            {
+                Console.WriteLine($"[LoadConversationsAsync] No conversations loaded. Success: {response?.Success}, Message: {response?.Message}");
+                _conversations = new List<ConversationDto>();
+
+                // Show empty state
+                try
+                {
+                    await JS.InvokeVoidAsync("TutorlyMessagingBackend.loadConversations", _conversations);
+                }
+                catch { }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LoadConversationsAsync] ✗ ERROR: {ex.Message}");
+            Console.WriteLine($"[LoadConversationsAsync] Stack trace: {ex.StackTrace}");
+            _conversations = new List<ConversationDto>();
+        }
+        finally
+        {
+            _isLoadingConversations = false;
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public async Task LoadConversationMessages(int conversationId)
+    {
+        try
+        {
+            Console.WriteLine($"[LoadConversationMessages] ✓ Called for conversation {conversationId}");
+            _activeConversationId = conversationId;
+
+            // Show loading indicator
+            try
+            {
+                await JS.InvokeVoidAsync("TutorlyMessagingBackend.showLoadingMessages");
+                Console.WriteLine($"[LoadConversationMessages] ✓ Showing loading indicator");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LoadConversationMessages] Could not show loading: {ex.Message}");
+            }
+
+            // Join SignalR room for this conversation
+            try
+            {
+                await MessagingHub.JoinConversationAsync(conversationId);
+                Console.WriteLine($"[LoadConversationMessages] ✓ Joined SignalR room for conversation {conversationId}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LoadConversationMessages] ✗ Could not join SignalR room: {ex.Message}");
+            }
+
+            // Load messages from backend API
+            Console.WriteLine($"[LoadConversationMessages] Fetching messages from API...");
+            var response = await Http.GetFromJsonAsync<ServiceResult<List<MessageDto>>>(
+                $"/api/messaging/conversations/{conversationId}/messages?pageSize=50"
+            );
+
+            Console.WriteLine($"[LoadConversationMessages] API Response - Success: {response?.Success}, Count: {response?.Data?.Count ?? 0}");
+
+            if (response?.Success == true && response?.Data != null)
+            {
+                Console.WriteLine($"[LoadConversationMessages] ✓ Loaded {response.Data.Count} messages for conversation {conversationId}");
+
+                // Log first few messages for debugging
+                foreach (var msg in response.Data.Take(3))
+                {
+                    Console.WriteLine($"  • Message {msg.MessageId}: '{msg.Content.Substring(0, Math.Min(30, msg.Content.Length))}...' by {msg.SenderName}");
+                }
+
+                // Send to JavaScript to render with existing styling
+                await JS.InvokeVoidAsync("TutorlyMessagingBackend.loadMessages", conversationId, response.Data);
+                Console.WriteLine($"[LoadConversationMessages] ✓ Sent {response.Data.Count} messages to JavaScript for rendering");
+            }
+            else
+            {
+                Console.WriteLine($"[LoadConversationMessages] No messages found - Response: {response?.Message}");
+                // Still call JavaScript with empty array to clear any old messages
+                await JS.InvokeVoidAsync("TutorlyMessagingBackend.loadMessages", conversationId, new List<MessageDto>());
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[LoadConversationMessages] ✗ ERROR: {ex.Message}");
+            Console.WriteLine($"[LoadConversationMessages] Stack trace: {ex.StackTrace}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task SendMessageFromJS(int conversationId, string content)
+    {
+        try
+        {
+            Console.WriteLine($"[SendMessageFromJS] ✓ Sending message to conversation {conversationId}: '{content.Substring(0, Math.Min(30, content.Length))}...'");
+
+            var dto = new SendMessageDto
+                {
+                    Content = content,
+                    MessageType = MessageType.Text
+                };
+
+            // Call REST API to save to database (server will also broadcast via SignalR)
+            var response = await Http.PostAsJsonAsync($"/api/messaging/conversations/{conversationId}/messages", dto);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ServiceResult<MessageDto>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    Console.WriteLine($"[SendMessageFromJS] ✓ Message saved to database - MessageId: {result.Data.MessageId}");
+
+                    // Message will appear via SignalR broadcast from server
+                    // (Server broadcasts to all participants after saving)
+                }
+                else
+                {
+                    Console.WriteLine($"[SendMessageFromJS] ✗ API returned failure: {result?.Message}");
+                    throw new Exception($"Failed to send message: {result?.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"[SendMessageFromJS] ✗ HTTP error: {response.StatusCode}");
+                throw new Exception($"HTTP {response.StatusCode}: Failed to send message");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SendMessageFromJS] ✗ ERROR: {ex.Message}");
+            Console.WriteLine($"[SendMessageFromJS] Stack trace: {ex.StackTrace}");
+            throw; // Let JavaScript know it failed
+        }
+    }
+
+    private void HandleNewMessage(MessageDto message)
+    {
+        try
+        {
+            Console.WriteLine($"[HandleNewMessage] ✓ SignalR message received - ConversationId: {message.ConversationId}, MessageId: {message.MessageId}, Content: '{message.Content?.Substring(0, Math.Min(30, message.Content?.Length ?? 0))}...'");
+
+            // Add message to UI in real-time
+            _ = JS.InvokeVoidAsync("TutorlyMessagingBackend.addNewMessage", message);
+            Console.WriteLine($"[HandleNewMessage] ✓ Called JavaScript to render message {message.MessageId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[HandleNewMessage] ✗ Error: {ex.Message}");
+            Console.WriteLine($"[HandleNewMessage] Stack trace: {ex.StackTrace}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task<object?> SearchUsers(string query)
+    {
+        try
+        {
+            Console.WriteLine($"[SearchUsers] Searching for: '{query}'");
+
+            // Fixed: Correct URL and proper query parameters
+            var url = $"/api/messaging/users/search?SearchQuery={Uri.EscapeDataString(query)}&PageSize=5";
+            Console.WriteLine($"[SearchUsers] URL: {url}");
+
+            var response = await Http.GetFromJsonAsync<ServiceResult<List<UserSearchResultDto>>>(url);
+
+            Console.WriteLine($"[SearchUsers] Response Success: {response?.Success}, Data Count: {response?.Data?.Count ?? 0}");
+
+            if (response?.Success == true && response.Data != null)
+            {
+                // Return max 5 results
+                var results = response.Data.Take(5).ToList();
+                Console.WriteLine($"[SearchUsers] Returning {results.Count} results");
+                return results;
+            }
+
+            Console.WriteLine($"[SearchUsers] No results or failed. Message: {response?.Message}");
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SearchUsers] ERROR: {ex.Message}");
+            Console.WriteLine($"[SearchUsers] Stack: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    [JSInvokable]
+    public async Task<object?> CreateDirectConversation(string participantId, string participantName)
+    {
+        try
+        {
+            Console.WriteLine($"[CreateDirectConversation] Creating conversation with user: {participantId}");
+
+            var createDto = new CreateConversationDto
+                {
+                    Type = ConversationType.Direct,
+                    OtherUserId = participantId  // Fixed: Use OtherUserId for direct conversations
+                };
+
+            var response = await Http.PostAsJsonAsync("/api/messaging/conversations/direct", createDto);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<ServiceResult<ConversationDto>>();
+                if (result?.Success == true && result.Data != null)
+                {
+                    Console.WriteLine($"[CreateDirectConversation] Successfully created conversation {result.Data.ConversationId} with user {participantId}");
+
+                    // Reload conversations to show the new one
+                    await LoadConversationsAsync();
+
+                    // Update the UI with new conversations list (pass userId parameter)
+                    try
+                    {
+                        await JS.InvokeVoidAsync("TutorlyMessagingBackend.loadConversations", _conversations ?? new List<ConversationDto>(), _currentUserId ?? "");
+                        Console.WriteLine($"[CreateDirectConversation] ✓ Updated UI with {_conversations?.Count ?? 0} conversations");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[CreateDirectConversation] ✗ Failed to update UI: {ex.Message}");
+                    }
+
+                    return result.Data;
+                }
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Failed to create conversation: {response.StatusCode} - {errorContent}");
+            }
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating conversation: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (MessagingHub != null)
+        {
+            MessagingHub.OnMessageReceived -= HandleNewMessage;
+        }
+        _dotnetRef?.Dispose();
+        await Task.CompletedTask;
+    }
+
+    private async Task InitiateCall(CallType callType)
+    {
+        if (_activeConversationId.HasValue)
+        {
+            // Get the current conversation
+            var conversation = _conversations.FirstOrDefault(c => c.ConversationId == _activeConversationId.Value);
+            if (conversation != null)
+            {
+                // Get the other participant's user ID
+                var otherParticipant = conversation.Participants
+                    .FirstOrDefault(p => p.UserId != _currentUserId);
+
+                if (otherParticipant != null)
+                {
+                    // Show loading state
+                    await JS.InvokeVoidAsync("alert", $"Initiating {(callType == CallType.Video ? "video" : "voice")} call...");
+
+                    // Ensure StudyRoomHub is connected before initiating call
+                    var accessToken = await JS.InvokeAsync<string>("localStorage.getItem", "accessToken");
+                    if (!string.IsNullOrEmpty(accessToken))
+                    {
+                        try
+                        {
+                            await HubService.ConnectAsync(accessToken);
+                            await HubService.InitiateCallAsync(
+                                conversation.ConversationId,
+                                Guid.Parse(otherParticipant.UserId),
+                                callType
+                            );
+
+                            // Show success message
+                            await JS.InvokeVoidAsync("alert", $"Call initiated! Waiting for {otherParticipant.FullName} to respond...");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to initiate call: {ex.Message}");
+                            await JS.InvokeVoidAsync("alert", "Failed to initiate call. Please try again.");
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+<style>
+    /* Scoped to Messages only */
+    #page-messages .ms-addbtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px; /* space between “+” and “Chat” */
+        height: 38px;
+        padding: 0 12px;
+        border-radius: 10px;
+        border: 1px solid var(--db-border);
+        background: var(--db-link);
+        color: #fff;
+        font-weight: 900;
+        font-size: 14px;
+        line-height: 1; /* prevent the text from pushing outside */
+        white-space: nowrap; /* keep “+ Chat” on a single line */
+        box-shadow: var(--db-shadow);
+        cursor: pointer;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+        #page-messages .ms-addbtn:focus {
+            outline: 2px solid rgba(255,255,255,.6);
+            outline-offset: 2px;
+        }
+
+        #page-messages .ms-addbtn:active {
+            transform: translateY(1px);
+        }
+</style>

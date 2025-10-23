@@ -1,0 +1,329 @@
+﻿/* Scope everything to this page so nothing leaks */
+.login-page {
+    /* nothing here; just the scoping root */
+}
+
+/* ---------- Brand tokens ---------- */
+:root {
+    --brand-500: #3ECF8E;
+    --brand-600: #33c684;
+    --brand-700: #2bb673;
+    --brand-800: #239e63;
+    --brand-ring: rgba(62,207,142,.45);
+    --page-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #111827;
+    --text-sub: #6b7280;
+    --border-soft: #e5e7eb;
+    --neo-surface: #f9fafb;
+    --neo-surface-hi: #f3f4f6;
+    --neo-text: #111827;
+    --info-bg: #ecfdf5;
+    --info-border: #34d399;
+    --info-text: #047857;
+    --btn-bg: #e3e6ea;
+    --btn-text: #111827;
+    --btn-text-shadow: #ffffff;
+    --btn-inset: #ffffff;
+    --btn-1: #d2d6db;
+    --btn-2: #c8cdd3;
+    --btn-3: #c0c6cd;
+    --btn-4: #b7bdc5;
+    --btn-5: #afb5be;
+    --btn-6: #a7adb7;
+    --btn-7: #9fa6af;
+    --btn-drop: rgba(0,0,0,.26);
+    --btn-fixed-width: 11.5rem;
+    --btn-fixed-height: 44px;
+}
+
+/* Dark theme */
+html[data-theme="dark"] {
+    --page-bg: #0b0d11;
+    --card-bg: #0f1115;
+    --text-main: #e5e7eb;
+    --text-sub: #9aa4b2;
+    --border-soft: #1f232b;
+    --neo-surface: #141821;
+    --neo-surface-hi: #0f141d;
+    --neo-text: #e5e7eb;
+    --info-bg: #0c1a14;
+    --info-border: #146c4a;
+    --info-text: #8ef0c1;
+    --btn-bg: #1f2329;
+    --btn-text: #e6e7e9;
+    --btn-text-shadow: #000;
+    --btn-inset: #31353b;
+    --btn-1: #191c21;
+    --btn-2: #15181c;
+    --btn-3: #12151a;
+    --btn-4: #0f1216;
+    --btn-5: #0c0f13;
+    --btn-6: #0a0c10;
+    --btn-7: #07090c;
+    --btn-drop: rgba(0,0,0,.70);
+}
+
+/* ---------- Global ---------- */
+.login-page body {
+    font-family: 'Inter',sans-serif;
+}
+
+.gradient-bg {
+    background: linear-gradient(135deg,var(--brand-700) 0%,var(--brand-500) 100%) !important;
+}
+
+/* Icon badge size (keeps it consistent) */
+.login-page .icon-badge {
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Inputs */
+.login-page .neo-field {
+    position: relative;
+}
+
+.login-page .neo-input {
+    width: 100%;
+    height: 44px;
+    border: 0 !important;
+    border-radius: 10px;
+    outline: none !important;
+    background: var(--neo-surface);
+    color: var(--neo-text);
+    padding: 0 12px;
+    box-shadow: 6px 6px 14px rgba(0,0,0,.08), -6px -6px 14px rgba(255,255,255,.9) !important;
+    transition: box-shadow .25s ease, background .25s ease, color .25s ease;
+}
+
+    .login-page .neo-input:hover {
+        background: #f7f7fb;
+    }
+
+    .login-page .neo-input:focus {
+        background: var(--neo-surface-hi);
+        box-shadow: 6px 6px 14px rgba(0,0,0,.08), -6px -6px 14px rgba(255,255,255,.9), inset 6px 6px 12px rgba(0,0,0,.12), inset -6px -6px 12px rgba(255,255,255,.65) !important;
+    }
+
+html[data-theme="dark"] .login-page .neo-input {
+    background: var(--neo-surface);
+    box-shadow: 10px 10px 24px rgba(0,0,0,.55), -6px -6px 16px rgba(255,255,255,.03) !important;
+}
+
+    html[data-theme="dark"] .login-page .neo-input:hover {
+        background: color-mix(in srgb, var(--neo-surface) 92%, #000 8%);
+    }
+
+    html[data-theme="dark"] .login-page .neo-input:focus {
+        background: var(--neo-surface-hi);
+        box-shadow: 8px 8px 18px rgba(0,0,0,.55), inset 8px 8px 16px rgba(0,0,0,.35), inset -8px -8px 16px rgba(255,255,255,.04) !important;
+    }
+
+/* Floating label */
+.login-page .neo-label {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    font-size: .95rem;
+    color: var(--text-sub);
+    pointer-events: none;
+    transition: top .2s ease, font-size .2s ease, color .2s ease;
+}
+
+.login-page .neo-input:focus + .neo-label,
+.login-page .neo-input:not(:placeholder-shown) + .neo-label {
+    top: -16px;
+    font-size: .72rem;
+    color: var(--brand-600);
+}
+
+.login-page .neo-input::placeholder {
+    color: transparent;
+}
+
+.login-page .neo-input:focus::placeholder {
+    color: #9ca3af;
+}
+
+/* Tailwind remaps (theme aware) */
+.login-page .bg-white {
+    background-color: var(--card-bg) !important;
+}
+
+.login-page .text-gray-900 {
+    color: var(--text-main) !important;
+}
+
+.login-page .text-gray-700 {
+    color: var(--text-main) !important;
+}
+
+.login-page .text-gray-600 {
+    color: var(--text-sub) !important;
+}
+
+.login-page .border-gray-300 {
+    border-color: var(--border-soft) !important;
+}
+
+.login-page a {
+    color: var(--brand-500);
+}
+
+html[data-theme="dark"] .login-page a {
+    color: #8af0c1;
+}
+
+.login-page a:hover {
+    color: var(--brand-700) !important;
+}
+
+/* Info banner */
+.login-page .bg-blue-50 {
+    background-color: var(--info-bg) !important;
+}
+
+.login-page .border-blue-400 {
+    border-color: var(--info-border) !important;
+}
+
+.login-page .text-blue-700 {
+    color: var(--info-text) !important;
+}
+
+/* ---------- Compact Theme Button (dashboard style) ---------- */
+.login-page .theme-btn {
+    position: fixed;
+    top: 1.25rem;
+    right: 1.25rem;
+    z-index: 50;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid var(--border-soft);
+    background: var(--card-bg);
+    color: var(--text-sub);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 14px rgba(0,0,0,.06);
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, color .15s ease, transform .05s ease;
+}
+
+    .login-page .theme-btn:hover {
+        box-shadow: 0 10px 24px rgba(0,0,0,.08);
+        transform: translateY(-1px);
+    }
+
+html[data-theme="dark"] .login-page .theme-btn {
+    background: #151922;
+    border-color: #1f232b;
+    color: #9aa4b2;
+    box-shadow: 0 10px 24px rgba(0,0,0,.45);
+}
+
+.login-page .theme-btn .icon-moon {
+    display: none;
+}
+
+html[data-theme="dark"] .login-page .theme-btn .icon-sun {
+    display: none;
+}
+
+html[data-theme="dark"] .login-page .theme-btn .icon-moon {
+    display: block;
+}
+
+/* ---------- 3D Buttons ---------- */
+.login-page .btn-3d, .login-page a.btn-3d {
+    font: inherit;
+    background-color: var(--btn-bg) !important;
+    border: 0 !important;
+    color: var(--btn-text) !important;
+    border-radius: .5em !important;
+    font-weight: 600;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 .0625em 0 var(--btn-text-shadow);
+    line-height: 1;
+    padding: .75rem 1.25rem;
+    box-shadow: inset 0 .0625em 0 0 var(--btn-inset), 0 .0625em 0 0 var(--btn-1), 0 .125em 0 0 var(--btn-2), 0 .25em 0 0 var(--btn-3), 0 .3125em 0 0 var(--btn-4), 0 .375em 0 0 var(--btn-5), 0 .425em 0 0 var(--btn-6), 0 .425em .5em 0 var(--btn-drop);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.login-page .btn-3d--tiny {
+    font-size: .95rem;
+    padding: .35em .9em;
+}
+
+.login-page .btn-3d--fixed {
+    min-width: var(--btn-fixed-width);
+    height: var(--btn-fixed-height);
+}
+
+.login-page .btn-3d:active, .login-page a.btn-3d:active {
+    transform: translateY(.225em);
+    box-shadow: inset 0 .03em 0 0 var(--btn-inset), 0 .03em 0 0 var(--btn-1), 0 .0625em 0 0 var(--btn-2), 0 .125em 0 0 var(--btn-3), 0 .125em 0 0 var(--btn-4), 0 .2em 0 0 var(--btn-5), 0 .225em 0 0 var(--btn-6), 0 .225em .375em 0 var(--btn-drop);
+}
+
+/* Center the action rows */
+.login-page .form-actions {
+    display: flex;
+    justify-content: center;
+}
+
+/* Animated checkbox (scoped) */
+.login-page .ux-check {
+    --size: 18px;
+    --check-stroke: #111827;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+html[data-theme="dark"] .login-page .ux-check {
+    --check-stroke: #ffffff;
+}
+
+.login-page .ux-check input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+.login-page .ux-check svg {
+    width: var(--size);
+    height: var(--size);
+    overflow: visible;
+}
+
+.login-page .ux-check__path {
+    fill: none;
+    stroke: var(--check-stroke);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke-dasharray .5s ease, stroke-dashoffset .5s ease;
+    stroke-dasharray: 241 9999999;
+    stroke-dashoffset: 0;
+}
+
+.login-page .ux-check input:checked ~ svg .ux-check__path {
+    stroke-dasharray: 70.5096664428711 9999999;
+    stroke-dashoffset: -262.2723388671875;
+}
+
+.login-page .ux-check:has(input:focus-visible) svg {
+    outline: 2px solid rgba(62,207,142,.35);
+    outline-offset: 3px;
+    border-radius: 6px;
+}

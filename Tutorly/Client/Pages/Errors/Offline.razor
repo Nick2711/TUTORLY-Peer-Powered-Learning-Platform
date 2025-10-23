@@ -1,0 +1,33 @@
+﻿@page "/offline"
+@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+<PageTitle>You’re offline</PageTitle>
+
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div class="max-w-lg w-full text-center" data-aos="zoom-in">
+        <div class="mx-auto h-16 w-16 rounded-2xl bg-gray-200 text-gray-700 flex items-center justify-center shadow">
+            <i data-feather="wifi-off" class="h-8 w-8"></i>
+        </div>
+        <h1 class="mt-6 text-3xl font-bold text-gray-900">You’re offline</h1>
+        <p class="mt-2 text-gray-600">Check your internet connection and try again.</p>
+
+        <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
+            <button class="btn primary" @onclick="Retry"><i data-feather="refresh-cw" class="h-4 w-4"></i> Retry</button>
+            <button class="btn ghost" @onclick="GoHome"><i data-feather="home" class="h-4 w-4"></i> Go Home</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private async Task Retry() => await JS.InvokeVoidAsync("location.reload");
+    private void GoHome() => Nav.NavigateTo("/");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JS.InvokeVoidAsync("ui.initFeather");
+        await JS.InvokeVoidAsync("ui.initAOS");
+        await JS.InvokeVoidAsync("ui.loadScript", "/js/status-pages.js");
+        await JS.InvokeVoidAsync("statusPages.initOffline");
+    }
+}

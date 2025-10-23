@@ -1,0 +1,744 @@
+﻿/* =========================
+   Supabase-style GREEN theme
+   ========================= */
+
+/* ---------- Brand tokens ---------- */
+:root {
+    --brand-500: #3ECF8E;
+    --brand-600: #33c684;
+    --brand-700: #2bb673;
+    --brand-800: #239e63;
+    --brand-ring: rgba(62,207,142,.45);
+    /* page + card */
+    --page-bg: #f8fafc;
+    --card-bg: #ffffff;
+    --text-main: #111827;
+    --text-sub: #6b7280;
+    --border-soft: #e5e7eb;
+    /* inputs (light) */
+    --neo-surface: #f9fafb;
+    --neo-surface-hi: #f3f4f6;
+    --neo-text: #111827;
+    /* info banner (green) */
+    --info-bg: #ecfdf5;
+    --info-border: #34d399;
+    --info-text: #047857;
+    /* 3D button (light) */
+    --btn-bg: #e3e6ea;
+    --btn-text: #111827;
+    --btn-text-shadow: #fff;
+    --btn-inset: #fff;
+    --btn-1: #d2d6db;
+    --btn-2: #c8cdd3;
+    --btn-3: #c0c6cd;
+    --btn-4: #b7bdc5;
+    --btn-5: #afb5be;
+    --btn-6: #a7adb7;
+    --btn-7: #9fa6af;
+    --btn-drop: rgba(0,0,0,.26);
+    --btn-fixed-width: 11.5rem;
+    --btn-fixed-height: 44px;
+}
+
+html[data-theme="dark"] {
+    --page-bg: #0b0d11;
+    --card-bg: #0f1115;
+    --text-main: #e5e7eb;
+    --text-sub: #9aa4b2;
+    --border-soft: #1f232b;
+    --neo-surface: #141821;
+    --neo-surface-hi: #0f141d;
+    --neo-text: #e5e7eb;
+    --info-bg: #0c1a14;
+    --info-border: #146c4a;
+    --info-text: #8ef0c1;
+    --btn-bg: #1f2329;
+    --btn-text: #e6e7e9;
+    --btn-text-shadow: #000;
+    --btn-inset: #31353b;
+    --btn-1: #191c21;
+    --btn-2: #15181c;
+    --btn-3: #12151a;
+    --btn-4: #0f1216;
+    --btn-5: #0c0f13;
+    --btn-6: #0a0c10;
+    --btn-7: #07090c;
+    --btn-drop: rgba(0,0,0,.70);
+}
+
+/* ---------- Global ---------- */
+body {
+    font-family: 'Inter',sans-serif;
+    background: var(--page-bg);
+    color: var(--text-main);
+}
+
+.gradient-bg {
+    background: linear-gradient(135deg,var(--brand-700) 0%,var(--brand-500) 100%) !important;
+}
+
+/* Inputs */
+.neo-field {
+    position: relative;
+}
+
+.neo-input {
+    width: 100%;
+    height: 44px;
+    border: 0 !important;
+    border-radius: 10px;
+    outline: none !important;
+    background: var(--neo-surface);
+    color: var(--neo-text);
+    padding: 0 12px;
+    box-shadow: 6px 6px 14px rgba(0,0,0,.08), -6px -6px 14px rgba(255,255,255,.9) !important;
+    transition: box-shadow .25s ease,background .25s ease,color .25s ease;
+}
+
+    .neo-input:hover {
+        background: #f7f7fb;
+    }
+
+    .neo-input:focus {
+        background: var(--neo-surface-hi);
+        box-shadow: 6px 6px 14px rgba(0,0,0,.08), -6px -6px 14px rgba(255,255,255,.9), inset 6px 6px 12px rgba(0,0,0,.12), inset -6px -6px 12px rgba(255,255,255,.65) !important;
+    }
+
+html[data-theme="dark"] .neo-input {
+    background: var(--neo-surface);
+    box-shadow: 10px 10px 24px rgba(0,0,0,.55), -6px -6px 16px rgba(255,255,255,.03) !important;
+}
+
+    html[data-theme="dark"] .neo-input:hover {
+        background: color-mix(in srgb,var(--neo-surface) 92%, #000 8%);
+    }
+
+    html[data-theme="dark"] .neo-input:focus {
+        background: var(--neo-surface-hi);
+        box-shadow: 8px 8px 18px rgba(0,0,0,.55), inset 8px 8px 16px rgba(0,0,0,.35), inset -8px -8px 16px rgba(255,255,255,.04) !important;
+    }
+
+/* floating labels */
+.neo-label {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    font-size: .95rem;
+    color: var(--text-sub);
+    pointer-events: none;
+    transition: top .2s ease, font-size .2s ease, color .2s ease;
+}
+
+.neo-input:focus + .neo-label, .neo-input:not(:placeholder-shown) + .neo-label {
+    top: -16px;
+    font-size: .72rem;
+    color: var(--brand-600);
+}
+
+.neo-input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px var(--neo-surface) inset !important;
+    -webkit-text-fill-color: var(--neo-text) !important;
+    transition: background-color 9999s ease-out 0s;
+}
+
+/* Centered action rows */
+.form-actions {
+    display: flex;
+    justify-content: center;
+}
+
+/* ---------- Compact dashboard-style theme button ---------- */
+.register-page .theme-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: 1px solid var(--border-soft);
+    background: var(--card-bg);
+    box-shadow: 0 6px 16px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.9);
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform .08s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+}
+
+.theme-btn:hover {
+    transform: translateY(-1px);
+}
+
+.theme-btn:active {
+    transform: translateY(0);
+}
+
+.register-page .theme-btn::before {
+    content: "";
+    width: 20px;
+    height: 20px;
+    display: block;
+    /* sun icon via mask (keeps colors theme-able) */
+    -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>') center/contain no-repeat;
+    mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>') center/contain no-repeat;
+    background: #6b7280;
+}
+
+.register-page .theme-btn.is-dark {
+    background: #1b1f24;
+    border-color: #2a2f37;
+    box-shadow: 0 10px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+    .register-page .theme-btn.is-dark::before {
+        /* moon icon */
+        -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>') center/contain no-repeat;
+        mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>') center/contain no-repeat;
+        background: #cfd6df;
+    }
+
+/* ---------- Role selection tweaks ---------- */
+.role-selection {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.role-label {
+    display: inline-flex;
+    cursor: pointer;
+    padding: 10px;
+    border: 2px solid #d1d5db;
+    border-radius: 10px;
+    transition: .3s transform,.3s box-shadow,.3s background-color;
+    align-items: center;
+    justify-content: center;
+    width: 100px;
+    height: 100px;
+    text-align: center;
+    background: #fff;
+    position: relative;
+}
+
+.role-button i {
+    margin-bottom: 5px;
+    color: #4CAF50;
+}
+
+html[data-theme="light"] .role-selector:hover {
+    transform: translateY(-1px);
+    box-shadow: 4px 4px 8px rgba(0,0,0,.1), -4px -4px 8px rgba(255,255,255,.8);
+}
+
+.role-button:hover {
+    transform: scale(1.05);
+}
+
+.role-selector input:checked + div {
+    border-color: #3ECF8E;
+    background-color: #90ef9ea6;
+    animation: select .3s cubic-bezier(.4,0,.2,1);
+}
+
+html[data-theme="dark"] .role-selector:hover {
+    background-color: #34d399;
+    transform: translateY(-1px);
+    border-radius: 7px;
+}
+
+html[data-theme="dark"] .role-selector input:checked + div {
+    background-color: #34d399;
+    border-color: #34d399;
+}
+/* Dark mode readability for role block */
+html[data-theme="dark"] .role-title {
+    color: #ffffff !important;
+}
+
+html[data-theme="dark"] .role-selector .text-sm,
+html[data-theme="dark"] .role-selector .text-xs {
+    color: #ffffff !important;
+}
+
+
+/* “I am a:” label readable in dark */
+html[data-theme="dark"] .text-gray-700 {
+    color: #ffffff !important;
+}
+
+/* =========================
+   Tutor modal & tags
+   ========================= */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+}
+
+.modal-card {
+    background: var(--card-bg);
+    color: var(--text-main);
+    width: 100%;
+    max-width: 720px;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.5);
+    padding: 0;
+    border: 1px solid var(--border-soft);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.modal-title {
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.modal-close {
+    border: 0;
+    background: transparent;
+    font-size: 1.1rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+    .modal-close:hover {
+        background: rgba(0,0,0,.06);
+    }
+
+.modal-body {
+    padding: 16px;
+}
+
+.modal-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--border-soft);
+}
+
+/* Modal buttons */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--brand-600) !important;
+    color: #fff !important;
+    border: 1px solid var(--brand-600) !important;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,0,0,.08);
+    transition: background .15s,border-color .15s,transform .05s;
+}
+
+    .btn-primary:hover {
+        background: var(--brand-700) !important;
+        border-color: var(--brand-700) !important;
+    }
+
+    .btn-primary:active {
+        transform: translateY(1px);
+    }
+
+    .btn-primary:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--border-soft);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+    .btn-ghost:hover {
+        background: rgba(0,0,0,.06);
+    }
+
+/* Textarea look */
+.neo-textarea {
+    min-height: 120px;
+    resize: vertical;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+/* Upload */
+.upload-zone {
+    position: relative;
+    background: var(--neo-surface);
+    border: 2px dashed var(--border-soft);
+    border-radius: 12px;
+    min-height: 120px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: border-color .2s, background .2s, box-shadow .2s;
+    box-shadow: 6px 6px 14px rgba(0,0,0,.05), -6px -6px 14px rgba(255,255,255,.7);
+}
+
+    .upload-zone.dragover {
+        border-color: var(--brand-600);
+        background: var(--neo-surface-hi);
+        box-shadow: 0 0 0 4px var(--brand-ring);
+    }
+
+.upload-zone__content {
+    pointer-events: none;
+}
+
+.upload-zone__title {
+    font-weight: 700;
+}
+
+.upload-zone__sub {
+    color: var(--text-sub);
+    font-size: .9rem;
+    margin-top: 2px;
+}
+
+.upload-zone__hint {
+    color: var(--text-sub);
+    font-size: .75rem;
+    margin-top: 6px;
+}
+
+.drop-input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    height: 100%;
+    width: 100%;
+    display: block;
+}
+
+/* Select height = input height */
+select.neo-input {
+    padding-right: 36px;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, #9ca3af 50%), linear-gradient(135deg, #9ca3af 50%, transparent 50%);
+    background-position: calc(100% - 16px) 18px, calc(100% - 11px) 18px;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+}
+
+/* ============ Square checkbox ============ */
+.cbx {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+    .cbx input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+.cbx-box {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid #1f2937;
+    background: transparent;
+    display: inline-block;
+    position: relative;
+    transition: border-color .15s, background .15s;
+}
+
+.cbx input:checked + .cbx-box {
+    background: transparent; /* stays clear; just show the tick */
+    border-color: #111827;
+}
+
+    .cbx input:checked + .cbx-box::after {
+        content: "";
+        position: absolute;
+        left: 3px;
+        top: 0px;
+        width: 10px;
+        height: 6px;
+        border: 2px solid #111827;
+        border-top: 0;
+        border-right: 0;
+        transform: rotate(-45deg);
+    }
+
+html[data-theme="dark"] .cbx-box {
+    border-color: #d1d5db33;
+}
+
+html[data-theme="dark"] .cbx input:checked + .cbx-box {
+    border-color: #e5e7eb;
+}
+
+    html[data-theme="dark"] .cbx input:checked + .cbx-box::after {
+        border-color: #e5e7eb;
+    }
+
+.cbx input:focus-visible + .cbx-box {
+    outline: 2px solid var(--brand-ring);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+.cbx-label {
+    color: var(--text-main);
+}
+
+/* ----- Tailwind remaps ----- */
+.bg-white {
+    background-color: var(--card-bg) !important;
+}
+
+.text-gray-900 {
+    color: var(--text-main) !important;
+}
+
+.text-gray-700 {
+    color: var(--text-main) !important;
+}
+
+.text-gray-600 {
+    color: var(--text-sub) !important;
+}
+
+.border-gray-300 {
+    border-color: var(--border-soft) !important;
+}
+
+a {
+    color: var(--brand-500);
+}
+
+html[data-theme="dark"] a {
+    color: #8af0c1;
+}
+
+a:hover, .hover\:text-indigo-500:hover, .text-indigo-600:hover {
+    color: var(--brand-700) !important;
+}
+
+/* Ensure button and link render 100% identical */
+.btn-3d, a.btn-3d {
+    font: inherit;
+    line-height: 1;
+    padding: 0 .9em; /* same compact padding */
+    min-width: var(--btn-fixed-width);
+    height: var(--btn-fixed-height); /* LOCK height */
+    border-radius: .5em !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-3d--tiny {
+    font-size: .95rem;
+}
+
+.btn-3d--fixed {
+    min-width: var(--btn-fixed-width);
+    height: var(--btn-fixed-height);
+}
+
+/* ensures correct size */
+.btn-3d:active, a.btn-3d:active {
+    transform: translateY(.225em);
+    box-shadow: inset 0 .03em 0 0 var(--btn-inset), 0 .03em 0 0 var(--btn-1), 0 .0625em 0 0 var(--btn-2), 0 .125em 0 0 var(--btn-3), 0 .125em 0 0 var(--btn-4), 0 .2em 0 0 var(--btn-5), 0 .225em 0 0 var(--btn-6), 0 .225em .375em 0 var(--btn-drop);
+}
+
+/* ===== Animated checkbox (shared with Login) ===== */
+.ux-check {
+    --size: 18px;
+    --check-stroke: #111827;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+}
+
+html[data-theme="dark"] .ux-check {
+    --check-stroke: #ffffff;
+}
+
+.ux-check input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+}
+
+.ux-check svg {
+    width: var(--size);
+    height: var(--size);
+    overflow: visible;
+    flex: 0 0 var(--size);
+}
+
+.ux-check__path {
+    fill: none;
+    stroke: var(--check-stroke);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke-dasharray .5s ease, stroke-dashoffset .5s ease;
+    stroke-dasharray: 241 9999999;
+    stroke-dashoffset: 0;
+}
+
+.ux-check input:checked ~ svg .ux-check__path {
+    stroke-dasharray: 70.5096664428711 9999999;
+    stroke-dashoffset: -262.2723388671875;
+}
+
+.ux-check:has(input:focus-visible) svg {
+    outline: 2px solid var(--brand-ring);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+/* ========== Register page: make buttons match Login exactly ========== */
+.register-page .btn-3d,
+.register-page a.btn-3d {
+    font: inherit;
+    background-color: var(--btn-bg) !important;
+    border: 0 !important;
+    color: var(--btn-text) !important;
+    border-radius: .5em !important;
+    font-weight: 600;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: 0 .0625em 0 var(--btn-text-shadow);
+    box-sizing: border-box;
+    line-height: 1;
+    padding: 0 .9em; /* compact */
+    box-shadow: inset 0 .0625em 0 0 var(--btn-inset), 0 .0625em 0 0 var(--btn-1), 0 .125em 0 0 var(--btn-2), 0 .25em 0 0 var(--btn-3), 0 .3125em 0 0 var(--btn-4), 0 .375em 0 0 var(--btn-5), 0 .425em 0 0 var(--btn-6), 0 .425em .5em 0 var(--btn-drop);
+    transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.register-page .btn-3d--tiny {
+    font-size: .95rem;
+    line-height: 1;
+    border-radius: .5em;
+}
+
+.register-page .btn-3d--fixed {
+    min-width: var(--btn-fixed-width);
+    height: var(--btn-fixed-height); /* 44px to match Login */
+}
+
+.register-page .btn-3d:active,
+.register-page a.btn-3d:active {
+    transform: translateY(.225em);
+    box-shadow: inset 0 .03em 0 0 var(--btn-inset), 0 .03em 0 0 var(--btn-1), 0 .0625em 0 0 var(--btn-2), 0 .125em 0 0 var(--btn-3), 0 .125em 0 0 var(--btn-4), 0 .2em 0 0 var(--btn-5), 0 .225em 0 0 var(--btn-6), 0 .225em .375em 0 var(--btn-drop);
+}
+
+/* ========== Register page: Login-style animated checkbox ========== */
+.register-page .ux-check {
+    --size: 18px; /* same as Login */
+    --check-stroke: #111827; /* light mode */
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+html[data-theme="dark"] .register-page .ux-check {
+    --check-stroke: #ffffff;
+}
+
+.register-page .ux-check input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.register-page .ux-check svg {
+    width: var(--size);
+    height: var(--size);
+    overflow: visible;
+    flex: 0 0 var(--size);
+}
+
+.register-page .ux-check__path {
+    fill: none;
+    stroke: var(--check-stroke);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke-dasharray .5s ease, stroke-dashoffset .5s ease;
+    stroke-dasharray: 241 9999999; /* box outline */
+    stroke-dashoffset: 0;
+}
+
+/* checked — animates into a tick */
+.register-page .ux-check input:checked ~ svg .ux-check__path {
+    stroke-dasharray: 70.5096664428711 9999999;
+    stroke-dashoffset: -262.2723388671875;
+}
+
+/* focus ring */
+.register-page .ux-check:has(input:focus-visible) svg {
+    outline: 2px solid rgba(62,207,142,.35);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+/* Fix: darken the popup backdrop on the register page (dark mode only) */
+html[data-theme="dark"] .register-page .modal-overlay {
+    background: rgba(0, 0, 0, 0.75) !important; /* darker scrim */
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
+}
+/* Register -> Tutor modal: force dark card in dark mode */
+html[data-theme="dark"] .register-page .modal-card,
+html[data-theme="dark"] .register-page .modal-header,
+html[data-theme="dark"] .register-page .modal-footer {
+    background: #0f1115 !important; /* same tone as your dark card-bg */
+    color: #e5e7eb !important; /* readable text */
+    border-color: #1f232b !important; /* match dark borders */
+}
+
+/* (optional) make the divider line subtle in dark */
+html[data-theme="dark"] .register-page .modal-header,
+html[data-theme="dark"] .register-page .modal-footer {
+    border-top-color: #1f232b !important;
+    border-bottom-color: #1f232b !important;
+}
+/* Register -> Tutor modal: remove the light glow around the upload zone in dark */
+html[data-theme="dark"] .register-page .upload-zone {
+    /* kill the light (-) highlight and keep a subtle dark shadow */
+    box-shadow: 8px 8px 18px rgba(0,0,0,.6) !important;
+    border-color: #2a2f37 !important; /* softer border so it doesn't halo */
+}

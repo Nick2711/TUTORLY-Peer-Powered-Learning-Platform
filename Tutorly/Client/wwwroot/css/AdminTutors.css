@@ -1,0 +1,765 @@
+﻿/* =============== Admin Tutors (scoped) =============== */
+#admin-tutors-app.ta-v1 {
+    --bg: #f7f8fb;
+    --card: #fff;
+    --text: #0f172a;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --accent: #5b5bd6;
+    --brand: #10b981;
+    --pill-bg: #eef;
+    --pill-fg: #3433aa;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 14.5px;
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.error-state p {
+    color: #dc2626;
+    margin-bottom: 1rem;
+}
+
+.pill.pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.no-transcript {
+    color: var(--muted);
+    font-style: italic;
+    padding: 2rem;
+    text-align: center;
+}
+
+/* Topbar */
+#admin-tutors-app.ta-v1 .ad-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    padding: .6rem 1rem;
+    overflow: visible;
+    /* ensure popovers aren’t clipped */
+}
+
+#admin-tutors-app.ta-v1 .brand {
+    font-weight: 900;
+    font-size: 1.35rem;
+}
+
+#admin-tutors-app.ta-v1 .brand span {
+    color: var(--brand);
+}
+
+#admin-tutors-app.ta-v1 .ad-topnav {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+    overflow: auto;
+    white-space: nowrap;
+}
+
+#admin-tutors-app.ta-v1 .nav-item {
+    padding: .5rem .7rem;
+    border-radius: .6rem;
+    text-decoration: none;
+    color: #111827;
+    font-weight: 800;
+}
+
+#admin-tutors-app.ta-v1 .nav-item.active,
+#admin-tutors-app.ta-v1 .nav-item:hover {
+    background: var(--pill-bg);
+    color: var(--pill-fg);
+}
+
+#admin-tutors-app.ta-v1 .nav-toggle {
+    display: none;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .6rem;
+    width: 40px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+}
+
+#admin-tutors-app.ta-v1 .nav-toggle span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: #475569;
+}
+
+#admin-tutors-app.ta-v1 .top-actions {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    position: relative;
+    /* anchor popovers here */
+}
+
+#admin-tutors-app.ta-v1 .icon-btn {
+    inline-size: 36px;
+    block-size: 36px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: .7rem;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+}
+
+#admin-tutors-app.ta-v1 .icon-btn svg {
+    width: 18px;
+    height: 18px;
+    fill: #64748b;
+}
+
+#admin-tutors-app.ta-v1 .user-mini {
+    display: flex;
+    gap: .6rem;
+    align-items: center;
+    padding: .25rem .4rem;
+    border-radius: .7rem;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+}
+
+#admin-tutors-app.ta-v1 .user-mini img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+}
+
+#admin-tutors-app.ta-v1 .user-mini .name {
+    font-weight: 800;
+}
+
+#admin-tutors-app.ta-v1 .user-mini .chev {
+    width: 16px;
+    height: 16px;
+    margin-left: .25rem;
+    fill: #475569;
+}
+
+#admin-tutors-app.ta-v1 .muted {
+    color: var(--muted);
+    font-size: .9rem;
+}
+
+/* ---------- Pop menus (aligned to avatar/right edge) ---------- */
+#admin-tutors-app.ta-v1 .aa-pop {
+    position: absolute;
+    /* anchored to .top-actions */
+    right: 0;
+    /* align to avatar/right edge */
+    top: calc(100% + 10px);
+    /* drop just below header controls */
+    min-width: 300px;
+    max-width: min(360px, 96vw);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: .9rem;
+    box-shadow: 0 18px 40px rgba(2, 8, 23, .16);
+    padding: .5rem .8rem;
+    /* shared inner padding */
+    z-index: 1100;
+}
+
+#admin-tutors-app.ta-v1 .aa-pop[hidden] {
+    display: none !important;
+}
+
+/* Title aligns with the text column (icon width 28px + gap .75rem) */
+#admin-tutors-app.ta-v1 .aa-pop-title {
+    font-weight: 900;
+    color: #111827;
+    padding: .4rem 0 .35rem calc(28px + .75rem);
+    margin: 0 0 .1rem 0;
+}
+
+/* Profile rows: consistent icon/text columns */
+#admin-tutors-app.ta-v1 .aa-profile .row {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    /* icon col + text col */
+    column-gap: .75rem;
+    align-items: start;
+    width: 100%;
+    background: transparent;
+    border: 0;
+    text-align: left;
+    padding: .6rem 0;
+    /* aligns with title padding */
+    border-radius: .6rem;
+    cursor: pointer;
+}
+
+#admin-tutors-app.ta-v1 .aa-profile .row:hover {
+    background: #f3f4f6;
+}
+
+#admin-tutors-app.ta-v1 .aa-profile .row.danger .t {
+    color: #b91c1c;
+}
+
+#admin-tutors-app.ta-v1 .aa-profile .ico {
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    font-size: 18px;
+    line-height: 1;
+}
+
+#admin-tutors-app.ta-v1 .aa-profile .t {
+    font-weight: 800;
+    line-height: 1.15;
+    display: block;
+}
+
+#admin-tutors-app.ta-v1 .aa-profile .s {
+    font-size: .86rem;
+    color: var(--muted);
+    margin-top: .2rem;
+}
+
+/* Notifications list uses same vertical rhythm */
+#admin-tutors-app.ta-v1 .aa-notify ul {
+    list-style: none;
+    margin: 0;
+    padding: .25rem 0;
+}
+
+#admin-tutors-app.ta-v1 .aa-notify .note {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: .6rem;
+    padding: .55rem 0;
+    border-radius: .6rem;
+}
+
+#admin-tutors-app.ta-v1 .aa-notify .note:hover {
+    background: #f3f4f6;
+}
+
+#admin-tutors-app.ta-v1 .aa-notify .t {
+    font-weight: 800;
+}
+
+#admin-tutors-app.ta-v1 .aa-notify .s {
+    color: var(--muted);
+    font-size: .86rem;
+}
+
+#admin-tutors-app.ta-v1 .aa-notify .ico {
+    font-size: 18px;
+    line-height: 1;
+    display: grid;
+    place-items: center;
+}
+
+/* Page container */
+#admin-tutors-app.ta-v1 .ad-main {
+    padding: 1rem 1.25rem 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+#admin-tutors-app.ta-v1 h1 {
+    all: unset;
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 900;
+    line-height: 1.2;
+    margin: .25rem 0;
+    color: #0f172a;
+}
+
+/* Header with search */
+#admin-tutors-app.ta-v1 .ta-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1rem;
+    align-items: center;
+    margin: .25rem 0 .9rem;
+}
+
+#admin-tutors-app.ta-v1 .ta-search {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: .75rem;
+    padding: .5rem .75rem;
+    inline-size: clamp(260px, 34vw, 520px);
+    min-inline-size: 260px;
+    justify-self: end;
+}
+
+#admin-tutors-app.ta-v1 .ta-search-ico {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    fill: #64748b;
+    pointer-events: none;
+}
+
+#admin-tutors-app.ta-v1 .ta-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #0f172a;
+    -webkit-text-fill-color: #0f172a;
+    font-size: .95rem;
+    caret-color: #3433aa;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+#admin-tutors-app.ta-v1 .ta-search-input::placeholder {
+    color: var(--muted);
+    opacity: .9;
+}
+
+/* Table */
+#admin-tutors-app.ta-v1 .table-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+#admin-tutors-app.ta-v1 .ta-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+#admin-tutors-app.ta-v1 thead th {
+    background: #fafafb;
+    text-align: left;
+    color: #6b7280;
+    font-weight: 800;
+    letter-spacing: .02em;
+    font-size: .85rem;
+    padding: .9rem 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+#admin-tutors-app.ta-v1 tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+#admin-tutors-app.ta-v1 tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+#admin-tutors-app.ta-v1 .ta-right {
+    text-align: right;
+}
+
+#admin-tutors-app.ta-v1 .applicant {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: .75rem;
+    align-items: center;
+}
+
+#admin-tutors-app.ta-v1 .applicant img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+}
+
+#admin-tutors-app.ta-v1 .badge {
+    display: inline-block;
+    font-weight: 800;
+    padding: .25rem .6rem;
+    border-radius: 999px;
+    font-size: .8rem;
+}
+
+#admin-tutors-app.ta-v1 .badge-sky {
+    background: #eaf1ff;
+    color: #1d4ed8;
+}
+
+#admin-tutors-app.ta-v1 .badge-green {
+    background: #e9f9ef;
+    color: #15803d;
+}
+
+#admin-tutors-app.ta-v1 .link-btn {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: #4f46e5;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+#admin-tutors-app.ta-v1 .btn-approve {
+    background: #5146e5;
+    color: #fff;
+    border: 0;
+    border-radius: .7rem;
+    padding: .45rem .8rem;
+    font-weight: 800;
+}
+
+#admin-tutors-app.ta-v1 .btn-reject {
+    background: #f4f4f8;
+    color: #111827;
+    border: 0;
+    border-radius: .7rem;
+    padding: .45rem .8rem;
+    font-weight: 800;
+    margin-left: .4rem;
+}
+
+#admin-tutors-app.ta-v1 .pill {
+    display: inline-block;
+    padding: .35rem .7rem;
+    border-radius: 999px;
+    font-weight: 900;
+}
+
+#admin-tutors-app.ta-v1 .pill.ok {
+    background: #e8fbef;
+    color: #087443;
+    border: 1px solid #bbf7d0;
+}
+
+#admin-tutors-app.ta-v1 .pill.no {
+    background: #ffe9ea;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+#admin-tutors-app.ta-v1 tr.no-rows td {
+    text-align: center;
+    color: var(--muted);
+    padding: 1rem;
+}
+
+/* Toast */
+#admin-tutors-app.ta-v1 .ta-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%) translateY(12px);
+    background: #111827;
+    color: #fff;
+    border-radius: .7rem;
+    padding: .55rem .9rem;
+    font-weight: 800;
+    opacity: 0;
+    transition: transform .18s ease, opacity .18s ease;
+    z-index: 9999;
+}
+
+#admin-tutors-app.ta-v1 .ta-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Modals */
+#admin-tutors-app.ta-v1 .aa-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    z-index: 60;
+}
+
+#admin-tutors-app.ta-v1 .aa-modal.open {
+    display: block;
+}
+
+#admin-tutors-app.ta-v1 .aa-modal .scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, .45);
+}
+
+#admin-tutors-app.ta-v1 .aa-modal .dialog {
+    position: relative;
+    z-index: 1;
+    width: min(920px, 95vw);
+    margin: 8vh auto;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    box-shadow: 0 24px 48px rgba(2, 8, 23, .2);
+    display: flex;
+    flex-direction: column;
+    max-height: 84vh;
+}
+
+/* Change photo modal sizing a little smaller */
+#admin-tutors-app.ta-v1 #taPhotoModal .dialog {
+    width: min(680px, 94vw);
+}
+
+/* Modal header */
+#admin-tutors-app.ta-v1 .m-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1rem .75rem;
+}
+
+#admin-tutors-app.ta-v1 .m-head h3 {
+    margin: 0;
+    font-size: 1.15rem;
+}
+
+#admin-tutors-app.ta-v1 .m-head .x {
+    border: 0;
+    background: #f3f4f6;
+    border-radius: .6rem;
+    padding: .35rem .6rem;
+    cursor: pointer;
+}
+
+#admin-tutors-app.ta-v1 .m-body {
+    padding: 0 1rem 1rem;
+    overflow: auto;
+}
+
+#admin-tutors-app.ta-v1 .m-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: .6rem;
+    padding: .75rem 1rem 1rem;
+}
+
+#admin-tutors-app.ta-v1 .btn {
+    border: 0;
+    border-radius: .7rem;
+    padding: .5rem .9rem;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+#admin-tutors-app.ta-v1 .btn.ghost {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+#admin-tutors-app.ta-v1 .btn.primary {
+    background: linear-gradient(180deg, #6366f1, #4f46e5);
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(79, 70, 229, .25);
+}
+
+/* Change Photo modal body */
+#admin-tutors-app.ta-v1 #taPhotoModal .m-body {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 1rem;
+}
+
+#admin-tutors-app.ta-v1 .preview-wrap img {
+    width: 84px;
+    height: 84px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#admin-tutors-app.ta-v1 .help {
+    font-size: .9rem;
+    color: var(--muted);
+    margin-top: .3rem;
+}
+
+#admin-tutors-app.ta-v1 .err {
+    margin-top: .4rem;
+    color: #b91c1c;
+    font-weight: 800;
+}
+
+/* Application modal – brand bar */
+#admin-tutors-app.ta-v1 .app-modal .m-head.brand {
+    background: linear-gradient(90deg, #0dbb87, #0aa774);
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    color: #fff;
+}
+
+#admin-tutors-app.ta-v1 .app-modal .m-head.brand .title {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+#admin-tutors-app.ta-v1 .app-modal .m-head.brand h3 {
+    color: #fff;
+}
+
+#admin-tutors-app.ta-v1 .pill-subject {
+    display: inline-block;
+    background: #eafff6;
+    color: #0a6a4f;
+    border: 1px solid #b6f5dd;
+    padding: .2rem .55rem;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: .78rem;
+}
+
+#admin-tutors-app.ta-v1 .head-actions {
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+}
+
+#admin-tutors-app.ta-v1 .open-tab {
+    background: #eafff6;
+    border: 1px solid #b6f5dd;
+    color: #0a6a4f;
+    padding: .45rem .7rem;
+    border-radius: .7rem;
+    font-weight: 800;
+    text-decoration: none;
+}
+
+/* App grid */
+#admin-tutors-app.ta-v1 .app-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 1rem;
+}
+
+#admin-tutors-app.ta-v1 .app-col .kv {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: .6rem;
+    margin: .55rem 0;
+}
+
+#admin-tutors-app.ta-v1 .app-col .k {
+    font-weight: 800;
+    color: #0f172a;
+}
+
+#admin-tutors-app.ta-v1 .section-title {
+    margin: .5rem 0 .4rem;
+    color: #0f172a;
+    font-size: .95rem;
+    font-weight: 900;
+}
+
+#admin-tutors-app.ta-v1 .transcript-col iframe {
+    width: 100%;
+    height: 52vh;
+    background: #f4f6f9;
+    border: 1px solid #e5e7eb;
+    border-radius: .8rem;
+}
+
+/* Responsive */
+@media (max-width:900px) {
+    #admin-tutors-app.ta-v1 .nav-toggle {
+        display: inline-flex;
+    }
+
+    #admin-tutors-app.ta-v1 .ad-topnav {
+        display: none;
+    }
+
+    #admin-tutors-app.ta-v1 .ad-topnav.is-open {
+        display: flex;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 58px;
+        z-index: 39;
+        background: #fff;
+        border-bottom: 1px solid var(--border);
+        padding: .5rem .75rem;
+        gap: .25rem;
+        flex-wrap: wrap;
+    }
+
+    #admin-tutors-app.ta-v1 .ta-header {
+        grid-template-columns: 1fr;
+    }
+
+    #admin-tutors-app.ta-v1 .ta-search {
+        justify-self: start;
+        inline-size: 100%;
+        min-inline-size: unset;
+    }
+
+    #admin-tutors-app.ta-v1 .ta-table thead {
+        display: none;
+    }
+
+    #admin-tutors-app.ta-v1 .ta-table tbody tr {
+        display: grid;
+        gap: .5rem;
+        padding: .8rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    #admin-tutors-app.ta-v1 .ta-table td {
+        border: 0;
+        padding: .2rem 1rem;
+    }
+
+    #admin-tutors-app.ta-v1 .ta-right {
+        text-align: left;
+    }
+
+    #admin-tutors-app.ta-v1 .app-grid {
+        grid-template-columns: 1fr;
+    }
+}
