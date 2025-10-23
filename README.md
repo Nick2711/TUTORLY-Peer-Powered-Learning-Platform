@@ -408,7 +408,7 @@ This project was developed as part of the **Software Engineering curriculum** at
 
 **GitHub:** [@Nick2711](https://github.com/Nick2711/Nick2711)
 
-*Final-year Software Engineering student at Belgium Campus ITversity. Passionate about building innovative solutions and contributing to impactful projects.*
+*Final-year Software Engineering student at Belgium Campus ITversity. Thrives in team environments. Passionate about building innovative solutions and contributing to impactful projects.*
 
 </td>
 <td width="25%" align="center">
@@ -424,7 +424,7 @@ This project was developed as part of the **Software Engineering curriculum** at
 
 **GitHub:** [@Cimannin](https://github.com/Cimannin)
 
-*Dedicated Software Engineering student focused on creating robust database solutions and intuitive user interfaces.*
+*Dedicated Software Engineering student focused on creating robust database solutions and intuitive user interfaces.Passionate about building innovative solutions.*
 
 </td>
 <td width="25%" align="center">
@@ -439,7 +439,7 @@ This project was developed as part of the **Software Engineering curriculum** at
 
 **GitHub:** [@mattys1908](https://github.com/mattys1908/mattys1908)
 
-*Passionate Software Engineer skilled in designing, developing, and deploying robust solutions. Builds full-stack applications with a focus on clean, maintainable code.*
+*Final Year Software Engineer skilled in designing, developing, and deploying robust solutions. Builds full-stack applications with a focus on clean, maintainable code.*
 
 </td>
 </tr>
