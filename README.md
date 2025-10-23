@@ -68,7 +68,6 @@ To create a collaborative learning ecosystem where Belgium Campus students can e
 
 #### 🤖 **AI Chatbot Assistant**
 - 24/7 intelligent academic support
-- Smart escalation to human tutors
 - Instant answers to FAQs and study queries
 
 #### 💬 **Anonymous Forum**
