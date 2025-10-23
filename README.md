@@ -110,7 +110,7 @@ To create a collaborative learning ecosystem where Belgium Campus students can e
 
 #### 🔔 **Smart Notifications**
 - Real-time alerts for new queries
-- Email, SMS, and WhatsApp integration
+- Email and in-app notifications
 - Priority-based notification system
 
 #### 📊 **Analytics Dashboard**
