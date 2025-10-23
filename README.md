@@ -2,17 +2,17 @@
 
 # 🎓 TUTORLY™
 
-### *Empowering Belgium Campus Students Through Peer-Powered Tutoring*
+### *Empowering Belgium Campus Students Through Peer-Powered Learning*
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download)
 [![Blazor](https://img.shields.io/badge/Blazor-WebAssembly-512BD4?style=for-the-badge&logo=blazor&logoColor=white)](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor)
 [![Supabase](https://img.shields.io/badge/Supabase-Database-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![Azure](https://img.shields.io/badge/Azure-Blob%20Storage-0078D4?style=for-the-badge&logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com/en-us/services/storage/)
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/CampusLearn?style=social)](https://github.com/yourusername/CampusLearn/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/yourusername/CampusLearn?style=social)](https://github.com/yourusername/CampusLearn/network)
-[![GitHub issues](https://img.shields.io/github/issues/yourusername/CampusLearn?color=red&style=flat-square)](https://github.com/yourusername/CampusLearn/issues)
-[![GitHub license](https://img.shields.io/github/license/yourusername/CampusLearn?style=flat-square)](https://github.com/yourusername/CampusLearn/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/Nick2711/TUTORLY-Peer-Powered-Learning-Platform?style=social)](https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Nick2711/TUTORLY-Peer-Powered-Learning-Platform?style=social)](https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform/network)
+[![GitHub issues](https://img.shields.io/github/issues/Nick2711/TUTORLY-Peer-Powered-Learning-Platform?color=red&style=flat-square)](https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform/issues)
+[![GitHub license](https://img.shields.io/github/license/Nick2711/TUTORLY-Peer-Powered-Learning-Platform?style=flat-square)](https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform/blob/main/LICENSE)
 
 ---
 
@@ -34,7 +34,6 @@
 - [📱 User Experience](#-user-experience)
 - [🏆 Project Recognition](#-project-recognition)
 - [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
 - [👥 Team](#-team)
 
 ---
@@ -43,7 +42,7 @@
 
 <div align="center">
 
-![CampusLearn Demo](https://via.placeholder.com/800x400/512BD4/FFFFFF?text=CampusLearn+Platform+Demo)
+
 
 </div>
 
@@ -242,7 +241,7 @@ graph TB
 
 1. **Clone the Repository**
    ```bash
-   git clone https://github.com/yourusername/CampusLearn.git
+   git clone https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform.git
    cd CampusLearn
    ```
 
@@ -279,7 +278,7 @@ graph TB
    ```
 
 5. **Access Platform**
-   - 🌐 **Frontend**: `https://localhost:5173`
+   - 🌐 **Frontend**: `https://localhost:7085`
    - 🔌 **API**: `https://localhost:7085`
 
 </details>
@@ -294,7 +293,7 @@ graph TB
 
 | **Student Dashboard** | **Tutor Interface** | **AI Chatbot** |
 |:---:|:---:|:---:|
-| ![Student Dashboard](https://via.placeholder.com/300x200/512BD4/FFFFFF?text=Student+Dashboard) | ![Tutor Interface](https://via.placeholder.com/300x200/3ECF8E/FFFFFF?text=Tutor+Interface) | ![AI Chatbot](https://via.placeholder.com/300x200/FF6B6B/FFFFFF?text=AI+Chatbot) |
+
 
 </div>
 
@@ -367,6 +366,99 @@ This project was developed as part of the **Software Engineering curriculum** at
 
 ---
 
+## 👥 Development Team
+
+<div align="center">
+
+### 🎓 **Meet the CampusLearn™ Development Team**
+
+*Four passionate Software Engineering students from Belgium Campus ITversity*
+
+</div>
+
+<table>
+<tr>
+<td width="25%" align="center">
+
+### 👩‍💼 **Anouk van Alphen**
+**Team Lead & Project Manager**
+
+
+**Roles:**
+- 🎯 Project Manager & Scrum Master
+- 🏗️ Back-End Developer
+- 🏛️ System Architect
+- 🧪 Tester
+
+**GitHub:** [@AnoukvanAlphen](https://github.com/AnoukvanAlphen/AnoukvanAlphen)
+
+*Passionate software engineering student with growing interest in Cloud computing and networking. Thrives in team environments where collaboration, creativity, and ethical leadership take center stage.*
+
+</td>
+<td width="25%" align="center">
+
+### 👨‍💻 **Nicholas Kelly**
+**Team Lead & Lead Back-End Developer**
+
+
+**Roles:**
+- 🚀 Lead Back-End Developer
+- 🏛️ System Architect
+- 🔧 Integration Testing
+- ⚙️ DevOps
+
+**GitHub:** [@Nick2711](https://github.com/Nick2711/Nick2711)
+
+*Final-year Software Engineering student at Belgium Campus ITversity. Passionate about building innovative solutions and contributing to impactful projects.*
+
+</td>
+<td width="25%" align="center">
+
+### 👨‍💻 **Viljoen Steenkamp**
+**Database Analyst & Front-End Developer**
+
+
+**Roles:**
+- 🗄️ Database Analyst
+- 🏗️ Database Architect
+- 🎨 Front-End Developer
+
+**GitHub:** [@Cimannin](https://github.com/Cimannin)
+
+*Dedicated Software Engineering student focused on creating robust database solutions and intuitive user interfaces.*
+
+</td>
+<td width="25%" align="center">
+
+### 👨‍🎨 **Matthew Smith**
+**Lead Front-End Developer & UI/UX Designer**
+
+
+**Roles:**
+- 🎨 Lead Front-End Developer
+- 🖌️ UI/UX Designer
+
+**GitHub:** [@mattys1908](https://github.com/mattys1908/mattys1908)
+
+*Passionate Software Engineer skilled in designing, developing, and deploying robust solutions. Builds full-stack applications with a focus on clean, maintainable code.*
+
+</td>
+</tr>
+</table>
+
+### 🌟 **Team Collaboration**
+
+Our team worked collaboratively using **Agile methodologies** with **Scrum** practices, ensuring efficient project delivery and continuous improvement. Each team member brought unique expertise to create a comprehensive tutoring platform that serves the Belgium Campus community.
+
+**Key Achievements:**
+- ✅ **Full-stack development** using modern .NET technologies
+- ✅ **Real-time communication** implementation with SignalR
+- ✅ **AI integration** for intelligent tutoring assistance
+- ✅ **Comprehensive testing** and quality assurance
+- ✅ **Professional UI/UX design** for optimal user experience
+
+---
+
 ## 🤝 Contributing
 
 <div align="center">
@@ -412,19 +504,6 @@ This project was developed as part of the **Software Engineering curriculum** at
 
 ---
 
-## 📄 License
-
-<div align="center">
-
-### 📜 **MIT License**
-
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
-
-**Free to use, modify, and distribute**
-
-</div>
-
----
 
 ## 👥 Team
 
@@ -459,8 +538,8 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 | **Support Channel** | **Contact** |
 |:---:|:---:|
-| 🐛 **Bug Reports** | [GitHub Issues](https://github.com/yourusername/CampusLearn/issues) |
-| 💡 **Feature Requests** | [GitHub Discussions](https://github.com/yourusername/CampusLearn/discussions) |
+| 🐛 **Bug Reports** | [GitHub Issues](https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform/issues) |
+| 💡 **Feature Requests** | [GitHub Discussions](https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform/discussions) |
 | 📧 **General Support** | [TutorlyBC@gmail.com](mailto:TutorlyBC@gmail.com) |
 | 🏫 **Academic Inquiries** | Belgium Campus ITversity |
 
@@ -478,7 +557,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **⭐ Star this repository if you find it helpful!**
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/CampusLearn?style=social&label=Star)](https://github.com/yourusername/CampusLearn/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/yourusername/CampusLearn?style=social&label=Fork)](https://github.com/yourusername/CampusLearn/network)
+[![GitHub stars](https://img.shields.io/github/stars/Nick2711/TUTORLY-Peer-Powered-Learning-Platform?style=social&label=Star)](https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Nick2711/TUTORLY-Peer-Powered-Learning-Platform?style=social&label=Fork)](https://github.com/Nick2711/TUTORLY-Peer-Powered-Learning-Platform/network)
 
 </div>
