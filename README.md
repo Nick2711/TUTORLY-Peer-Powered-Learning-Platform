@@ -46,7 +46,7 @@
 
 </div>
 
-**CampusLearn™** is a cutting-edge peer-to-peer tutoring platform that revolutionizes how Belgium Campus students access academic support. Built as part of our Software Engineering capstone project, this platform bridges the gap between traditional lectures and personalized learning through intelligent student-tutor matching.
+**Tutorly™** is a cutting-edge peer-to-peer tutoring platform that revolutionizes how Belgium Campus students access academic support. Built as part of our Software Engineering capstone project, this platform bridges the gap between traditional lectures and personalized learning through intelligent student-tutor matching.
 
 ### 🎯 **Our Mission**
 To create a collaborative learning ecosystem where Belgium Campus students can easily connect with peer tutors, access AI-powered assistance, and participate in anonymous academic discussions—all within a single, intuitive platform.
