@@ -435,7 +435,7 @@ This project was developed as part of the **Software Engineering curriculum** at
 
 **Roles:**
 - 🎨 Lead Front-End Developer
-- 🖌️ UI/UX Designer
+- 🖍️ UI/UX Designer
 
 **GitHub:** [@mattys1908](https://github.com/mattys1908/mattys1908)
 
